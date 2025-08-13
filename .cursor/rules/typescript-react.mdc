@@ -1,0 +1,25 @@
+---
+alwaysApply: true
+---
+
+# TypeScript & React Development
+
+## TypeScript Best Practices
+- Use strict TypeScript configuration
+- Define interfaces for all browser extension APIs
+- Type all message passing between scripts
+- Use union types for action types and message schemas
+- Leverage branded types for security-critical data
+
+## React Patterns
+- Use functional components with hooks
+- Implement proper cleanup in useEffect for content scripts
+- Use React.memo for performance optimization
+- Handle portal rendering for content script React components
+- Use context for sharing state between extension parts
+
+## Component Architecture
+- Comprehensive error boundaries in React components
+- Graceful degradation when browser APIs are unavailable
+- User-friendly error messages in the popup
+- Proper state management across extension components

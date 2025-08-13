@@ -1,0 +1,34 @@
+---
+alwaysApply: true
+---
+
+# AI & Automation Implementation
+
+## Input Emulation
+- **DOM Events**: Use DOM events (click, input, keydown) with proper event dispatching
+- **Element Selection**: Implement robust element selection (CSS selectors, XPath, AI-based recognition)
+- **Action Sequencing**: Build a queue system for action execution with proper timing
+- **Safety**: Add safeguards to prevent infinite loops or harmful actions
+
+## AI Agent Decision Making
+- Implement explainable AI decisions for user transparency
+- Use confidence scores for action recommendations
+- Provide fallback strategies for low-confidence scenarios
+- Log decision reasoning for debugging
+
+## User Interaction Guidelines
+- Always request permission before performing actions
+- Provide clear feedback during automation
+- Allow users to interrupt or modify automation sequences
+- Respect user preferences and site-specific settings
+
+## Learning & Adaptation
+- Store successful interaction patterns
+- Learn from user corrections and feedback
+- Adapt to site changes and updates
+- Maintain privacy while improving performance
+
+## Error Handling
+- Implement graceful fallbacks when automation fails
+- Validate DOM manipulation targets
+- Implement rate limiting for automation actions

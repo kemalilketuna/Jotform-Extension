@@ -1,0 +1,29 @@
+---
+alwaysApply: true
+---
+
+# Code Quality Standards
+
+## Code Documentation
+- Comments should be concise and only used for complex code
+- Avoid obvious comments that restate what the code does
+- Focus comments on explaining why, not what
+- Use JSDoc for public function documentation
+
+## Testing Standards
+- Unit tests for utility functions and AI logic
+- Integration tests for browser extension APIs
+- E2E tests for automation workflows
+- Cross-browser testing setup
+
+## Error Handling
+- Comprehensive error boundaries in React components
+- Graceful degradation when browser APIs are unavailable
+- Logging system that respects user privacy
+- User-friendly error messages in the popup
+
+## Documentation Requirements
+- JSDoc for all public functions
+- README with setup and development instructions
+- Architecture documentation for AI decision-making
+- Browser compatibility matrix

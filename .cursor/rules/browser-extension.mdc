@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+# Browser Extension Development Guidelines
+
+## Extension Configuration
+- **Manifest**: Always provide both v2 and v3 configurations
+- **Permissions**: Request minimal permissions, use optional permissions when possible
+- **CSP**: Handle Content Security Policy restrictions
+
+## Communication & Storage
+- **Message Passing**: Use proper message passing between background, content, and popup scripts
+- **Storage**: Use browser.storage.sync for user preferences, browser.storage.local for cache
+- **Event Handling**: Implement proper cleanup for event listeners
+- **Navigation**: Handle page navigation and dynamic content loading
+
+## Cross-browser Compatibility
+- Use `webextension-polyfill` for API consistency across browsers
+- Avoid browser-specific APIs unless absolutely necessary
+- Test manifest v3 compatibility (Chrome/Edge) and v2 fallbacks (Firefox/Safari)
+- Validate all inter-script communications
+
+## Content Script Best Practices
+- Minimize content script impact on page performance
+- Use efficient DOM querying strategies
+- Use requestIdleCallback for non-critical operations
+- Implement proper cleanup in useEffect for content scripts

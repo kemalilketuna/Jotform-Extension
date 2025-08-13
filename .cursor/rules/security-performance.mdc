@@ -1,0 +1,26 @@
+---
+alwaysApply: true
+---
+
+# Security & Performance Guidelines
+
+## Security Considerations
+- Sanitize all user inputs and AI-generated content
+- Use CSP-compliant inline styles and scripts
+- Validate all inter-script communications
+- Implement rate limiting for automation actions
+- Use secure storage for sensitive data
+- Validate DOM manipulation targets
+
+## Performance & Reliability
+- Minimize content script impact on page performance
+- Use efficient DOM querying strategies
+- Implement proper cleanup for event listeners
+- Use requestIdleCallback for non-critical operations
+- Handle page navigation and dynamic content loading
+
+## Privacy & Data Protection
+- Logging system that respects user privacy
+- Maintain privacy while improving AI performance
+- Secure storage for sensitive user data
+- Transparent data usage policies

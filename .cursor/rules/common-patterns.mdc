@@ -1,0 +1,61 @@
+---
+alwaysApply: true
+---
+
+# Common Implementation Patterns
+
+## Message Passing Pattern
+```typescript
+// Define message types
+interface AutomationMessage {
+  type: 'EXECUTE_ACTION';
+  payload: ActionSequence;
+}
+
+// Background script listener
+browser.runtime.onMessage.addListener((message: AutomationMessage) => {
+  // Handle message
+});
+```
+
+## Content Script React Integration
+```typescript
+// Safe React root creation in content scripts
+const createReactRoot = (container: Element) => {
+  const root = ReactDOM.createRoot(container);
+  return root;
+};
+```
+
+## Cross-browser API Usage
+```typescript
+import browser from 'webextension-polyfill';
+
+// Use consistent API across browsers
+await browser.storage.sync.set({ key: value });
+```
+
+## Action Queue Pattern
+```typescript
+interface AutomationAction {
+  type: string;
+  target: string;
+  value?: string;
+  delay?: number;
+}
+
+class ActionQueue {
+  private queue: AutomationAction[] = [];
+  
+  async execute() {
+    for (const action of this.queue) {
+      await this.performAction(action);
+      if (action.delay) {
+        await new Promise(resolve => setTimeout(resolve, action.delay));
+      }
+    }
+  }
+}
+```
+
+These patterns provide reusable, tested approaches for common browser extension and AI automation scenarios.
