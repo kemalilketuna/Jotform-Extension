@@ -22,6 +22,12 @@ alwaysApply: true
 - Logging system that respects user privacy
 - User-friendly error messages in the popup
 
+## Refactoring Policy
+- **Proactive Refactoring**: Always refactor code during development when improvements are identified
+- **Code Clarity**: Prioritize code readability and maintainability over quick implementations
+- **Clean Architecture**: Continuously improve code structure rather than leaving technical debt
+- **No Postponement**: Refactor immediately when needed - don't defer improvements for later
+
 ## Documentation Requirements
 - JSDoc for all public functions
 - README with setup and development instructions

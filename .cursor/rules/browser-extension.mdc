@@ -4,10 +4,12 @@ alwaysApply: true
 
 # Browser Extension Development Guidelines
 
-## Extension Configuration
-- **Manifest**: Always provide both v2 and v3 configurations
-- **Permissions**: Request minimal permissions, use optional permissions when possible
-- **CSP**: Handle Content Security Policy restrictions
+## Extension Configuration (WXT Framework)
+- **WXT Config**: Use `wxt.config.ts` for all extension configuration
+- **Manifest**: WXT automatically generates manifest files for different browsers
+- **Permissions**: Request minimal permissions in wxt.config.ts manifest section
+- **CSP**: Configure Content Security Policy in wxt.config.ts
+- **Modules**: Use WXT modules like @wxt-dev/module-react for React integration
 
 ## Communication & Storage
 - **Message Passing**: Use proper message passing between background, content, and popup scripts

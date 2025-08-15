@@ -27,11 +27,32 @@ const createReactRoot = (container: Element) => {
 };
 ```
 
+## WXT Framework Patterns
+```typescript
+// WXT auto-imports browser API
+// No need for webextension-polyfill import in most cases
+await browser.storage.sync.set({ key: value });
+
+// WXT entrypoint exports
+export default defineContentScript({
+  matches: ['*://*/*'],
+  main() {
+    // Content script logic
+  },
+});
+
+// WXT background script
+export default defineBackground(() => {
+  // Background script logic
+});
+```
+
 ## Cross-browser API Usage
 ```typescript
+// WXT provides browser API automatically
+// For complex cases, still use webextension-polyfill
 import browser from 'webextension-polyfill';
 
-// Use consistent API across browsers
 await browser.storage.sync.set({ key: value });
 ```
 

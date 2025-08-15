@@ -8,10 +8,10 @@ alwaysApply: true
 You are developing a cross-browser extension using TypeScript and React that emulates user input through AI agents for site automation.
 
 ## Core Technologies
+- **WXT Framework**: Use WXT for extension development and build configuration
 - **TypeScript**: Strict type checking, use latest ES features
-- **React**: For popup UI and content script components
+- **React**: For popup UI and content script components (with @wxt-dev/module-react)
 - **Tailwind CSS**: Use Tailwind CSS for all styling needs
-- **Webpack/Vite**: For bundling with proper browser extension configuration
 - **Web Extensions API**: Use the standardized WebExtensions API for maximum compatibility
 
 ## Browser Compatibility
@@ -20,22 +20,23 @@ You are developing a cross-browser extension using TypeScript and React that emu
 - Avoid browser-specific APIs unless absolutely necessary
 - Test manifest v3 compatibility (Chrome/Edge) and v2 fallbacks (Firefox/Safari)
 
-## Directory Structure
+## Directory Structure (WXT Framework)
 ```
 src/
-├── background/          # Background scripts
-├── content/            # Content scripts
-├── popup/              # Extension popup UI
-├── options/            # Options page
+├── entrypoints/        # WXT entrypoints (background.ts, content.ts, popup/)
+│   ├── background.ts   # Background script entrypoint
+│   ├── content.ts      # Content script entrypoint
+│   └── popup/          # Popup UI entrypoint
 ├── components/         # Shared React components
 ├── utils/              # Utility functions
 ├── types/              # TypeScript type definitions
 ├── ai/                 # AI agent logic
-└── automation/         # User input emulation
+├── automation/         # User input emulation
+└── assets/             # Static assets
 ```
 
-## Key Files
-- `manifest.json` (v3 preferred, v2 fallback)
-- `background.ts` - Service worker/background page
-- `content.ts` - Content script injection
-- `popup.tsx` - Extension popup interface
+## Key Files (WXT Configuration)
+- `wxt.config.ts` - WXT framework configuration
+- `src/entrypoints/background.ts` - Service worker/background page
+- `src/entrypoints/content.ts` - Content script injection
+- `src/entrypoints/popup/` - Extension popup interface directory
