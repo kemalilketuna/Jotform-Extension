@@ -4,6 +4,13 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   srcDir: 'src',
   modules: ['@wxt-dev/module-react', '@wxt-dev/auto-icons'],
+  manifest: {
+    name: 'AI-Form',
+    description: 'AI-powered browser extension that automates form filling and interactions with JotForm using intelligent agents.',
+    action: {
+      default_title: 'AI-Form - Smart Form Assistant',
+    },
+  },
   webExt: {
     disabled: true,
   },
