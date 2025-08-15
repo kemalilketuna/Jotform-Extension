@@ -10,12 +10,24 @@ export default defineConfig({
     action: {
       default_title: 'AI-Form - Smart Form Assistant',
     },
+    permissions: [
+      'tabs',
+      'activeTab'
+    ],
+    content_security_policy: {
+      extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+    }
   },
   webExt: {
     disabled: true,
   },
   autoIcons: {
     baseIconPath: '../public/jotform-logo.svg',
-    grayscaleOnDevelopment: false,
+    developmentIndicator: false,
   },
+  dev: {
+    server: {
+      port: 3000
+    }
+  }
 });

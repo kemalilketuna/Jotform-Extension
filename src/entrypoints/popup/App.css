@@ -118,6 +118,24 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.create-form-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #51cf66;
+  color: white;
+}
+
+.create-form-btn:hover {
+  background: #40c057;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 .secondary-btn {
   padding: 10px 24px;
   border: 1px solid rgba(255, 255, 255, 0.3);

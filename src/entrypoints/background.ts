@@ -1,3 +1,5 @@
-export default defineBackground(() => {
-  console.log('Hello background!', { id: browser.runtime.id });
-});
+export default {
+  main() {
+    console.log('Background script loaded');
+  }
+};

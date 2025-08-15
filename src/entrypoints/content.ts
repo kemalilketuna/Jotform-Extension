@@ -1,6 +1,6 @@
-export default defineContentScript({
-  matches: ['*://*.google.com/*'],
+export default {
+  matches: ['*://*.jotform.com/*'],
   main() {
-    console.log('Hello content.');
+    console.log('JotForm Extension content script loaded');
   },
-});
+};

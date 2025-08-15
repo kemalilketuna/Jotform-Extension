@@ -1,18 +1,26 @@
-import { useState } from 'react';
+import React from 'react';
 import jotformLogo from '@/assets/jotform-logo.svg';
 import './App.css';
 
 function App() {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [status, setStatus] = useState('Ready');
+  const createForm = async () => {
+    try {
+      // Get the current active tab
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  const toggleExtension = () => {
-    setIsEnabled(!isEnabled);
-    setStatus(isEnabled ? 'Ready' : 'Active');
-  };
+      if (tab.id) {
+        // Navigate the current tab to the Jotform workspace
+        await chrome.tabs.update(tab.id, { url: 'https://www.jotform.com/workspace/' });
 
-  const openJotForm = () => {
-    window.open('https://jotform.com', '_blank');
+        // Close the popup
+        window.close();
+      }
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      // Fallback: open in new tab if current tab navigation fails
+      chrome.tabs.create({ url: 'https://www.jotform.com/workspace/' });
+      window.close();
+    }
   };
 
   return (
@@ -25,12 +33,7 @@ function App() {
         </div>
       </header>
 
-      <div className="status-section">
-        <div className={`status-indicator ${isEnabled ? 'active' : 'inactive'}`}>
-          <span className="status-dot"></span>
-          <span className="status-text">Status: {status}</span>
-        </div>
-      </div>
+
 
       <div className="main-content">
         <div className="description">
@@ -39,15 +42,8 @@ function App() {
         </div>
 
         <div className="controls">
-          <button
-            className={`toggle-btn ${isEnabled ? 'enabled' : 'disabled'}`}
-            onClick={toggleExtension}
-          >
-            {isEnabled ? 'Disable AI Assistant' : 'Enable AI Assistant'}
-          </button>
-
-          <button className="secondary-btn" onClick={openJotForm}>
-            Open JotForm
+          <button className="create-form-btn" onClick={createForm}>
+            Create Form
           </button>
         </div>
 
