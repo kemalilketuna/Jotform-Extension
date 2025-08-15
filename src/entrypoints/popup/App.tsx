@@ -1,34 +1,71 @@
 import { useState } from 'react';
-import reactLogo from '@/assets/react.svg';
 import jotformLogo from '@/assets/jotform-logo.svg';
 import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [status, setStatus] = useState('Ready');
+
+  const toggleExtension = () => {
+    setIsEnabled(!isEnabled);
+    setStatus(isEnabled ? 'Ready' : 'Active');
+  };
+
+  const openJotForm = () => {
+    window.open('https://jotform.com', '_blank');
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://wxt.dev" target="_blank">
-          <img src={jotformLogo} className="logo" alt="Jotform logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="ai-form-popup">
+      <header className="popup-header">
+        <img src={jotformLogo} className="logo" alt="JotForm logo" />
+        <div className="header-text">
+          <h1>AI-Form</h1>
+          <p className="subtitle">Smart Form Assistant</p>
+        </div>
+      </header>
+
+      <div className="status-section">
+        <div className={`status-indicator ${isEnabled ? 'active' : 'inactive'}`}>
+          <span className="status-dot"></span>
+          <span className="status-text">Status: {status}</span>
+        </div>
       </div>
-      <h1>WXT + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+
+      <div className="main-content">
+        <div className="description">
+          <p>AI-powered automation for JotForm interactions.
+            Let our intelligent agent help you fill forms efficiently.</p>
+        </div>
+
+        <div className="controls">
+          <button
+            className={`toggle-btn ${isEnabled ? 'enabled' : 'disabled'}`}
+            onClick={toggleExtension}
+          >
+            {isEnabled ? 'Disable AI Assistant' : 'Enable AI Assistant'}
+          </button>
+
+          <button className="secondary-btn" onClick={openJotForm}>
+            Open JotForm
+          </button>
+        </div>
+
+        <div className="features">
+          <h3>Features:</h3>
+          <ul>
+            <li>🤖 Intelligent form detection</li>
+            <li>📝 Automated form filling</li>
+            <li>⚡ Quick form interactions</li>
+            <li>🎯 Smart field recognition</li>
+          </ul>
+        </div>
       </div>
-      <p className="read-the-docs">
-        Click on the WXT and React logos to learn more.
-      </p>
-    </>
+
+      <footer className="popup-footer">
+        <p>Powered by AI • Built for JotForm</p>
+      </footer>
+    </div>
   );
 }
 
