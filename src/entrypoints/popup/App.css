@@ -136,6 +136,32 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.create-form-btn.executing {
+  background: #868e96;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.create-form-btn.executing:hover {
+  background: #868e96;
+  transform: none;
+  box-shadow: none;
+}
+
+.status-message {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #51cf66;
+}
+
+.status-message p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .secondary-btn {
   padding: 10px 24px;
   border: 1px solid rgba(255, 255, 255, 0.3);
