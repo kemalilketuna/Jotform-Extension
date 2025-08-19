@@ -14,6 +14,6 @@ export interface AutomationSequence {
 }
 
 export interface AutomationMessage {
-    type: 'EXECUTE_SEQUENCE' | 'SEQUENCE_COMPLETE' | 'SEQUENCE_ERROR';
-    payload?: AutomationSequence | { error: string; step: number };
+    type: 'EXECUTE_SEQUENCE' | 'SEQUENCE_COMPLETE' | 'SEQUENCE_ERROR' | 'PING' | 'PONG';
+    payload?: AutomationSequence | { error: string; step?: number } | { sequenceId: string };
 }

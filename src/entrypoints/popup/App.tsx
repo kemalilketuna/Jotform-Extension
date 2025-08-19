@@ -1,12 +1,120 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import jotformLogo from '@/assets/jotform-logo.svg';
 import { AutomationServerService } from '../../services/AutomationServerService';
 import { AutomationMessage } from '../../types/AutomationTypes';
 import './App.css';
 
+// Helper function to wait for content script to be ready after navigation
+const waitForContentScriptReady = async (tabId: number): Promise<void> => {
+  const maxAttempts = 40; // 20 seconds with 500ms intervals
+  let attempts = 0;
+
+  console.log('Waiting for content script to be ready...');
+
+  while (attempts < maxAttempts) {
+    try {
+      // Try to ping the content script
+      const response = await chrome.tabs.sendMessage(tabId, { type: 'PING' });
+      if (response?.type === 'PONG') {
+        console.log('Content script is ready');
+        return;
+      }
+    } catch (error) {
+      attempts++;
+      console.log(`Content script not ready, attempt ${attempts}/${maxAttempts}`);
+
+      if (attempts >= maxAttempts) {
+        // Try manual injection as fallback
+        console.log('Attempting manual content script injection...');
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId },
+            files: ['content-scripts/content.js']
+          });
+
+          // Wait for manual injection to complete
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          // Try one more ping
+          const response = await chrome.tabs.sendMessage(tabId, { type: 'PING' });
+          if (response?.type === 'PONG') {
+            console.log('Content script ready after manual injection');
+            return;
+          }
+        } catch (injectionError) {
+          console.error('Manual injection failed:', injectionError);
+        }
+
+        throw new Error('Content script failed to load after navigation');
+      }
+
+      // Wait before next attempt
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+};
+
 function App() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [status, setStatus] = useState<string>('');
+  const [autoTriggerReady, setAutoTriggerReady] = useState(false);
+
+  // Check for auto-trigger readiness when popup opens
+  useEffect(() => {
+    const checkAutoTriggerStatus = async () => {
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab.id && tab.url?.includes('jotform.com/workspace/')) {
+          setStatus('Checking if automation is ready...');
+
+          // Give content script more time to load and detect conditions
+          let attempts = 0;
+          const maxAttempts = 10;
+
+          while (attempts < maxAttempts) {
+            try {
+              const response = await chrome.tabs.sendMessage(tab.id, { type: 'PING' });
+              if (response?.type === 'PONG') {
+                // Content script is ready, check auto-trigger state
+                const result = await chrome.scripting.executeScript({
+                  target: { tabId: tab.id },
+                  func: () => (window as any).jotformAutoTriggerReady || false
+                });
+
+                if (result && result[0]?.result) {
+                  setAutoTriggerReady(true);
+                  setStatus('Ready to create form automatically!');
+                  return;
+                } else {
+                  // Content script is loaded but conditions not met yet
+                  setStatus('Waiting for workspace to load...');
+                }
+                break;
+              }
+            } catch (error) {
+              attempts++;
+              if (attempts >= maxAttempts) {
+                setStatus('Click "Create Form" to start automation');
+                break;
+              }
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+        } else {
+          setStatus('Navigate to JotForm to begin');
+        }
+      } catch (error) {
+        console.error('Error checking auto-trigger status:', error);
+        setStatus('Click "Create Form" to start automation');
+      }
+    };
+
+    checkAutoTriggerStatus();
+
+    // Also recheck periodically in case conditions change
+    const interval = setInterval(checkAutoTriggerStatus, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const createForm = async () => {
     if (isExecuting) return;
@@ -27,8 +135,8 @@ function App() {
         setStatus('Navigating to Jotform workspace...');
         await chrome.tabs.update(tab.id, { url: 'https://www.jotform.com/workspace/' });
 
-        // Wait for navigation to complete
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Wait for navigation to complete and content script to load
+        await waitForContentScriptReady(tab.id);
       }
 
       setStatus('Fetching automation from server...');
@@ -137,11 +245,11 @@ function App() {
 
         <div className="controls">
           <button
-            className={`create-form-btn ${isExecuting ? 'executing' : ''}`}
+            className={`create-form-btn ${isExecuting ? 'executing' : ''} ${autoTriggerReady ? 'auto-ready' : ''}`}
             onClick={createForm}
             disabled={isExecuting}
           >
-            {isExecuting ? 'Creating...' : 'Create Form'}
+            {isExecuting ? 'Creating...' : autoTriggerReady ? 'Create Form Now' : 'Create Form'}
           </button>
         </div>
 
