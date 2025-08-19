@@ -1,155 +1,244 @@
-import { AutomationAction, AutomationSequence } from '../types/AutomationTypes';
+import { AutomationAction, AutomationSequence, NavigationAction, ClickAction, TypeAction, WaitAction } from '../types/AutomationTypes';
+import { LoggingService } from '../services/LoggingService';
+import { UserMessages } from '../constants/UserMessages';
+import { NavigationUrls } from '../constants/NavigationUrls';
+import { ElementSelectors } from '../constants/ElementSelectors';
+import { AutomationError, ElementNotFoundError, NavigationError, ActionExecutionError, SequenceExecutionError } from '../errors/AutomationErrors';
 
+/**
+ * Engine for executing automation sequences with proper error handling and logging
+ */
 export class AutomationEngine {
     private static instance: AutomationEngine;
     private isExecuting = false;
+    private readonly logger: LoggingService;
+    private readonly DEFAULT_TIMEOUT = 10000;
+    private readonly NAVIGATION_TIMEOUT = 10000;
 
-    static getInstance(): AutomationEngine {
-        if (!this.instance) {
-            this.instance = new AutomationEngine();
-        }
-        return this.instance;
+    private constructor() {
+        this.logger = LoggingService.getInstance();
     }
 
+    static getInstance(): AutomationEngine {
+        if (!AutomationEngine.instance) {
+            AutomationEngine.instance = new AutomationEngine();
+        }
+        return AutomationEngine.instance;
+    }
+
+    /**
+     * Execute a complete automation sequence
+     */
     async executeSequence(sequence: AutomationSequence): Promise<void> {
         if (this.isExecuting) {
-            throw new Error('Another automation sequence is already running');
+            throw new AutomationError(UserMessages.ERRORS.AUTOMATION_ALREADY_RUNNING);
         }
 
         this.isExecuting = true;
-        console.log(`Starting automation sequence: ${sequence.name}`);
+        this.logger.info(`Starting automation sequence: ${sequence.name}`, 'AutomationEngine');
 
         try {
             for (let i = 0; i < sequence.actions.length; i++) {
                 const action = sequence.actions[i];
-                console.log(`Executing step ${i + 1}: ${action.description}`);
+                this.logger.info(
+                    UserMessages.getStepExecutionMessage(i + 1, action.description),
+                    'AutomationEngine'
+                );
 
-                await this.executeAction(action);
+                await this.executeAction(action, i);
 
                 if (action.delay) {
                     await this.wait(action.delay);
                 }
             }
 
-            console.log(`Automation sequence completed: ${sequence.name}`);
+            this.logger.info(
+                UserMessages.getSequenceCompletionMessage(sequence.name),
+                'AutomationEngine'
+            );
         } catch (error) {
-            console.error('Automation sequence failed:', error);
-            throw error;
+            const sequenceError = new SequenceExecutionError(
+                sequence.id,
+                error instanceof Error ? error.message : 'Unknown error',
+                this.getCurrentStepIndex(error)
+            );
+            this.logger.logError(sequenceError, 'AutomationEngine');
+            throw sequenceError;
         } finally {
             this.isExecuting = false;
         }
     }
 
-    private async executeAction(action: AutomationAction): Promise<void> {
-        switch (action.type) {
-            case 'NAVIGATE':
-                await this.handleNavigation(action);
-                break;
-            case 'CLICK':
-                await this.handleClick(action);
-                break;
-            case 'TYPE':
-                await this.handleType(action);
-                break;
-            case 'WAIT':
-                if (action.delay) {
-                    await this.wait(action.delay);
-                }
-                break;
-            default:
-                throw new Error(`Unknown action type: ${(action as any).type}`);
+    /**
+     * Execute a single automation action with proper type checking
+     */
+    private async executeAction(action: AutomationAction, stepIndex?: number): Promise<void> {
+        try {
+            switch (action.type) {
+                case 'NAVIGATE':
+                    await this.handleNavigation(action as NavigationAction);
+                    break;
+                case 'CLICK':
+                    await this.handleClick(action as ClickAction);
+                    break;
+                case 'TYPE':
+                    await this.handleType(action as TypeAction);
+                    break;
+                case 'WAIT':
+                    await this.handleWait(action as WaitAction);
+                    break;
+                default:
+                    throw new ActionExecutionError(
+                        'UNKNOWN',
+                        UserMessages.getUnknownActionError(action.type),
+                        stepIndex
+                    );
+            }
+        } catch (error) {
+            if (error instanceof AutomationError) {
+                throw error;
+            }
+            throw new ActionExecutionError(
+                action.type,
+                error instanceof Error ? error.message : 'Unknown error',
+                stepIndex
+            );
         }
     }
 
-    private async handleNavigation(action: AutomationAction): Promise<void> {
-        if (!action.url) {
-            throw new Error('Navigation action requires URL');
-        }
-
+    /**
+     * Handle navigation actions with URL validation
+     */
+    private async handleNavigation(action: NavigationAction): Promise<void> {
+        const validatedUrl = NavigationUrls.validateUrl(action.url);
         const currentUrl = window.location.href;
 
         // Check if we're already on the target URL
-        if (currentUrl.includes(action.url) || action.url.includes(currentUrl)) {
-            console.log('Already on target URL, skipping navigation');
+        if (currentUrl.includes(validatedUrl) || validatedUrl.includes(currentUrl)) {
+            this.logger.debug('Already on target URL, skipping navigation', 'AutomationEngine');
             return;
         }
 
-        console.log(`Navigating to: ${action.url}`);
-        window.location.href = action.url;
-        await this.waitForNavigationComplete();
+        this.logger.info(`Navigating to: ${validatedUrl}`, 'AutomationEngine');
+
+        try {
+            window.location.href = validatedUrl;
+            await this.waitForNavigationComplete();
+        } catch (error) {
+            throw new NavigationError(
+                validatedUrl,
+                error instanceof Error ? error.message : 'Navigation failed'
+            );
+        }
     }
 
-    private async handleClick(action: AutomationAction): Promise<void> {
-        if (!action.target) {
-            throw new Error('Click action requires target selector');
-        }
+    /**
+     * Handle click actions with element validation
+     */
+    private async handleClick(action: ClickAction): Promise<void> {
+        const validatedSelector = ElementSelectors.validateSelector(action.target);
 
-        console.log(`Waiting for element: ${action.target}`);
-        const element = await this.waitForElement(action.target);
+        this.logger.debug(`Waiting for element: ${validatedSelector}`, 'AutomationEngine');
+        const element = await this.waitForElement(validatedSelector);
 
         if (!element) {
-            throw new Error(`Element not found: ${action.target}`);
+            throw new ElementNotFoundError(validatedSelector);
         }
 
-        console.log(`Clicking element: ${action.target}`);
+        this.logger.debug(`Clicking element: ${validatedSelector}`, 'AutomationEngine');
         this.simulateClick(element);
     }
 
-    private async handleType(action: AutomationAction): Promise<void> {
-        if (!action.target) {
-            throw new Error('Type action requires target selector');
-        }
+    /**
+     * Handle typing actions with input validation
+     */
+    private async handleType(action: TypeAction): Promise<void> {
+        const validatedSelector = ElementSelectors.validateSelector(action.target);
 
-        if (!action.value) {
-            throw new Error('Type action requires value to type');
-        }
-
-        console.log(`Typing into element: ${action.target}`);
-        const element = await this.waitForElement(action.target);
+        this.logger.debug(`Typing into element: ${validatedSelector}`, 'AutomationEngine');
+        const element = await this.waitForElement(validatedSelector);
 
         if (!element) {
-            throw new Error(`Element not found: ${action.target}`);
+            throw new ElementNotFoundError(validatedSelector);
         }
 
         this.simulateTyping(element, action.value);
     }
 
-    private async waitForElement(selector: string, timeout = 10000): Promise<Element | null> {
+    /**
+     * Handle wait actions
+     */
+    private async handleWait(action: WaitAction): Promise<void> {
+        await this.wait(action.delay);
+    }
+
+    /**
+     * Wait for an element to appear in the DOM with timeout
+     */
+    private async waitForElement(selector: string, timeout: number = this.DEFAULT_TIMEOUT): Promise<Element | null> {
         return new Promise((resolve) => {
             const startTime = Date.now();
 
             const checkElement = () => {
-                const element = document.querySelector(selector);
+                try {
+                    const element = document.querySelector(selector);
 
-                if (element) {
-                    resolve(element);
-                    return;
-                }
+                    if (element) {
+                        this.logger.debug(`Element found: ${selector}`, 'AutomationEngine');
+                        resolve(element);
+                        return;
+                    }
 
-                if (Date.now() - startTime > timeout) {
+                    if (Date.now() - startTime > timeout) {
+                        this.logger.warn(`Element timeout: ${selector}`, 'AutomationEngine');
+                        resolve(null);
+                        return;
+                    }
+
+                    setTimeout(checkElement, 100);
+                } catch (error) {
+                    this.logger.error(`Error checking element: ${selector}`, 'AutomationEngine', { error });
                     resolve(null);
-                    return;
                 }
-
-                setTimeout(checkElement, 100);
             };
 
             checkElement();
         });
     }
 
+    /**
+     * Simulate a mouse click on an element
+     */
     private simulateClick(element: Element): void {
-        const event = new MouseEvent('click', {
-            view: window,
-            bubbles: true,
-            cancelable: true
-        });
+        try {
+            const event = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true
+            });
 
-        element.dispatchEvent(event);
+            element.dispatchEvent(event);
+            this.logger.debug('Click event dispatched successfully', 'AutomationEngine');
+        } catch (error) {
+            throw new ActionExecutionError(
+                'CLICK',
+                `Failed to simulate click: ${error instanceof Error ? error.message : 'Unknown error'}`
+            );
+        }
     }
 
+    /**
+     * Simulate typing text into an input element
+     */
     private simulateTyping(element: Element, text: string): void {
-        if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
+            throw new ActionExecutionError(
+                'TYPE',
+                'Target element is not a valid input element'
+            );
+        }
+
+        try {
             // Clear existing content
             element.value = '';
             element.focus();
@@ -191,15 +280,35 @@ export class AutomationEngine {
                 cancelable: true
             });
             element.dispatchEvent(changeEvent);
+
+            this.logger.debug(`Text typed successfully: ${text}`, 'AutomationEngine');
+        } catch (error) {
+            throw new ActionExecutionError(
+                'TYPE',
+                `Failed to simulate typing: ${error instanceof Error ? error.message : 'Unknown error'}`
+            );
         }
     }
 
+    /**
+     * Wait for a specified number of milliseconds
+     */
     private async wait(ms: number): Promise<void> {
+        if (ms <= 0) {
+            return;
+        }
+
+        this.logger.debug(`Waiting ${ms}ms`, 'AutomationEngine');
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    /**
+     * Wait for navigation to complete with workspace-specific checks
+     */
     private async waitForNavigationComplete(): Promise<void> {
         return new Promise((resolve) => {
+            const startTime = Date.now();
+
             // Wait for document ready state
             const checkReadyState = () => {
                 if (document.readyState === 'complete') {
@@ -207,11 +316,14 @@ export class AutomationEngine {
                     setTimeout(() => {
                         // Check if key elements are loaded (workspace specific)
                         const checkWorkspaceLoaded = () => {
-                            const sidebar = document.querySelector('.lsApp-sidebar');
-                            const mainContent = document.querySelector('.lsApp-body');
+                            const sidebar = document.querySelector(ElementSelectors.WORKSPACE.SIDEBAR);
+                            const mainContent = document.querySelector(ElementSelectors.WORKSPACE.MAIN_CONTENT);
 
                             if (sidebar && mainContent) {
-                                console.log('Workspace navigation complete - elements loaded');
+                                this.logger.info('Workspace navigation complete - elements loaded', 'AutomationEngine');
+                                resolve();
+                            } else if (Date.now() - startTime > this.NAVIGATION_TIMEOUT) {
+                                this.logger.warn('Navigation timeout reached, proceeding anyway', 'AutomationEngine');
                                 resolve();
                             } else {
                                 // Keep checking for workspace elements
@@ -221,18 +333,25 @@ export class AutomationEngine {
 
                         checkWorkspaceLoaded();
                     }, 1000);
+                } else if (Date.now() - startTime > this.NAVIGATION_TIMEOUT) {
+                    this.logger.warn('Document ready timeout reached, proceeding anyway', 'AutomationEngine');
+                    resolve();
                 } else {
                     setTimeout(checkReadyState, 100);
                 }
             };
 
             checkReadyState();
-
-            // Timeout fallback
-            setTimeout(() => {
-                console.log('Navigation timeout reached, proceeding anyway');
-                resolve();
-            }, 10000);
         });
+    }
+
+    /**
+     * Get the current step index from an error (if available)
+     */
+    private getCurrentStepIndex(error: unknown): number | undefined {
+        if (error instanceof ActionExecutionError && error.stepNumber !== undefined) {
+            return error.stepNumber;
+        }
+        return undefined;
     }
 }

@@ -1,73 +1,87 @@
 import React, { useState } from 'react';
 import jotformLogo from '@/assets/jotform-logo.svg';
 import { AutomationServerService } from '../../services/AutomationServerService';
-import { AutomationMessage } from '../../types/AutomationTypes';
+import { ExecuteSequenceMessage } from '../../types/AutomationTypes';
+import { LoggingService } from '../../services/LoggingService';
+import { UserMessages } from '../../constants/UserMessages';
+import { NavigationUrls } from '../../constants/NavigationUrls';
+import { ContentScriptError } from '../../errors/AutomationErrors';
 import './App.css';
 
+/**
+ * Main popup component for the JotForm extension
+ */
 function App() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [status, setStatus] = useState<string>('');
+  const logger = LoggingService.getInstance();
 
+  /**
+   * Handle form creation automation
+   */
   const createForm = async () => {
     if (isExecuting) return;
 
     try {
       setIsExecuting(true);
-      setStatus('Starting form creation...');
+      setStatus(UserMessages.STATUS.STARTING_AUTOMATION);
+      logger.info('Starting form creation from popup', 'PopupApp');
 
       // Get the current active tab
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
       if (!tab.id) {
-        throw new Error('No active tab found');
+        throw new Error(UserMessages.ERRORS.NO_ACTIVE_TAB);
       }
 
       // Check if we're on a Jotform page
-      if (!tab.url?.includes('jotform.com')) {
-        setStatus('Navigating to Jotform workspace...');
-        await chrome.tabs.update(tab.id, { url: 'https://www.jotform.com/workspace/' });
+      if (!tab.url || !NavigationUrls.isJotformUrl(tab.url)) {
+        setStatus(UserMessages.STATUS.NAVIGATING_TO_WORKSPACE);
+        await chrome.tabs.update(tab.id, { url: NavigationUrls.WORKSPACE });
 
         // Wait for navigation to complete
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
 
-      setStatus('Fetching automation from server...');
+      setStatus(UserMessages.STATUS.FETCHING_FROM_SERVER);
 
-      // Get automation steps from server (dummy function for now)
+      // Get automation steps from server
       const serverService = AutomationServerService.getInstance();
       const serverResponse = await serverService.fetchFormCreationSteps();
 
-      setStatus('Converting server response to automation sequence...');
+      setStatus(UserMessages.STATUS.CONVERTING_RESPONSE);
       const sequence = serverService.convertToAutomationSequence(serverResponse);
 
-      setStatus('Preparing automation sequence...');
+      setStatus(UserMessages.STATUS.PREPARING_SEQUENCE);
 
       // Wait a moment for content script to load
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Send automation sequence to content script
-      const message: AutomationMessage = {
+      const message: ExecuteSequenceMessage = {
         type: 'EXECUTE_SEQUENCE',
         payload: sequence
       };
 
-      setStatus('Executing automation sequence...');
+      setStatus(UserMessages.STATUS.EXECUTING_SEQUENCE);
 
       try {
         const response = await chrome.tabs.sendMessage(tab.id, message);
         console.log('Response from content script:', response);
 
         if (response && response.type === 'SEQUENCE_COMPLETE') {
-          setStatus('Form creation completed!');
+          setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
+          logger.info('Form creation completed successfully', 'PopupApp');
         } else if (response && response.type === 'SEQUENCE_ERROR') {
-          throw new Error(response.payload?.error || 'Automation failed');
+          throw new Error(response.payload?.error || UserMessages.ERRORS.AUTOMATION_TIMEOUT);
         } else {
-          setStatus('Form creation completed!');
+          setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
         }
       } catch (messageError: any) {
         // If content script is not available, try injecting it
         if (messageError.message?.includes('Receiving end does not exist')) {
-          setStatus('Injecting content script...');
+          setStatus(UserMessages.STATUS.INJECTING_CONTENT_SCRIPT);
+          logger.warn('Content script not available, attempting injection', 'PopupApp');
 
           try {
             // Try to inject the content script manually
@@ -80,19 +94,22 @@ function App() {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Retry the message
-            setStatus('Retrying automation sequence...');
+            setStatus(UserMessages.STATUS.RETRYING_AUTOMATION);
             const response = await chrome.tabs.sendMessage(tab.id, message);
 
             if (response && response.type === 'SEQUENCE_COMPLETE') {
-              setStatus('Form creation completed!');
+              setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
+              logger.info('Form creation completed after content script injection', 'PopupApp');
             } else if (response && response.type === 'SEQUENCE_ERROR') {
-              throw new Error(response.payload?.error || 'Automation failed');
+              throw new Error(response.payload?.error || UserMessages.ERRORS.AUTOMATION_TIMEOUT);
             } else {
-              setStatus('Form creation completed!');
+              setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
             }
           } catch (injectionError) {
-            setStatus('Please refresh the Jotform page and try again.');
-            throw new Error('Could not inject content script. Please refresh the page and try again.');
+            setStatus(UserMessages.STATUS.REFRESH_PAGE_REQUIRED);
+            const error = new ContentScriptError(UserMessages.ERRORS.CONTENT_SCRIPT_INJECTION_FAILED, tab.id);
+            logger.logError(error, 'PopupApp');
+            throw error;
           }
         } else {
           throw messageError;
@@ -105,7 +122,7 @@ function App() {
       }, 1500);
 
     } catch (error) {
-      console.error('Form creation failed:', error);
+      logger.logError(error as Error, 'PopupApp');
       setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsExecuting(false);
     }
@@ -125,8 +142,7 @@ function App() {
 
       <div className="main-content">
         <div className="description">
-          <p>AI-powered automation for JotForm interactions.
-            Let our intelligent agent help you fill forms efficiently.</p>
+          <p>{UserMessages.PROMPTS.EXTENSION_DESCRIPTION}</p>
         </div>
 
         {status && (
@@ -146,12 +162,11 @@ function App() {
         </div>
 
         <div className="features">
-          <h3>Features:</h3>
+          <h3>{UserMessages.PROMPTS.FEATURES_TITLE}</h3>
           <ul>
-            <li>🤖 Intelligent form detection</li>
-            <li>📝 Automated form filling</li>
-            <li>⚡ Quick form interactions</li>
-            <li>🎯 Smart field recognition</li>
+            {UserMessages.PROMPTS.FEATURES_LIST.map((feature, index) => (
+              <li key={index}>{feature}</li>
+            ))}
           </ul>
         </div>
       </div>

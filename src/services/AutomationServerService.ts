@@ -1,4 +1,9 @@
-import { AutomationSequence, AutomationAction } from '../types/AutomationTypes';
+import { AutomationSequence, AutomationAction, ClickAction, NavigationAction, TypeAction, WaitAction } from '../types/AutomationTypes';
+import { StorageService } from './StorageService';
+import { LoggingService } from './LoggingService';
+import { ElementSelectors } from '../constants/ElementSelectors';
+import { NavigationUrls } from '../constants/NavigationUrls';
+import { AutomationError } from '../errors/AutomationErrors';
 
 export interface ServerAutomationStep {
     action: 'click' | 'navigate' | 'wait' | 'type';
@@ -15,68 +20,105 @@ export interface ServerAutomationResponse {
     steps: ServerAutomationStep[];
 }
 
+/**
+ * Service for handling automation server communication and data conversion
+ */
 export class AutomationServerService {
     private static instance: AutomationServerService;
+    private readonly storageService: StorageService;
+    private readonly logger: LoggingService;
+
+    private constructor() {
+        this.storageService = StorageService.getInstance();
+        this.logger = LoggingService.getInstance();
+    }
 
     static getInstance(): AutomationServerService {
-        if (!this.instance) {
-            this.instance = new AutomationServerService();
+        if (!AutomationServerService.instance) {
+            AutomationServerService.instance = new AutomationServerService();
         }
-        return this.instance;
+        return AutomationServerService.instance;
     }
 
-    // Dummy function that simulates server response
+    /**
+     * Fetch form creation steps (simulated server response)
+     */
     async fetchFormCreationSteps(): Promise<ServerAutomationResponse> {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+        try {
+            this.logger.debug('Fetching form creation steps from server', 'AutomationServerService');
 
-        // Check for dynamic selectors from SelectorUpdateService
-        const dynamicSelectors = (typeof window !== 'undefined')
-            ? (window as any).dynamicSelectors?.formCreation || {}
-            : {};
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Return dummy data as if from server, with dynamic overrides
-        return {
-            sequenceId: 'form-creation-v1',
-            name: 'Create New Form',
-            steps: [
-                {
-                    action: 'navigate',
-                    url: 'https://www.jotform.com/workspace/',
-                    description: 'Navigate to Jotform workspace',
-                    delay: 3000
-                },
-                {
-                    action: 'click',
-                    selector: dynamicSelectors.createButton || '#root > div.lsApp > div.lsApp-body.newWorkspaceUI.newTeamCoversActive > div.lsApp-sidebar.relative > div.lsApp-sidebar-content.lsApp-sidebar-ls > div.lsApp-sidebar-button > button',
-                    description: 'Click Create button',
-                    delay: 1000
-                },
-                {
-                    action: 'click',
-                    selector: dynamicSelectors.formButton || '#create-asset-modal-container > div > div.sc-khQegj.fNgvag.forSideBySideCreation.jfWizard-item.jfWizard-gutter.withMaxWidth > div > div > div.jfWizard-body.sc-hUpaCq.gxAShf > div > ul > li:nth-child(1) > button',
-                    description: 'Click Form button',
-                    delay: 1000
-                },
-                {
-                    action: 'click',
-                    selector: dynamicSelectors.startFromScratchButton || '#modal-container > div > div.isMain.largeWizardItem.moreThanFourItem.jfWizard-item > div.jfWizard-gutter.withMaxWidth > div > ul > li.jfWizard-list-item-wrapper.forStartFromScratch > button',
-                    description: 'Click Start from scratch',
-                    delay: 1000
-                },
-                {
-                    action: 'click',
-                    selector: dynamicSelectors.classicFormButton || '#modal-container > div > div.largeWizardItem.isStartFromScratch.forNewOptions.jfWizard-item > div.jfWizard-gutter.withMaxWidth > div > ul > li.jfWizard-list-item-wrapper.forClassicForm > button',
-                    description: 'Click Classic form',
-                    delay: 500
-                }
-            ]
-        };
+            // Get dynamic selectors from storage
+            const dynamicSelectors = await this.storageService.getDynamicSelectors();
+            const formCreationSelectors = dynamicSelectors.formCreation || {};
+
+            // Return dummy data as if from server, with dynamic overrides
+            const response: ServerAutomationResponse = {
+                sequenceId: 'form-creation-v1',
+                name: 'Create New Form',
+                steps: [
+                    {
+                        action: 'navigate',
+                        url: NavigationUrls.WORKSPACE,
+                        description: 'Navigate to Jotform workspace',
+                        delay: 3000
+                    },
+                    {
+                        action: 'click',
+                        selector: ElementSelectors.getFormCreationSelector(
+                            'CREATE_BUTTON',
+                            formCreationSelectors.createButton
+                        ),
+                        description: 'Click Create button',
+                        delay: 1000
+                    },
+                    {
+                        action: 'click',
+                        selector: ElementSelectors.getFormCreationSelector(
+                            'FORM_BUTTON',
+                            formCreationSelectors.formButton
+                        ),
+                        description: 'Click Form button',
+                        delay: 1000
+                    },
+                    {
+                        action: 'click',
+                        selector: ElementSelectors.getFormCreationSelector(
+                            'START_FROM_SCRATCH_BUTTON',
+                            formCreationSelectors.startFromScratchButton
+                        ),
+                        description: 'Click Start from scratch',
+                        delay: 1000
+                    },
+                    {
+                        action: 'click',
+                        selector: ElementSelectors.getFormCreationSelector(
+                            'CLASSIC_FORM_BUTTON',
+                            formCreationSelectors.classicFormButton
+                        ),
+                        description: 'Click Classic form',
+                        delay: 500
+                    }
+                ]
+            };
+
+            this.logger.debug('Form creation steps fetched successfully', 'AutomationServerService');
+            return response;
+        } catch (error) {
+            this.logger.logError(error as Error, 'AutomationServerService');
+            throw new AutomationError('Failed to fetch form creation steps');
+        }
     }
 
-    // Real server call function (to be implemented later)
+    /**
+     * Fetch automation from server (to be implemented later)
+     */
     async fetchAutomationFromServer(automationId: string): Promise<ServerAutomationResponse> {
         try {
+            this.logger.info(`Fetching automation: ${automationId}`, 'AutomationServerService');
+
             // TODO: Replace with actual server endpoint
             const response = await fetch(`/api/automations/${automationId}`, {
                 method: 'GET',
@@ -86,58 +128,92 @@ export class AutomationServerService {
             });
 
             if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
+                throw new AutomationError(`Server error: ${response.status}`);
             }
 
-            return await response.json();
+            const result = await response.json();
+            this.logger.debug('Automation fetched from server', 'AutomationServerService');
+            return result;
         } catch (error) {
-            console.error('Failed to fetch automation from server:', error);
+            this.logger.logError(error as Error, 'AutomationServerService');
+
             // Fallback to dummy data
+            this.logger.warn('Falling back to dummy data', 'AutomationServerService');
             return this.fetchFormCreationSteps();
         }
     }
 
-    // Convert server response to automation sequence
+    /**
+     * Convert server response to automation sequence with type safety
+     */
     convertToAutomationSequence(serverResponse: ServerAutomationResponse): AutomationSequence {
-        const actions: AutomationAction[] = serverResponse.steps.map(step => {
-            switch (step.action) {
-                case 'click':
-                    return {
-                        type: 'CLICK',
-                        target: step.selector,
-                        description: step.description,
-                        delay: step.delay
-                    };
-                case 'navigate':
-                    return {
-                        type: 'NAVIGATE',
-                        url: step.url,
-                        description: step.description,
-                        delay: step.delay
-                    };
-                case 'wait':
-                    return {
-                        type: 'WAIT',
-                        description: step.description,
-                        delay: step.delay || 1000
-                    };
-                case 'type':
-                    return {
-                        type: 'TYPE',
-                        target: step.selector,
-                        value: step.text,
-                        description: step.description,
-                        delay: step.delay
-                    } as AutomationAction;
-                default:
-                    throw new Error(`Unknown action type: ${step.action}`);
-            }
-        });
+        try {
+            this.logger.debug('Converting server response to automation sequence', 'AutomationServerService');
 
-        return {
-            id: serverResponse.sequenceId,
-            name: serverResponse.name,
-            actions
-        };
+            const actions: AutomationAction[] = serverResponse.steps.map((step, index) => {
+                try {
+                    switch (step.action) {
+                        case 'click':
+                            if (!step.selector) {
+                                throw new AutomationError(`Click action requires selector at step ${index + 1}`);
+                            }
+                            return {
+                                type: 'CLICK',
+                                target: ElementSelectors.validateSelector(step.selector),
+                                description: step.description,
+                                delay: step.delay
+                            } as ClickAction;
+
+                        case 'navigate':
+                            if (!step.url) {
+                                throw new AutomationError(`Navigate action requires URL at step ${index + 1}`);
+                            }
+                            return {
+                                type: 'NAVIGATE',
+                                url: NavigationUrls.validateUrl(step.url),
+                                description: step.description,
+                                delay: step.delay
+                            } as NavigationAction;
+
+                        case 'wait':
+                            return {
+                                type: 'WAIT',
+                                description: step.description,
+                                delay: step.delay || 1000
+                            } as WaitAction;
+
+                        case 'type':
+                            if (!step.selector || !step.text) {
+                                throw new AutomationError(`Type action requires selector and text at step ${index + 1}`);
+                            }
+                            return {
+                                type: 'TYPE',
+                                target: ElementSelectors.validateSelector(step.selector),
+                                value: step.text,
+                                description: step.description,
+                                delay: step.delay
+                            } as TypeAction;
+
+                        default:
+                            throw new AutomationError(`Unknown action type: ${step.action} at step ${index + 1}`);
+                    }
+                } catch (error) {
+                    this.logger.logError(error as Error, 'AutomationServerService');
+                    throw error;
+                }
+            });
+
+            const sequence: AutomationSequence = {
+                id: serverResponse.sequenceId,
+                name: serverResponse.name,
+                actions
+            };
+
+            this.logger.debug('Server response converted successfully', 'AutomationServerService');
+            return sequence;
+        } catch (error) {
+            this.logger.logError(error as Error, 'AutomationServerService');
+            throw new AutomationError('Failed to convert server response to automation sequence');
+        }
     }
 }
