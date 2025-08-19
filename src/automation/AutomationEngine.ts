@@ -1,9 +1,10 @@
-import { AutomationAction, AutomationSequence, NavigationAction, ClickAction, TypeAction, WaitAction } from '../types/AutomationTypes';
+import { AutomationAction, AutomationSequence, NavigationAction, ClickAction, TypeAction, WaitAction, VisualAnimationConfig } from '../types/AutomationTypes';
 import { LoggingService } from '../services/LoggingService';
 import { UserMessages } from '../constants/UserMessages';
 import { NavigationUrls } from '../constants/NavigationUrls';
 import { ElementSelectors } from '../constants/ElementSelectors';
 import { AutomationError, ElementNotFoundError, NavigationError, ActionExecutionError, SequenceExecutionError } from '../errors/AutomationErrors';
+import { VisualCursor } from './VisualCursor';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
@@ -12,11 +13,13 @@ export class AutomationEngine {
     private static instance: AutomationEngine;
     private isExecuting = false;
     private readonly logger: LoggingService;
+    private readonly visualCursor: VisualCursor;
     private readonly DEFAULT_TIMEOUT = 10000;
     private readonly NAVIGATION_TIMEOUT = 10000;
 
     private constructor() {
         this.logger = LoggingService.getInstance();
+        this.visualCursor = VisualCursor.getInstance();
     }
 
     static getInstance(): AutomationEngine {
@@ -29,7 +32,7 @@ export class AutomationEngine {
     /**
      * Execute a complete automation sequence
      */
-    async executeSequence(sequence: AutomationSequence): Promise<void> {
+    async executeSequence(sequence: AutomationSequence, visualConfig?: Partial<VisualAnimationConfig>): Promise<void> {
         if (this.isExecuting) {
             throw new AutomationError(UserMessages.ERRORS.AUTOMATION_ALREADY_RUNNING);
         }
@@ -38,6 +41,13 @@ export class AutomationEngine {
         this.logger.info(`Starting automation sequence: ${sequence.name}`, 'AutomationEngine');
 
         try {
+            // Initialize visual cursor with config
+            if (visualConfig) {
+                this.visualCursor.updateConfig(visualConfig);
+            }
+            this.visualCursor.initialize();
+            this.visualCursor.show({ x: 100, y: 100 });
+
             for (let i = 0; i < sequence.actions.length; i++) {
                 const action = sequence.actions[i];
                 this.logger.info(
@@ -66,6 +76,11 @@ export class AutomationEngine {
             throw sequenceError;
         } finally {
             this.isExecuting = false;
+            // Hide cursor after sequence completion
+            this.visualCursor.hide();
+            setTimeout(() => {
+                this.visualCursor.destroy();
+            }, 1000);
         }
     }
 
@@ -133,7 +148,7 @@ export class AutomationEngine {
     }
 
     /**
-     * Handle click actions with element validation
+     * Handle click actions with element validation and visual feedback
      */
     private async handleClick(action: ClickAction): Promise<void> {
         const validatedSelector = ElementSelectors.validateSelector(action.target);
@@ -146,11 +161,20 @@ export class AutomationEngine {
         }
 
         this.logger.debug(`Clicking element: ${validatedSelector}`, 'AutomationEngine');
+
+        // Move cursor to element and perform visual click
+        await this.visualCursor.moveToElement(element);
+        await this.visualCursor.performClick();
+
+        // Perform actual click
         this.simulateClick(element);
+
+        // Wait for page actions to complete before proceeding
+        await this.waitForPageStabilization();
     }
 
     /**
-     * Handle typing actions with input validation
+     * Handle typing actions with input validation and visual feedback
      */
     private async handleType(action: TypeAction): Promise<void> {
         const validatedSelector = ElementSelectors.validateSelector(action.target);
@@ -161,6 +185,12 @@ export class AutomationEngine {
         if (!element) {
             throw new ElementNotFoundError(validatedSelector);
         }
+
+        // Move cursor to element before typing
+        await this.visualCursor.moveToElement(element);
+
+        // Perform visual click to focus the element
+        await this.visualCursor.performClick();
 
         this.simulateTyping(element, action.value);
     }
@@ -342,6 +372,48 @@ export class AutomationEngine {
             };
 
             checkReadyState();
+        });
+    }
+
+    /**
+     * Wait for page stabilization after actions complete
+     */
+    private async waitForPageStabilization(): Promise<void> {
+        return new Promise((resolve) => {
+            let lastChange = Date.now();
+            const stabilizationDelay = 500; // Wait 500ms of no DOM changes
+
+            const observer = new MutationObserver(() => {
+                lastChange = Date.now();
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true
+            });
+
+            const checkStability = () => {
+                const timeSinceLastChange = Date.now() - lastChange;
+
+                if (timeSinceLastChange >= stabilizationDelay) {
+                    observer.disconnect();
+                    this.logger.debug('Page stabilized after DOM changes', 'AutomationEngine');
+                    resolve();
+                } else {
+                    setTimeout(checkStability, 100);
+                }
+            };
+
+            // Initial check after a short delay
+            setTimeout(checkStability, 100);
+
+            // Safety timeout to prevent infinite waiting
+            setTimeout(() => {
+                observer.disconnect();
+                this.logger.debug('Page stabilization timeout reached', 'AutomationEngine');
+                resolve();
+            }, 5000);
         });
     }
 

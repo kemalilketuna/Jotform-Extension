@@ -34,7 +34,11 @@ export class UserMessages {
         EXECUTING_SEQUENCE: 'Executing automation sequence...',
         INJECTING_CONTENT_SCRIPT: 'Injecting content script...',
         RETRYING_AUTOMATION: 'Retrying automation sequence...',
-        REFRESH_PAGE_REQUIRED: 'Please refresh the Jotform page and try again.'
+        REFRESH_PAGE_REQUIRED: 'Please refresh the Jotform page and try again.',
+        CURSOR_MOVING: 'Moving cursor to target...',
+        CURSOR_HOVERING: 'Hovering over element...',
+        CURSOR_CLICKING: 'Performing click...',
+        PAGE_STABILIZING: 'Waiting for page actions to complete...'
     } as const;
 
     // User Prompts
