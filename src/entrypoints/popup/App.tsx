@@ -61,7 +61,7 @@ function App() {
       // Wait a moment for content script to load
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Send automation sequence to content script
+      // Send automation sequence to background script for persistent execution
       const message: ExecuteSequenceMessage = {
         type: 'EXECUTE_SEQUENCE',
         payload: sequence,
@@ -70,7 +70,9 @@ function App() {
       setStatus(UserMessages.STATUS.EXECUTING_SEQUENCE);
 
       try {
-        const response = await browser.tabs.sendMessage(tab.id, message);
+        // Send to background script instead of content script directly
+        // Background script will handle persistence across page navigations
+        const response = await browser.runtime.sendMessage(message);
 
         if (response && response.type === 'SEQUENCE_COMPLETE') {
           setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
@@ -83,57 +85,8 @@ function App() {
           setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
         }
       } catch (messageError: unknown) {
-        // If content script is not available, try injecting it
-        if (
-          messageError instanceof Error &&
-          messageError.message?.includes('Receiving end does not exist')
-        ) {
-          setStatus(UserMessages.STATUS.INJECTING_CONTENT_SCRIPT);
-          logger.warn(
-            'Content script not available, attempting injection',
-            'PopupApp'
-          );
-
-          try {
-            // Try to inject the content script manually
-            await browser.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content-scripts/content.js'],
-        });
-
-            // Wait for script to load
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-
-            // Retry the message
-            setStatus(UserMessages.STATUS.RETRYING_AUTOMATION);
-            const response = await browser.tabs.sendMessage(tab.id, message);
-
-            if (response && response.type === 'SEQUENCE_COMPLETE') {
-              setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
-              logger.info(
-                'Form creation completed after content script injection',
-                'PopupApp'
-              );
-            } else if (response && response.type === 'SEQUENCE_ERROR') {
-              throw new Error(
-                response.payload?.error ||
-                  UserMessages.ERRORS.AUTOMATION_TIMEOUT
-              );
-            } else {
-              setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
-            }
-          } catch {
-            setStatus(UserMessages.STATUS.REFRESH_PAGE_REQUIRED);
-            const error = new ContentScriptError(
-              UserMessages.ERRORS.CONTENT_SCRIPT_INJECTION_FAILED,
-              tab.id
-            );
-            logger.logError(error, 'PopupApp');
-            throw error;
-          }
-        } else {
-          throw messageError;
-        }
+        logger.logError(messageError as Error, 'PopupApp');
+        throw messageError;
       }
 
       // Close popup after a short delay

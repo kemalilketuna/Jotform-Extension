@@ -66,7 +66,12 @@ export type AutomationMessageType =
   | 'EXECUTE_SEQUENCE'
   | 'SEQUENCE_COMPLETE'
   | 'SEQUENCE_ERROR'
-  | 'UNKNOWN_MESSAGE';
+  | 'UNKNOWN_MESSAGE'
+  | 'CONTINUE_AUTOMATION'
+  | 'AUTOMATION_STATE_REQUEST'
+  | 'AUTOMATION_STATE_RESPONSE'
+  | 'NAVIGATION_DETECTED'
+  | 'CONTENT_SCRIPT_READY';
 
 export interface BaseAutomationMessage {
   type: AutomationMessageType;
@@ -92,11 +97,46 @@ export interface UnknownMessage extends BaseAutomationMessage {
   payload: { error: string };
 }
 
+export interface ContinueAutomationMessage extends BaseAutomationMessage {
+  type: 'CONTINUE_AUTOMATION';
+  payload: { tabId: number; url: string };
+}
+
+export interface AutomationStateRequestMessage extends BaseAutomationMessage {
+  type: 'AUTOMATION_STATE_REQUEST';
+  payload: { tabId: number };
+}
+
+export interface AutomationStateResponseMessage extends BaseAutomationMessage {
+  type: 'AUTOMATION_STATE_RESPONSE';
+  payload: {
+    hasActiveAutomation: boolean;
+    currentSequence?: AutomationSequence;
+    currentStepIndex?: number;
+    pendingActions?: AutomationAction[];
+  };
+}
+
+export interface NavigationDetectedMessage extends BaseAutomationMessage {
+  type: 'NAVIGATION_DETECTED';
+  payload: { fromUrl: string; toUrl: string; tabId: number };
+}
+
+export interface ContentScriptReadyMessage extends BaseAutomationMessage {
+  type: 'CONTENT_SCRIPT_READY';
+  payload: { tabId: number; url: string };
+}
+
 export type AutomationMessage =
   | ExecuteSequenceMessage
   | SequenceCompleteMessage
   | SequenceErrorMessage
-  | UnknownMessage;
+  | UnknownMessage
+  | ContinueAutomationMessage
+  | AutomationStateRequestMessage
+  | AutomationStateResponseMessage
+  | NavigationDetectedMessage
+  | ContentScriptReadyMessage;
 
 // Browser Extension Types
 export interface ExtensionTab {

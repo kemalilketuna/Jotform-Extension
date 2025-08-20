@@ -2,7 +2,7 @@
  * Centralized management of all DOM element selectors and XPaths
  */
 export class ElementSelectors {
-  private constructor() {} // Prevent instantiation
+  private constructor() { } // Prevent instantiation
 
   // Form Creation Flow Selectors
   static readonly FORM_CREATION = {
@@ -21,6 +21,11 @@ export class ElementSelectors {
     SIDEBAR: '.lsApp-sidebar',
     MAIN_CONTENT: '.lsApp-body',
     SIDEBAR_CONTENT: '.lsApp-sidebar-content',
+  } as const;
+
+  // Modal Elements
+  static readonly MODAL = {
+    CLOSE_BUTTON: '#portal-root > div > div > div > div > div > div.jfModal-header > div.jfModal-title > div.jfModal-close',
   } as const;
 
   /**
