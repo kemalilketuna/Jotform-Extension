@@ -71,7 +71,6 @@ function App() {
 
       try {
         const response = await chrome.tabs.sendMessage(tab.id, message);
-        console.log('Response from content script:', response);
 
         if (response && response.type === 'SEQUENCE_COMPLETE') {
           setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
@@ -83,9 +82,12 @@ function App() {
         } else {
           setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
         }
-      } catch (messageError: any) {
+      } catch (messageError: unknown) {
         // If content script is not available, try injecting it
-        if (messageError.message?.includes('Receiving end does not exist')) {
+        if (
+          messageError instanceof Error &&
+          messageError.message?.includes('Receiving end does not exist')
+        ) {
           setStatus(UserMessages.STATUS.INJECTING_CONTENT_SCRIPT);
           logger.warn(
             'Content script not available, attempting injection',
@@ -120,7 +122,7 @@ function App() {
             } else {
               setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
             }
-          } catch (injectionError) {
+          } catch {
             setStatus(UserMessages.STATUS.REFRESH_PAGE_REQUIRED);
             const error = new ContentScriptError(
               UserMessages.ERRORS.CONTENT_SCRIPT_INJECTION_FAILED,

@@ -1,5 +1,4 @@
 import { AutomationEngine } from '../automation/AutomationEngine';
-import { AutomationServerService } from '../services/AutomationServerService';
 import { SelectorUpdateService } from '../services/SelectorUpdateService';
 import { LoggingService } from '../services/LoggingService';
 import {
@@ -38,7 +37,7 @@ export default defineContentScript({
           });
 
           switch (message.type) {
-            case 'EXECUTE_SEQUENCE':
+            case 'EXECUTE_SEQUENCE': {
               const executeMessage = message as ExecuteSequenceMessage;
               if (executeMessage.payload) {
                 // Default visual animation configuration
@@ -62,8 +61,9 @@ export default defineContentScript({
                 sendResponse(response);
               }
               break;
+            }
 
-            default:
+            default: {
               logger.warn(
                 `Unknown message type: ${message.type}`,
                 'ContentScript'
@@ -75,6 +75,8 @@ export default defineContentScript({
                 },
               };
               sendResponse(unknownResponse);
+              break;
+            }
           }
         } catch (error) {
           logger.logError(error as Error, 'ContentScript');
@@ -95,6 +97,6 @@ export default defineContentScript({
     );
 
     // Initialize services
-    const selectorUpdateService = SelectorUpdateService.getInstance();
+    const _selectorUpdateService = SelectorUpdateService.getInstance();
   },
 });

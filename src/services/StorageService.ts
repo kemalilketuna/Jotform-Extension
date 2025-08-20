@@ -1,3 +1,5 @@
+import { LoggingService } from './LoggingService';
+
 /**
  * Centralized storage service for managing extension data
  * Replaces direct window object manipulation with proper browser storage
@@ -20,8 +22,11 @@ export interface ExtensionData {
 export class StorageService {
   private static instance: StorageService;
   private memoryCache: Map<string, unknown> = new Map();
+  private logger: LoggingService;
 
-  private constructor() {}
+  private constructor() {
+    this.logger = LoggingService.getInstance();
+  }
 
   static getInstance(): StorageService {
     if (!StorageService.instance) {
@@ -38,7 +43,7 @@ export class StorageService {
       await browser.storage.local.set({ dynamicSelectors: selectors });
       this.memoryCache.set('dynamicSelectors', selectors);
     } catch (error) {
-      console.error('Failed to store dynamic selectors:', error);
+      this.logger.logError(error as Error, 'StorageService');
       throw new Error('Failed to store dynamic selectors');
     }
   }
@@ -64,7 +69,7 @@ export class StorageService {
       this.memoryCache.set('dynamicSelectors', selectors);
       return selectors;
     } catch (error) {
-      console.error('Failed to retrieve dynamic selectors:', error);
+      this.logger.logError(error as Error, 'StorageService');
       return {};
     }
   }
@@ -79,7 +84,7 @@ export class StorageService {
       await browser.storage.sync.set({ userPreferences: preferences });
       this.memoryCache.set('userPreferences', preferences);
     } catch (error) {
-      console.error('Failed to store user preferences:', error);
+      this.logger.logError(error as Error, 'StorageService');
       throw new Error('Failed to store user preferences');
     }
   }
@@ -103,7 +108,7 @@ export class StorageService {
       this.memoryCache.set('userPreferences', preferences);
       return preferences;
     } catch (error) {
-      console.error('Failed to retrieve user preferences:', error);
+      this.logger.logError(error as Error, 'StorageService');
       return {};
     }
   }
@@ -117,7 +122,7 @@ export class StorageService {
       await browser.storage.sync.clear();
       this.memoryCache.clear();
     } catch (error) {
-      console.error('Failed to clear storage:', error);
+      this.logger.logError(error as Error, 'StorageService');
       throw new Error('Failed to clear storage');
     }
   }

@@ -52,7 +52,7 @@ export class SelectorUpdateService {
       );
 
       // Validate selectors
-      for (const [key, selector] of Object.entries(selectors)) {
+      for (const [_key, selector] of Object.entries(selectors)) {
         if (selector) {
           ElementSelectors.validateSelector(selector);
         }
