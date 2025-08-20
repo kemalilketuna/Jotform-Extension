@@ -9,6 +9,7 @@ import {
   AutomationMessage,
   ExecuteSequenceMessage,
   StepProgressUpdateMessage,
+  SequenceCompleteMessage,
 } from '../types/AutomationTypes';
 import { LoggingService } from '../services/LoggingService';
 import { UserMessages } from '../constants/UserMessages';
@@ -130,6 +131,9 @@ export class AutomationEngine {
         UserMessages.getSequenceCompletionMessage(sequence.name),
         'AutomationEngine'
       );
+
+      // Send sequence completion message to background script
+      await this.sendSequenceComplete(sequence.id);
     } catch (error) {
       const sequenceError = new SequenceExecutionError(
         sequence.id,
@@ -589,6 +593,25 @@ export class AutomationEngine {
       this.logger.info(`Progress update sent: step ${completedStepIndex} completed`, 'AutomationEngine');
     } catch (error) {
       this.logger.error(`Failed to send progress update: ${error}`, 'AutomationEngine');
+    }
+  }
+
+  /**
+   * Send sequence completion message to background script
+   */
+  private async sendSequenceComplete(sequenceId: string): Promise<void> {
+    try {
+      const completeMessage: SequenceCompleteMessage = {
+        type: 'SEQUENCE_COMPLETE',
+        payload: {
+          sequenceId,
+        },
+      };
+      
+      await browser.runtime.sendMessage(completeMessage);
+      this.logger.info(`Sequence completion message sent: ${sequenceId}`, 'AutomationEngine');
+    } catch (error) {
+      this.logger.error(`Failed to send sequence completion message: ${error}`, 'AutomationEngine');
     }
   }
 
