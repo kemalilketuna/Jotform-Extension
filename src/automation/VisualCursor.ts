@@ -50,21 +50,37 @@ export class VisualCursor {
 
     this.createCursorElement();
     this.attachStyles();
-    this.logger.debug('Visual cursor initialized', 'VisualCursor');
+    this.ensureStyleIsolation();
+    this.logger.info('Visual cursor initialized', 'VisualCursor');
   }
 
   /**
    * Clean up the visual cursor
    */
   destroy(): void {
-    if (this.cursorElement) {
-      this.cursorElement.remove();
-      this.cursorElement = null;
-    }
     if (this.animationTimeout) {
       clearTimeout(this.animationTimeout);
       this.animationTimeout = null;
     }
+
+    if (this.cursorElement) {
+      // Clean up mutation observer
+      const observer = (this.cursorElement as any).__styleObserver;
+      if (observer) {
+        observer.disconnect();
+        delete (this.cursorElement as any).__styleObserver;
+      }
+
+      this.cursorElement.remove();
+      this.cursorElement = null;
+    }
+
+    // Clean up injected styles
+    const styleElement = document.getElementById('jotform-cursor-styles');
+    if (styleElement) {
+      styleElement.remove();
+    }
+
     this.state.isVisible = false;
     this.logger.debug('Visual cursor destroyed', 'VisualCursor');
   }
@@ -82,6 +98,9 @@ export class VisualCursor {
       this.updateCursorPosition();
     }
 
+    // Ensure styles are properly applied before showing
+    this.reapplyStyles();
+    
     this.state.isVisible = true;
     this.cursorElement.style.display = 'block';
     this.cursorElement.style.opacity = '1';
@@ -174,14 +193,63 @@ export class VisualCursor {
             <div class="cursor-click-ripple"></div>
         `;
 
-    // Position absolutely and add to body
-    this.cursorElement.style.position = 'fixed';
-    this.cursorElement.style.top = '0';
-    this.cursorElement.style.left = '0';
-    this.cursorElement.style.pointerEvents = 'none';
-    this.cursorElement.style.zIndex = '999999';
-    this.cursorElement.style.display = 'none';
-    this.cursorElement.style.transition = 'opacity 0.2s ease';
+    // Apply comprehensive style isolation
+    const styles = {
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      pointerEvents: 'none',
+      zIndex: '2147483647', // Maximum z-index value
+      display: 'none',
+      transition: 'opacity 0.2s ease',
+      width: '20px',
+      height: '20px',
+      margin: '0',
+      padding: '0',
+      border: 'none',
+      background: 'transparent',
+      boxSizing: 'border-box',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: '14px',
+      lineHeight: '1',
+      color: 'initial',
+      textAlign: 'left',
+      direction: 'ltr',
+      unicodeBidi: 'normal',
+      whiteSpace: 'normal',
+      wordSpacing: 'normal',
+      letterSpacing: 'normal',
+      textTransform: 'none',
+      textIndent: '0',
+      textShadow: 'none',
+      userSelect: 'none',
+      webkitUserSelect: 'none',
+      mozUserSelect: 'none',
+      msUserSelect: 'none',
+      overflow: 'visible',
+      opacity: '1',
+      visibility: 'visible',
+      animation: 'none',
+      filter: 'none',
+      backdropFilter: 'none',
+      clip: 'auto',
+      clipPath: 'none',
+      mask: 'none',
+      mixBlendMode: 'normal'
+    };
+
+    // Apply all styles with proper typing
+    Object.entries(styles).forEach(([property, value]) => {
+      (this.cursorElement!.style as any)[property] = value;
+    });
+
+    // Ensure the element is isolated from page styles
+    this.cursorElement.setAttribute('data-jotform-extension', 'true');
+    this.cursorElement.setAttribute('role', 'presentation');
+    this.cursorElement.setAttribute('aria-hidden', 'true');
+
+    // Set initial transform position
+    this.updateCursorPosition();
 
     document.body.appendChild(this.cursorElement);
   }
@@ -198,63 +266,122 @@ export class VisualCursor {
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = `
+            /* Isolated styles for JotForm automation cursor */
             #jotform-automation-cursor {
-                width: 20px;
-                height: 20px;
-                transform: translate(-10px, -10px);
+                width: 20px !important;
+                height: 20px !important;
+                /* DO NOT use !important on transform - it breaks animations */
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                font-size: 14px !important;
+                line-height: 1 !important;
+                color: initial !important;
+                background: transparent !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+                text-align: left !important;
+                direction: ltr !important;
+                unicode-bidi: normal !important;
+                white-space: normal !important;
+                word-spacing: normal !important;
+                letter-spacing: normal !important;
+                text-transform: none !important;
+                text-indent: 0 !important;
+                text-shadow: none !important;
+                display: block !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: auto !important;
+                bottom: auto !important;
+                z-index: 2147483647 !important;
+                pointer-events: none !important;
+                user-select: none !important;
+                -webkit-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
             }
 
-            .cursor-pointer {
-                width: 20px;
-                height: 20px;
-                background: linear-gradient(45deg, #4A90E2, #357ABD);
-                border: 2px solid white;
-                border-radius: 50%;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-                transition: all 0.2s ease;
-                position: relative;
+            #jotform-automation-cursor .cursor-pointer {
+                width: 20px !important;
+                height: 20px !important;
+                background: linear-gradient(45deg, #4A90E2, #357ABD) !important;
+                border: 2px solid white !important;
+                border-radius: 50% !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+                transition: all 0.2s ease !important;
+                position: relative !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: block !important;
+                float: none !important;
+                clear: none !important;
+                overflow: visible !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                transform: none !important;
+                animation: none !important;
+                filter: none !important;
+                backdrop-filter: none !important;
+                clip: auto !important;
+                clip-path: none !important;
+                mask: none !important;
+                mix-blend-mode: normal !important;
             }
 
-            .cursor-pointer::before {
-                content: '';
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 8px;
-                height: 8px;
-                background: white;
-                border-radius: 50%;
-                transform: translate(-50%, -50%);
-                opacity: 0.8;
+            #jotform-automation-cursor .cursor-pointer::before {
+                content: '' !important;
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                width: 8px !important;
+                height: 8px !important;
+                background: white !important;
+                border-radius: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                opacity: 0.8 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                display: block !important;
+                z-index: 1 !important;
             }
 
-            .cursor-hover .cursor-pointer {
-                transform: scale(1.2);
-                background: linear-gradient(45deg, #5BA0F2, #4A90E2);
-                box-shadow: 0 3px 12px rgba(74, 144, 226, 0.4);
+            #jotform-automation-cursor.cursor-hover .cursor-pointer {
+                transform: scale(1.2) !important;
+                background: linear-gradient(45deg, #5BA0F2, #4A90E2) !important;
+                box-shadow: 0 3px 12px rgba(74, 144, 226, 0.4) !important;
             }
 
-            .cursor-clicking .cursor-pointer {
-                transform: scale(0.8);
-                background: linear-gradient(45deg, #357ABD, #2E6BA8);
+            #jotform-automation-cursor.cursor-clicking .cursor-pointer {
+                transform: scale(0.8) !important;
+                background: linear-gradient(45deg, #357ABD, #2E6BA8) !important;
             }
 
-            .cursor-click-ripple {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 40px;
-                height: 40px;
-                background: radial-gradient(circle, rgba(74, 144, 226, 0.3) 0%, transparent 70%);
-                border-radius: 50%;
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 0;
-                transition: all 0.3s ease;
+            #jotform-automation-cursor .cursor-click-ripple {
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                width: 40px !important;
+                height: 40px !important;
+                background: radial-gradient(circle, rgba(74, 144, 226, 0.3) 0%, transparent 70%) !important;
+                border-radius: 50% !important;
+                transform: translate(-50%, -50%) scale(0) !important;
+                opacity: 0 !important;
+                transition: all 0.3s ease !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                display: block !important;
+                pointer-events: none !important;
+                z-index: 0 !important;
             }
 
-            .cursor-clicking .cursor-click-ripple {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
+            #jotform-automation-cursor.cursor-clicking .cursor-click-ripple {
+                transform: translate(-50%, -50%) scale(1) !important;
+                opacity: 1 !important;
             }
         `;
 
@@ -376,6 +503,88 @@ export class VisualCursor {
 
     this.state.isHovering = false;
     this.cursorElement.classList.remove('cursor-hover');
+  }
+
+  /**
+   * Ensure the visual cursor is properly isolated from page styles
+   */
+  private ensureStyleIsolation(): void {
+    if (!this.cursorElement) {
+      return;
+    }
+
+    // Create a mutation observer to watch for style changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          // Re-apply our styles if they've been modified
+          this.reapplyStyles();
+        }
+      });
+    });
+
+    // Observe the cursor element for style changes
+    observer.observe(this.cursorElement, {
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    });
+
+    // Store observer for cleanup
+    (this.cursorElement as any).__styleObserver = observer;
+  }
+
+  /**
+   * Re-apply critical styles to maintain visual cursor integrity
+   */
+  private reapplyStyles(): void {
+    if (!this.cursorElement) {
+      return;
+    }
+
+    // Critical styles that must never be overridden
+    // Note: transform is managed by updateCursorPosition, not here
+    const criticalStyles = {
+      position: 'fixed',
+      zIndex: '2147483647',
+      pointerEvents: 'none',
+      userSelect: 'none',
+      webkitUserSelect: 'none',
+      mozUserSelect: 'none',
+      msUserSelect: 'none'
+    };
+
+    // Check for style conflicts before applying
+    this.detectStyleConflicts(criticalStyles);
+
+    Object.entries(criticalStyles).forEach(([property, value]) => {
+      (this.cursorElement!.style as any)[property] = value;
+    });
+  }
+
+  /**
+   * Detect and log potential style conflicts
+   */
+  private detectStyleConflicts(expectedStyles: Record<string, string>): void {
+    if (!this.cursorElement) {
+      return;
+    }
+
+    const computedStyles = window.getComputedStyle(this.cursorElement);
+    const conflicts: string[] = [];
+
+    Object.entries(expectedStyles).forEach(([property, expectedValue]) => {
+      const actualValue = (computedStyles as any)[property];
+      if (actualValue && actualValue !== expectedValue) {
+        conflicts.push(`${property}: expected '${expectedValue}', got '${actualValue}'`);
+      }
+    });
+
+    if (conflicts.length > 0) {
+      this.logger.warn(
+        `Visual cursor style conflicts detected: ${conflicts.join(', ')}`,
+        'VisualCursor'
+      );
+    }
   }
 
   /**
