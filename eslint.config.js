@@ -7,8 +7,10 @@ import tsParser from '@typescript-eslint/parser';
 import react from 'eslint-plugin-react';
 import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
+import autoImports from './.wxt/eslint-auto-imports.mjs';
 
 export default [
+  autoImports,
   {
     ignores: [
       'dist/**',
