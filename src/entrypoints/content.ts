@@ -2,7 +2,6 @@ import { AutomationEngine } from '../automation/AutomationEngine';
 import { AutomationServerService } from '../services/AutomationServerService';
 import { SelectorUpdateService } from '../services/SelectorUpdateService';
 import { LoggingService } from '../services/LoggingService';
-import { VisualDemo } from '../automation/VisualDemo';
 import { AutomationMessage, ExecuteSequenceMessage, SequenceCompleteMessage, SequenceErrorMessage, UnknownMessage, MessageResponse, MessageSender, VisualAnimationConfig } from '../types/AutomationTypes';
 import { UserMessages } from '../constants/UserMessages';
 
@@ -72,46 +71,9 @@ export default defineContentScript({
       return true;
     });
 
-    /**
-     * Handle direct form creation trigger with visual feedback
-     */
-    const handleFormCreation = async () => {
-      try {
-        logger.info('Starting direct form creation', 'ContentScript');
-        const serverService = AutomationServerService.getInstance();
-        const serverResponse = await serverService.fetchFormCreationSteps();
-        const sequence = serverService.convertToAutomationSequence(serverResponse);
 
-        // Visual configuration for direct form creation
-        const visualConfig: Partial<VisualAnimationConfig> = {
-          enabled: true,
-          animationSpeed: 1.5, // Slightly slower for better visibility
-          hoverDuration: 1000,
-          clickDuration: 400
-        };
 
-        await automationEngine.executeSequence(sequence, visualConfig);
-        logger.info('Direct form creation completed', 'ContentScript');
-      } catch (error) {
-        logger.logError(error as Error, 'ContentScript');
-      }
-    };
-
-    // Initialize and expose services for testing
+    // Initialize services
     const selectorUpdateService = SelectorUpdateService.getInstance();
-    selectorUpdateService.exposeTestingMethods();
-
-    // Expose to global scope for development testing only
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-      const visualDemo = VisualDemo.getInstance();
-      (globalThis as any).jotformAutomation = {
-        createForm: handleFormCreation,
-        engine: automationEngine,
-        selectorService: selectorUpdateService,
-        visualDemo: visualDemo,
-        logger: logger
-      };
-      logger.debug('Development testing objects exposed', 'ContentScript');
-    }
   },
 });

@@ -163,20 +163,5 @@ export class SelectorUpdateService {
         }
     }
 
-    /**
-     * Expose methods for console testing (development only)
-     */
-    exposeTestingMethods(): void {
-        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
-            // Only expose in development environment
-            (globalThis as any).selectorUpdateService = {
-                updateSelectors: this.updateFormCreationSelectors.bind(this),
-                getSteps: this.getFormCreationSteps.bind(this),
-                execute: this.executeFormCreationWithCurrentSelectors.bind(this),
-                clearStorage: () => this.storageService.clearAll()
-            };
 
-            this.logger.debug('Testing methods exposed to global scope', 'SelectorUpdateService');
-        }
-    }
 }
