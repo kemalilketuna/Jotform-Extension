@@ -28,7 +28,7 @@ function App() {
       logger.info('Starting form creation from popup', 'PopupApp');
 
       // Get the current active tab
-      const [tab] = await chrome.tabs.query({
+      const [tab] = await browser.tabs.query({
         active: true,
         currentWindow: true,
       });
@@ -40,7 +40,7 @@ function App() {
       // Check if we're on a Jotform page
       if (!tab.url || !NavigationUrls.isJotformUrl(tab.url)) {
         setStatus(UserMessages.STATUS.NAVIGATING_TO_WORKSPACE);
-        await chrome.tabs.update(tab.id, { url: NavigationUrls.WORKSPACE });
+        await browser.tabs.update(tab.id, { url: NavigationUrls.WORKSPACE });
 
         // Wait for navigation to complete
         await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -70,7 +70,7 @@ function App() {
       setStatus(UserMessages.STATUS.EXECUTING_SEQUENCE);
 
       try {
-        const response = await chrome.tabs.sendMessage(tab.id, message);
+        const response = await browser.tabs.sendMessage(tab.id, message);
 
         if (response && response.type === 'SEQUENCE_COMPLETE') {
           setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
@@ -96,17 +96,17 @@ function App() {
 
           try {
             // Try to inject the content script manually
-            await chrome.scripting.executeScript({
-              target: { tabId: tab.id },
-              files: ['content-scripts/content.js'],
-            });
+            await browser.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content-scripts/content.js'],
+        });
 
             // Wait for script to load
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
             // Retry the message
             setStatus(UserMessages.STATUS.RETRYING_AUTOMATION);
-            const response = await chrome.tabs.sendMessage(tab.id, message);
+            const response = await browser.tabs.sendMessage(tab.id, message);
 
             if (response && response.type === 'SEQUENCE_COMPLETE') {
               setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);

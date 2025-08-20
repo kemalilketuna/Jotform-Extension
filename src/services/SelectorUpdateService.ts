@@ -159,10 +159,10 @@ export class SelectorUpdateService {
       });
 
       // Get active tab
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
+      const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
       if (!tab.id) {
         throw new Error(UserMessages.ERRORS.NO_ACTIVE_TAB);
       }
@@ -173,7 +173,7 @@ export class SelectorUpdateService {
         payload: sequence,
       };
 
-      await chrome.tabs.sendMessage(tab.id, message);
+      await browser.tabs.sendMessage(tab.id, message);
       this.logger.info(
         'Automation sequence sent to content script',
         'SelectorUpdateService'
