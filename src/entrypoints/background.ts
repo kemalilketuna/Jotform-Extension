@@ -11,6 +11,7 @@ import {
   ContentScriptReadyMessage,
   SequenceCompleteMessage,
   SequenceErrorMessage,
+  StepProgressUpdateMessage,
 } from '../types/AutomationTypes';
 import { UserMessages } from '../constants/UserMessages';
 
@@ -269,6 +270,13 @@ export default defineBackground(() => {
           case 'NAVIGATION_DETECTED': {
             const navMessage = message as NavigationDetectedMessage;
             await coordinator.continueAutomation(navMessage.payload.tabId, navMessage.payload.toUrl);
+            break;
+          }
+
+          case 'STEP_PROGRESS_UPDATE': {
+            const progressMessage = message as StepProgressUpdateMessage;
+            coordinator.updateProgress(progressMessage.payload.completedStepIndex);
+            logger.info(`Step ${progressMessage.payload.completedStepIndex} completed for sequence ${progressMessage.payload.sequenceId}`, 'BackgroundScript');
             break;
           }
         }

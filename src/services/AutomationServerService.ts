@@ -94,6 +94,12 @@ export class AutomationServerService {
             description: 'Click Classic form',
             delay: 500,
           },
+          {
+            action: 'click',
+            selector: ElementSelectors.MODAL.CLOSE_BUTTON,
+            description: 'Close modal dialog',
+            delay: 1000,
+          },
         ],
       };
 

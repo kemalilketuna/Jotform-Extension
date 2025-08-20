@@ -8,6 +8,7 @@ import {
   VisualAnimationConfig,
   AutomationMessage,
   ExecuteSequenceMessage,
+  StepProgressUpdateMessage,
 } from '../types/AutomationTypes';
 import { LoggingService } from '../services/LoggingService';
 import { UserMessages } from '../constants/UserMessages';
@@ -117,6 +118,9 @@ export class AutomationEngine {
 
         await this.executeAction(action, i);
 
+        // Send progress update to background script
+        await this.sendProgressUpdate(i, sequence.id);
+
         if (action.delay) {
           await this.wait(action.delay);
         }
@@ -223,6 +227,18 @@ export class AutomationEngine {
   private async handleClick(action: ClickAction): Promise<void> {
     const validatedSelector = ElementSelectors.validateSelector(action.target);
 
+    this.logger.info(
+      `Starting click action for selector: ${validatedSelector}`,
+      'AutomationEngine'
+    );
+    
+    // Check if element exists immediately
+    const immediateElement = document.querySelector(validatedSelector);
+    this.logger.info(
+      `Element ${immediateElement ? 'found' : 'not found'} immediately: ${validatedSelector}`,
+      'AutomationEngine'
+    );
+
     this.logger.debug(
       `Waiting for element: ${validatedSelector}`,
       'AutomationEngine'
@@ -230,11 +246,15 @@ export class AutomationEngine {
     const element = await this.waitForElement(validatedSelector);
 
     if (!element) {
+      this.logger.error(
+        `Element not found after timeout: ${validatedSelector}`,
+        'AutomationEngine'
+      );
       throw new ElementNotFoundError(validatedSelector);
     }
 
-    this.logger.debug(
-      `Clicking element: ${validatedSelector}`,
+    this.logger.info(
+      `Element found, preparing to click: ${validatedSelector}`,
       'AutomationEngine'
     );
 
@@ -244,6 +264,11 @@ export class AutomationEngine {
 
     // Perform actual click
     this.simulateClick(element);
+    
+    this.logger.info(
+      `Click completed for: ${validatedSelector}`,
+      'AutomationEngine'
+    );
 
     // Wait for page actions to complete before proceeding
     await this.waitForPageStabilization();
@@ -290,24 +315,38 @@ export class AutomationEngine {
   ): Promise<Element | null> {
     return new Promise((resolve) => {
       const startTime = Date.now();
+      let attemptCount = 0;
 
       const checkElement = () => {
         try {
+          attemptCount++;
           const element = document.querySelector(selector);
 
           if (element) {
-            this.logger.debug(`Element found: ${selector}`, 'AutomationEngine');
+            this.logger.info(
+              `Element found after ${attemptCount} attempts (${Date.now() - startTime}ms): ${selector}`,
+              'AutomationEngine'
+            );
             resolve(element);
             return;
           }
 
-          if (Date.now() - startTime > timeout) {
+          const elapsed = Date.now() - startTime;
+          if (elapsed > timeout) {
             this.logger.warn(
-              `Element timeout: ${selector}`,
+              `Element timeout after ${attemptCount} attempts (${elapsed}ms): ${selector}`,
               'AutomationEngine'
             );
             resolve(null);
             return;
+          }
+
+          // Log every 2 seconds to track progress
+          if (attemptCount % 20 === 0) {
+            this.logger.debug(
+              `Still waiting for element (${elapsed}ms, ${attemptCount} attempts): ${selector}`,
+              'AutomationEngine'
+            );
           }
 
           setTimeout(checkElement, 100);
@@ -531,6 +570,26 @@ export class AutomationEngine {
         resolve();
       }, 5000);
     });
+  }
+
+  /**
+   * Send progress update to background script
+   */
+  private async sendProgressUpdate(completedStepIndex: number, sequenceId: string): Promise<void> {
+    try {
+      const progressMessage: StepProgressUpdateMessage = {
+        type: 'STEP_PROGRESS_UPDATE',
+        payload: {
+          completedStepIndex,
+          sequenceId,
+        },
+      };
+      
+      await browser.runtime.sendMessage(progressMessage);
+      this.logger.info(`Progress update sent: step ${completedStepIndex} completed`, 'AutomationEngine');
+    } catch (error) {
+      this.logger.error(`Failed to send progress update: ${error}`, 'AutomationEngine');
+    }
   }
 
   /**

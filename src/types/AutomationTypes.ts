@@ -71,7 +71,8 @@ export type AutomationMessageType =
   | 'AUTOMATION_STATE_REQUEST'
   | 'AUTOMATION_STATE_RESPONSE'
   | 'NAVIGATION_DETECTED'
-  | 'CONTENT_SCRIPT_READY';
+  | 'CONTENT_SCRIPT_READY'
+  | 'STEP_PROGRESS_UPDATE';
 
 export interface BaseAutomationMessage {
   type: AutomationMessageType;
@@ -127,6 +128,11 @@ export interface ContentScriptReadyMessage extends BaseAutomationMessage {
   payload: { tabId: number; url: string };
 }
 
+export interface StepProgressUpdateMessage extends BaseAutomationMessage {
+  type: 'STEP_PROGRESS_UPDATE';
+  payload: { completedStepIndex: number; sequenceId: string };
+}
+
 export type AutomationMessage =
   | ExecuteSequenceMessage
   | SequenceCompleteMessage
@@ -136,7 +142,8 @@ export type AutomationMessage =
   | AutomationStateRequestMessage
   | AutomationStateResponseMessage
   | NavigationDetectedMessage
-  | ContentScriptReadyMessage;
+  | ContentScriptReadyMessage
+  | StepProgressUpdateMessage;
 
 // Browser Extension Types
 export interface ExtensionTab {
