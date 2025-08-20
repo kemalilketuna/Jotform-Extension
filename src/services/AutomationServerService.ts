@@ -6,8 +6,7 @@ import {
   TypeAction,
   WaitAction,
 } from '../types/AutomationTypes';
-import { StorageService } from './StorageService';
-import { LoggingService } from './LoggingService';
+import { LoggingService } from '../services/LoggingService';
 import { ElementSelectors } from '../constants/ElementSelectors';
 import { NavigationUrls } from '../constants/NavigationUrls';
 import { AutomationError } from '../errors/AutomationErrors';
@@ -32,11 +31,9 @@ export interface ServerAutomationResponse {
  */
 export class AutomationServerService {
   private static instance: AutomationServerService;
-  private readonly storageService: StorageService;
   private readonly logger: LoggingService;
 
   private constructor() {
-    this.storageService = StorageService.getInstance();
     this.logger = LoggingService.getInstance();
   }
 
@@ -60,9 +57,7 @@ export class AutomationServerService {
       // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Get dynamic selectors from storage
-      const dynamicSelectors = await this.storageService.getDynamicSelectors();
-      const formCreationSelectors = dynamicSelectors.formCreation || {};
+      // Server-provided selectors - in future these will come from API
 
       // Return dummy data as if from server, with dynamic overrides
       const response: ServerAutomationResponse = {
@@ -77,37 +72,25 @@ export class AutomationServerService {
           },
           {
             action: 'click',
-            selector: ElementSelectors.getFormCreationSelector(
-              'CREATE_BUTTON',
-              formCreationSelectors.createButton
-            ),
+            selector: ElementSelectors.FORM_CREATION.CREATE_BUTTON,
             description: 'Click Create button',
             delay: 1000,
           },
           {
             action: 'click',
-            selector: ElementSelectors.getFormCreationSelector(
-              'FORM_BUTTON',
-              formCreationSelectors.formButton
-            ),
+            selector: ElementSelectors.FORM_CREATION.FORM_BUTTON,
             description: 'Click Form button',
             delay: 1000,
           },
           {
             action: 'click',
-            selector: ElementSelectors.getFormCreationSelector(
-              'START_FROM_SCRATCH_BUTTON',
-              formCreationSelectors.startFromScratchButton
-            ),
+            selector: ElementSelectors.FORM_CREATION.START_FROM_SCRATCH_BUTTON,
             description: 'Click Start from scratch',
             delay: 1000,
           },
           {
             action: 'click',
-            selector: ElementSelectors.getFormCreationSelector(
-              'CLASSIC_FORM_BUTTON',
-              formCreationSelectors.classicFormButton
-            ),
+            selector: ElementSelectors.FORM_CREATION.CLASSIC_FORM_BUTTON,
             description: 'Click Classic form',
             delay: 500,
           },

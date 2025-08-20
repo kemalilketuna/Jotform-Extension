@@ -1,5 +1,4 @@
 import { AutomationEngine } from '../automation/AutomationEngine';
-import { SelectorUpdateService } from '../services/SelectorUpdateService';
 import { LoggingService } from '../services/LoggingService';
 import {
   AutomationMessage,
@@ -96,7 +95,6 @@ export default defineContentScript({
       }
     );
 
-    // Initialize services
-    const _selectorUpdateService = SelectorUpdateService.getInstance();
+    // Services are initialized as needed
   },
 });

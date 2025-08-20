@@ -40,14 +40,5 @@ export class ElementSelectors {
     return selector.trim();
   }
 
-  /**
-   * Get form creation selector with fallback
-   */
-  static getFormCreationSelector(
-    type: keyof typeof ElementSelectors.FORM_CREATION,
-    override?: string
-  ): string {
-    const selector = override || ElementSelectors.FORM_CREATION[type];
-    return ElementSelectors.validateSelector(selector);
-  }
+
 }

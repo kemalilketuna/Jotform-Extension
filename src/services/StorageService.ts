@@ -4,17 +4,7 @@ import { LoggingService } from './LoggingService';
  * Centralized storage service for managing extension data
  * Replaces direct window object manipulation with proper browser storage
  */
-export interface DynamicSelectors {
-  formCreation?: {
-    createButton?: string;
-    formButton?: string;
-    startFromScratchButton?: string;
-    classicFormButton?: string;
-  };
-}
-
 export interface ExtensionData {
-  dynamicSelectors?: DynamicSelectors;
   userPreferences?: Record<string, unknown>;
   cache?: Record<string, unknown>;
 }
@@ -35,44 +25,7 @@ export class StorageService {
     return StorageService.instance;
   }
 
-  /**
-   * Store dynamic selectors in browser storage
-   */
-  async setDynamicSelectors(selectors: DynamicSelectors): Promise<void> {
-    try {
-      await browser.storage.local.set({ dynamicSelectors: selectors });
-      this.memoryCache.set('dynamicSelectors', selectors);
-    } catch (error) {
-      this.logger.logError(error as Error, 'StorageService');
-      throw new Error('Failed to store dynamic selectors');
-    }
-  }
 
-  /**
-   * Retrieve dynamic selectors from browser storage
-   */
-  async getDynamicSelectors(): Promise<DynamicSelectors> {
-    try {
-      // Check memory cache first
-      const cached = this.memoryCache.get(
-        'dynamicSelectors'
-      ) as DynamicSelectors;
-      if (cached) {
-        return cached;
-      }
-
-      // Fallback to browser storage
-      const result = await browser.storage.local.get('dynamicSelectors');
-      const selectors = result.dynamicSelectors || {};
-
-      // Cache the result
-      this.memoryCache.set('dynamicSelectors', selectors);
-      return selectors;
-    } catch (error) {
-      this.logger.logError(error as Error, 'StorageService');
-      return {};
-    }
-  }
 
   /**
    * Store user preferences
