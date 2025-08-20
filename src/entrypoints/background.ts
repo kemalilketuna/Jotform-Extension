@@ -192,13 +192,42 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener(
     async (message: AutomationMessage, sender, sendResponse) => {
       try {
-        logger.debug(`Background received message: ${message.type}`, 'BackgroundScript');
+        logger.info(`Background received message: ${message.type} from ${sender.tab ? 'content script' : 'popup'}`, 'BackgroundScript');
+        logger.debug(`Message details:`, 'BackgroundScript', { message, sender });
 
         switch (message.type) {
           case 'EXECUTE_SEQUENCE': {
             const executeMessage = message as ExecuteSequenceMessage;
-            if (sender.tab?.id && executeMessage.payload) {
-              await coordinator.startAutomation(executeMessage.payload, sender.tab.id);
+            logger.info(`Processing EXECUTE_SEQUENCE message`, 'BackgroundScript');
+            
+            if (executeMessage.payload) {
+              // If message comes from popup, get active tab
+              let targetTabId = sender.tab?.id;
+              
+              if (!targetTabId) {
+                logger.info('Message from popup, getting active tab', 'BackgroundScript');
+                try {
+                  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+                  if (tabs[0]?.id) {
+                    targetTabId = tabs[0].id;
+                    logger.info(`Found active tab: ${targetTabId}`, 'BackgroundScript');
+                  } else {
+                    logger.error('No active tab found', 'BackgroundScript');
+                    return;
+                  }
+                } catch (error) {
+                  logger.error(`Failed to get active tab: ${error}`, 'BackgroundScript');
+                  return;
+                }
+              }
+              
+              logger.info(`Starting automation on tab ${targetTabId}`, 'BackgroundScript');
+              await coordinator.startAutomation(executeMessage.payload, targetTabId);
+              
+              // Send response back to popup
+              sendResponse({ type: 'SEQUENCE_STARTED', payload: { success: true } });
+            } else {
+              logger.error('EXECUTE_SEQUENCE message missing payload', 'BackgroundScript');
             }
             break;
           }

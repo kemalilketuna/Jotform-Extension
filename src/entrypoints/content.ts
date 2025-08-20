@@ -175,6 +175,7 @@ class ContentScriptCoordinator {
     if (this.isReady) return;
 
     this.logger.info('Initializing content script coordinator', 'ContentScriptCoordinator');
+    this.logger.debug(`Current URL: ${window.location.href}`, 'ContentScriptCoordinator');
 
     // Initialize navigation detection
     this.navigationDetector.initialize();
@@ -183,6 +184,7 @@ class ContentScriptCoordinator {
     await this.checkForActiveAutomation();
 
     this.isReady = true;
+    this.logger.info('Content script coordinator initialization complete', 'ContentScriptCoordinator');
   }
 
   /**
@@ -215,54 +217,27 @@ class ContentScriptCoordinator {
     sendResponse: MessageResponse
   ): Promise<void> {
     try {
-      this.logger.debug('Content script received message', 'ContentScriptCoordinator', {
-        type: message.type,
-      });
+      this.logger.info(`Content script received message: ${message.type}`, 'ContentScriptCoordinator');
+       this.logger.debug('Message details:', 'ContentScriptCoordinator', { messageType: message.type, payload: message.payload });
+      
+      if (!this.isReady) {
+        this.logger.warn('Content script not ready, ignoring message', 'ContentScriptCoordinator');
+        return;
+      }
 
-      switch (message.type) {
-        case 'EXECUTE_SEQUENCE': {
-          const executeMessage = message as ExecuteSequenceMessage;
-          if (executeMessage.payload) {
-            // Default visual animation configuration
-            const visualConfig: Partial<VisualAnimationConfig> = {
-              enabled: true,
-              animationSpeed: 2,
-              hoverDuration: 800,
-              clickDuration: 300,
-            };
+      this.logger.info('Processing message in content script', 'ContentScriptCoordinator');
 
-            await this.automationEngine.executeSequence(
-              executeMessage.payload,
-              visualConfig
-            );
-
-            // Send response back to background script
-            const response: SequenceCompleteMessage = {
-              type: 'SEQUENCE_COMPLETE',
-              payload: { sequenceId: executeMessage.payload.id },
-            };
-            sendResponse(response);
-
-            // Also notify background script
-            await browser.runtime.sendMessage(response);
-          }
-          break;
-        }
-
-        default: {
-          this.logger.warn(
-            `Unknown message type: ${message.type}`,
-            'ContentScriptCoordinator'
-          );
-          const unknownResponse: UnknownMessage = {
-            type: 'UNKNOWN_MESSAGE',
-            payload: {
-              error: UserMessages.getUnknownActionError(message.type),
-            },
-          };
-          sendResponse(unknownResponse);
-          break;
-        }
+      // Delegate message handling to automation engine
+      await this.automationEngine.handleMessage(message);
+      
+      // Send success response for EXECUTE_SEQUENCE messages
+      if (message.type === 'EXECUTE_SEQUENCE') {
+        const executeMessage = message as ExecuteSequenceMessage;
+        const response: SequenceCompleteMessage = {
+          type: 'SEQUENCE_COMPLETE',
+          payload: { sequenceId: executeMessage.payload?.id || 'unknown' },
+        };
+        sendResponse(response);
       }
     } catch (error) {
       this.logger.logError(error as Error, 'ContentScriptCoordinator');

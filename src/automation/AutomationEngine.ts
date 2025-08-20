@@ -6,6 +6,8 @@ import {
   TypeAction,
   WaitAction,
   VisualAnimationConfig,
+  AutomationMessage,
+  ExecuteSequenceMessage,
 } from '../types/AutomationTypes';
 import { LoggingService } from '../services/LoggingService';
 import { UserMessages } from '../constants/UserMessages';
@@ -41,6 +43,44 @@ export class AutomationEngine {
       AutomationEngine.instance = new AutomationEngine();
     }
     return AutomationEngine.instance;
+  }
+
+  /**
+   * Handle incoming automation messages
+   */
+  async handleMessage(message: AutomationMessage): Promise<void> {
+    this.logger.info(`AutomationEngine received message: ${message.type}`, 'AutomationEngine');
+    this.logger.debug('Message payload:', 'AutomationEngine', { messageType: message.type, hasPayload: !!message.payload });
+    
+    try {
+      switch (message.type) {
+        case 'EXECUTE_SEQUENCE': {
+          const executeMessage = message as ExecuteSequenceMessage;
+          if (executeMessage.payload) {
+            this.logger.info(`Executing sequence: ${executeMessage.payload.name}`, 'AutomationEngine');
+            
+            // Default visual animation configuration
+            const visualConfig: Partial<VisualAnimationConfig> = {
+              enabled: true,
+              animationSpeed: 2,
+              hoverDuration: 800,
+              clickDuration: 300,
+            };
+            
+            await this.executeSequence(executeMessage.payload, visualConfig);
+          } else {
+            this.logger.error('EXECUTE_SEQUENCE message missing payload', 'AutomationEngine');
+          }
+          break;
+        }
+        default:
+          this.logger.warn(`Unknown message type: ${message.type}`, 'AutomationEngine');
+          break;
+      }
+    } catch (error) {
+      this.logger.logError(error as Error, 'AutomationEngine');
+      throw error;
+    }
   }
 
   /**
