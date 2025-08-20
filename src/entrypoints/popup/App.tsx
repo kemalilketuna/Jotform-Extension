@@ -28,7 +28,10 @@ function App() {
       logger.info('Starting form creation from popup', 'PopupApp');
 
       // Get the current active tab
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
 
       if (!tab.id) {
         throw new Error(UserMessages.ERRORS.NO_ACTIVE_TAB);
@@ -40,7 +43,7 @@ function App() {
         await chrome.tabs.update(tab.id, { url: NavigationUrls.WORKSPACE });
 
         // Wait for navigation to complete
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       }
 
       setStatus(UserMessages.STATUS.FETCHING_FROM_SERVER);
@@ -50,17 +53,18 @@ function App() {
       const serverResponse = await serverService.fetchFormCreationSteps();
 
       setStatus(UserMessages.STATUS.CONVERTING_RESPONSE);
-      const sequence = serverService.convertToAutomationSequence(serverResponse);
+      const sequence =
+        serverService.convertToAutomationSequence(serverResponse);
 
       setStatus(UserMessages.STATUS.PREPARING_SEQUENCE);
 
       // Wait a moment for content script to load
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Send automation sequence to content script
       const message: ExecuteSequenceMessage = {
         type: 'EXECUTE_SEQUENCE',
-        payload: sequence
+        payload: sequence,
       };
 
       setStatus(UserMessages.STATUS.EXECUTING_SEQUENCE);
@@ -73,7 +77,9 @@ function App() {
           setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
           logger.info('Form creation completed successfully', 'PopupApp');
         } else if (response && response.type === 'SEQUENCE_ERROR') {
-          throw new Error(response.payload?.error || UserMessages.ERRORS.AUTOMATION_TIMEOUT);
+          throw new Error(
+            response.payload?.error || UserMessages.ERRORS.AUTOMATION_TIMEOUT
+          );
         } else {
           setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
         }
@@ -81,17 +87,20 @@ function App() {
         // If content script is not available, try injecting it
         if (messageError.message?.includes('Receiving end does not exist')) {
           setStatus(UserMessages.STATUS.INJECTING_CONTENT_SCRIPT);
-          logger.warn('Content script not available, attempting injection', 'PopupApp');
+          logger.warn(
+            'Content script not available, attempting injection',
+            'PopupApp'
+          );
 
           try {
             // Try to inject the content script manually
             await chrome.scripting.executeScript({
               target: { tabId: tab.id },
-              files: ['content-scripts/content.js']
+              files: ['content-scripts/content.js'],
             });
 
             // Wait for script to load
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
 
             // Retry the message
             setStatus(UserMessages.STATUS.RETRYING_AUTOMATION);
@@ -99,15 +108,24 @@ function App() {
 
             if (response && response.type === 'SEQUENCE_COMPLETE') {
               setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
-              logger.info('Form creation completed after content script injection', 'PopupApp');
+              logger.info(
+                'Form creation completed after content script injection',
+                'PopupApp'
+              );
             } else if (response && response.type === 'SEQUENCE_ERROR') {
-              throw new Error(response.payload?.error || UserMessages.ERRORS.AUTOMATION_TIMEOUT);
+              throw new Error(
+                response.payload?.error ||
+                  UserMessages.ERRORS.AUTOMATION_TIMEOUT
+              );
             } else {
               setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
             }
           } catch (injectionError) {
             setStatus(UserMessages.STATUS.REFRESH_PAGE_REQUIRED);
-            const error = new ContentScriptError(UserMessages.ERRORS.CONTENT_SCRIPT_INJECTION_FAILED, tab.id);
+            const error = new ContentScriptError(
+              UserMessages.ERRORS.CONTENT_SCRIPT_INJECTION_FAILED,
+              tab.id
+            );
             logger.logError(error, 'PopupApp');
             throw error;
           }
@@ -120,10 +138,11 @@ function App() {
       setTimeout(() => {
         window.close();
       }, 1500);
-
     } catch (error) {
       logger.logError(error as Error, 'PopupApp');
-      setStatus(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatus(
+        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
       setIsExecuting(false);
     }
   };
@@ -137,8 +156,6 @@ function App() {
           <p className="subtitle">Smart Form Assistant</p>
         </div>
       </header>
-
-
 
       <div className="main-content">
         <div className="description">

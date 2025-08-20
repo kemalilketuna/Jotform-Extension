@@ -6,18 +6,16 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react', '@wxt-dev/auto-icons'],
   manifest: {
     name: 'AI-Form',
-    description: 'AI-powered browser extension that automates form filling and interactions with JotForm using intelligent agents.',
+    description:
+      'AI-powered browser extension that automates form filling and interactions with JotForm using intelligent agents.',
     action: {
       default_title: 'AI-Form - Smart Form Assistant',
     },
-    permissions: [
-      'tabs',
-      'activeTab',
-      'scripting'
-    ],
+    permissions: ['tabs', 'activeTab', 'scripting'],
     content_security_policy: {
-      extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
-    }
+      extension_pages:
+        "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
+    },
   },
   webExt: {
     disabled: true,
@@ -28,7 +26,7 @@ export default defineConfig({
   },
   dev: {
     server: {
-      port: 3000
-    }
-  }
+      port: 3000,
+    },
+  },
 });

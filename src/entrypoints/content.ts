@@ -2,7 +2,16 @@ import { AutomationEngine } from '../automation/AutomationEngine';
 import { AutomationServerService } from '../services/AutomationServerService';
 import { SelectorUpdateService } from '../services/SelectorUpdateService';
 import { LoggingService } from '../services/LoggingService';
-import { AutomationMessage, ExecuteSequenceMessage, SequenceCompleteMessage, SequenceErrorMessage, UnknownMessage, MessageResponse, MessageSender, VisualAnimationConfig } from '../types/AutomationTypes';
+import {
+  AutomationMessage,
+  ExecuteSequenceMessage,
+  SequenceCompleteMessage,
+  SequenceErrorMessage,
+  UnknownMessage,
+  MessageResponse,
+  MessageSender,
+  VisualAnimationConfig,
+} from '../types/AutomationTypes';
 import { UserMessages } from '../constants/UserMessages';
 
 /**
@@ -17,61 +26,73 @@ export default defineContentScript({
     const automationEngine = AutomationEngine.getInstance();
 
     // Listen for messages from popup/background
-    browser.runtime.onMessage.addListener(async (
-      message: AutomationMessage,
-      sender: MessageSender,
-      sendResponse: MessageResponse
-    ) => {
-      try {
-        logger.debug('Content script received message', 'ContentScript', { type: message.type });
+    browser.runtime.onMessage.addListener(
+      async (
+        message: AutomationMessage,
+        sender: MessageSender,
+        sendResponse: MessageResponse
+      ) => {
+        try {
+          logger.debug('Content script received message', 'ContentScript', {
+            type: message.type,
+          });
 
-        switch (message.type) {
-          case 'EXECUTE_SEQUENCE':
-            const executeMessage = message as ExecuteSequenceMessage;
-            if (executeMessage.payload) {
-              // Default visual animation configuration
-              const visualConfig: Partial<VisualAnimationConfig> = {
-                enabled: true,
-                animationSpeed: 2,
-                hoverDuration: 800,
-                clickDuration: 300
+          switch (message.type) {
+            case 'EXECUTE_SEQUENCE':
+              const executeMessage = message as ExecuteSequenceMessage;
+              if (executeMessage.payload) {
+                // Default visual animation configuration
+                const visualConfig: Partial<VisualAnimationConfig> = {
+                  enabled: true,
+                  animationSpeed: 2,
+                  hoverDuration: 800,
+                  clickDuration: 300,
+                };
+
+                await automationEngine.executeSequence(
+                  executeMessage.payload,
+                  visualConfig
+                );
+
+                // Send response back to popup
+                const response: SequenceCompleteMessage = {
+                  type: 'SEQUENCE_COMPLETE',
+                  payload: { sequenceId: executeMessage.payload.id },
+                };
+                sendResponse(response);
+              }
+              break;
+
+            default:
+              logger.warn(
+                `Unknown message type: ${message.type}`,
+                'ContentScript'
+              );
+              const unknownResponse: UnknownMessage = {
+                type: 'UNKNOWN_MESSAGE',
+                payload: {
+                  error: UserMessages.getUnknownActionError(message.type),
+                },
               };
+              sendResponse(unknownResponse);
+          }
+        } catch (error) {
+          logger.logError(error as Error, 'ContentScript');
 
-              await automationEngine.executeSequence(executeMessage.payload, visualConfig);
-
-              // Send response back to popup
-              const response: SequenceCompleteMessage = {
-                type: 'SEQUENCE_COMPLETE',
-                payload: { sequenceId: executeMessage.payload.id }
-              };
-              sendResponse(response);
-            }
-            break;
-
-          default:
-            logger.warn(`Unknown message type: ${message.type}`, 'ContentScript');
-            const unknownResponse: UnknownMessage = {
-              type: 'UNKNOWN_MESSAGE',
-              payload: { error: UserMessages.getUnknownActionError(message.type) }
-            };
-            sendResponse(unknownResponse);
+          // Send error response back to popup
+          const errorResponse: SequenceErrorMessage = {
+            type: 'SEQUENCE_ERROR',
+            payload: {
+              error: error instanceof Error ? error.message : 'Unknown error',
+            },
+          };
+          sendResponse(errorResponse);
         }
-      } catch (error) {
-        logger.logError(error as Error, 'ContentScript');
 
-        // Send error response back to popup
-        const errorResponse: SequenceErrorMessage = {
-          type: 'SEQUENCE_ERROR',
-          payload: { error: error instanceof Error ? error.message : 'Unknown error' }
-        };
-        sendResponse(errorResponse);
+        // Return true to indicate we will respond asynchronously
+        return true;
       }
-
-      // Return true to indicate we will respond asynchronously
-      return true;
-    });
-
-
+    );
 
     // Initialize services
     const selectorUpdateService = SelectorUpdateService.getInstance();

@@ -3,101 +3,113 @@ export type AutomationActionType = 'NAVIGATE' | 'CLICK' | 'WAIT' | 'TYPE';
 
 // Visual Animation Types
 export interface CursorPosition {
-    x: number;
-    y: number;
+  x: number;
+  y: number;
 }
 
 export interface VisualAnimationConfig {
-    enabled: boolean;
-    animationSpeed: number; // ms per pixel
-    hoverDuration: number; // ms to hover before click
-    clickDuration: number; // ms for click animation
+  enabled: boolean;
+  animationSpeed: number; // ms per pixel
+  hoverDuration: number; // ms to hover before click
+  clickDuration: number; // ms for click animation
 }
 
 export interface VisualCursorState {
-    isVisible: boolean;
-    position: CursorPosition;
-    isAnimating: boolean;
-    isHovering: boolean;
-    isClicking: boolean;
+  isVisible: boolean;
+  position: CursorPosition;
+  isAnimating: boolean;
+  isHovering: boolean;
+  isClicking: boolean;
 }
 
 export interface BaseAutomationAction {
-    type: AutomationActionType;
-    description: string;
-    delay?: number;
+  type: AutomationActionType;
+  description: string;
+  delay?: number;
 }
 
 export interface NavigationAction extends BaseAutomationAction {
-    type: 'NAVIGATE';
-    url: string;
+  type: 'NAVIGATE';
+  url: string;
 }
 
 export interface ClickAction extends BaseAutomationAction {
-    type: 'CLICK';
-    target: string;
+  type: 'CLICK';
+  target: string;
 }
 
 export interface TypeAction extends BaseAutomationAction {
-    type: 'TYPE';
-    target: string;
-    value: string;
+  type: 'TYPE';
+  target: string;
+  value: string;
 }
 
 export interface WaitAction extends BaseAutomationAction {
-    type: 'WAIT';
-    delay: number;
+  type: 'WAIT';
+  delay: number;
 }
 
-export type AutomationAction = NavigationAction | ClickAction | TypeAction | WaitAction;
+export type AutomationAction =
+  | NavigationAction
+  | ClickAction
+  | TypeAction
+  | WaitAction;
 
 export interface AutomationSequence {
-    id: string;
-    name: string;
-    actions: AutomationAction[];
+  id: string;
+  name: string;
+  actions: AutomationAction[];
 }
 
 // Message Types
-export type AutomationMessageType = 'EXECUTE_SEQUENCE' | 'SEQUENCE_COMPLETE' | 'SEQUENCE_ERROR' | 'UNKNOWN_MESSAGE';
+export type AutomationMessageType =
+  | 'EXECUTE_SEQUENCE'
+  | 'SEQUENCE_COMPLETE'
+  | 'SEQUENCE_ERROR'
+  | 'UNKNOWN_MESSAGE';
 
 export interface BaseAutomationMessage {
-    type: AutomationMessageType;
+  type: AutomationMessageType;
 }
 
 export interface ExecuteSequenceMessage extends BaseAutomationMessage {
-    type: 'EXECUTE_SEQUENCE';
-    payload: AutomationSequence;
+  type: 'EXECUTE_SEQUENCE';
+  payload: AutomationSequence;
 }
 
 export interface SequenceCompleteMessage extends BaseAutomationMessage {
-    type: 'SEQUENCE_COMPLETE';
-    payload: { sequenceId: string };
+  type: 'SEQUENCE_COMPLETE';
+  payload: { sequenceId: string };
 }
 
 export interface SequenceErrorMessage extends BaseAutomationMessage {
-    type: 'SEQUENCE_ERROR';
-    payload: { error: string; step?: number };
+  type: 'SEQUENCE_ERROR';
+  payload: { error: string; step?: number };
 }
 
 export interface UnknownMessage extends BaseAutomationMessage {
-    type: 'UNKNOWN_MESSAGE';
-    payload: { error: string };
+  type: 'UNKNOWN_MESSAGE';
+  payload: { error: string };
 }
 
-export type AutomationMessage = ExecuteSequenceMessage | SequenceCompleteMessage | SequenceErrorMessage | UnknownMessage;
+export type AutomationMessage =
+  | ExecuteSequenceMessage
+  | SequenceCompleteMessage
+  | SequenceErrorMessage
+  | UnknownMessage;
 
 // Browser Extension Types
 export interface ExtensionTab {
-    id?: number;
-    url?: string;
-    title?: string;
+  id?: number;
+  url?: string;
+  title?: string;
 }
 
 export interface MessageSender {
-    tab?: ExtensionTab;
-    frameId?: number;
-    id?: string;
-    url?: string;
+  tab?: ExtensionTab;
+  frameId?: number;
+  id?: string;
+  url?: string;
 }
 
 export type MessageResponse = (response?: AutomationMessage) => void;
