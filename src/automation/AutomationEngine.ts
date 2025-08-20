@@ -111,8 +111,9 @@ export class AutomationEngine {
     action: AutomationAction,
     stepIndex?: number
   ): Promise<void> {
+    const actionType = action.type;
     try {
-      switch (action.type) {
+      switch (actionType) {
         case 'NAVIGATE':
           await this.handleNavigation(action as NavigationAction);
           break;
@@ -128,7 +129,7 @@ export class AutomationEngine {
         default:
           throw new ActionExecutionError(
             'UNKNOWN',
-            UserMessages.getUnknownActionError(action.type),
+            UserMessages.getUnknownActionError(actionType),
             stepIndex
           );
       }
