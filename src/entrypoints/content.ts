@@ -5,16 +5,13 @@ import {
   ExecuteSequenceMessage,
   SequenceCompleteMessage,
   SequenceErrorMessage,
-  UnknownMessage,
   MessageResponse,
   MessageSender,
-  VisualAnimationConfig,
   ContentScriptReadyMessage,
   NavigationDetectedMessage,
   AutomationStateRequestMessage,
   AutomationStateResponseMessage,
 } from '../types/AutomationTypes';
-import { UserMessages } from '../constants/UserMessages';
 
 /**
  * Navigation detection and content script coordination

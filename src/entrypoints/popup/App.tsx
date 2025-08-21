@@ -5,7 +5,7 @@ import { ExecuteSequenceMessage } from '../../types/AutomationTypes';
 import { LoggingService } from '../../services/LoggingService';
 import { UserMessages } from '../../constants/UserMessages';
 import { NavigationUrls } from '../../constants/NavigationUrls';
-import { ContentScriptError } from '../../errors/AutomationErrors';
+
 import './App.css';
 
 /**

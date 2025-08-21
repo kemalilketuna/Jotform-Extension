@@ -4,8 +4,6 @@ import {
   AutomationSequence,
   AutomationAction,
   ExecuteSequenceMessage,
-  ContinueAutomationMessage,
-  AutomationStateRequestMessage,
   AutomationStateResponseMessage,
   NavigationDetectedMessage,
   ContentScriptReadyMessage,
@@ -13,7 +11,6 @@ import {
   SequenceErrorMessage,
   StepProgressUpdateMessage,
 } from '../types/AutomationTypes';
-import { UserMessages } from '../constants/UserMessages';
 
 /**
  * Persistent automation state interface
@@ -312,7 +309,6 @@ export default defineBackground(() => {
           }
 
           case 'AUTOMATION_STATE_REQUEST': {
-            const requestMessage = message as AutomationStateRequestMessage;
             const state = coordinator.getAutomationState();
             const response: AutomationStateResponseMessage = {
               type: 'AUTOMATION_STATE_RESPONSE',

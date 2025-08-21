@@ -67,10 +67,18 @@ export class VisualCursor {
 
     if (this.cursorElement) {
       // Clean up mutation observer
-      const observer = (this.cursorElement as any).__styleObserver;
+      const observer = (
+        this.cursorElement as HTMLElement & {
+          __styleObserver?: MutationObserver;
+        }
+      ).__styleObserver;
       if (observer) {
         observer.disconnect();
-        delete (this.cursorElement as any).__styleObserver;
+        delete (
+          this.cursorElement as HTMLElement & {
+            __styleObserver?: MutationObserver;
+          }
+        ).__styleObserver;
       }
 
       this.cursorElement.remove();
@@ -241,7 +249,10 @@ export class VisualCursor {
 
     // Apply all styles with proper typing
     Object.entries(styles).forEach(([property, value]) => {
-      (this.cursorElement!.style as any)[property] = value;
+      (
+        this.cursorElement!.style as CSSStyleDeclaration &
+          Record<string, string>
+      )[property] = value;
     });
 
     // Ensure the element is isolated from page styles
@@ -417,7 +428,9 @@ export class VisualCursor {
     });
 
     // Store observer for cleanup
-    (this.cursorElement as any).__styleObserver = observer;
+    (
+      this.cursorElement as HTMLElement & { __styleObserver?: MutationObserver }
+    ).__styleObserver = observer;
   }
 
   /**
@@ -444,7 +457,10 @@ export class VisualCursor {
     this.detectStyleConflicts(criticalStyles);
 
     Object.entries(criticalStyles).forEach(([property, value]) => {
-      (this.cursorElement!.style as any)[property] = value;
+      (
+        this.cursorElement!.style as CSSStyleDeclaration &
+          Record<string, string>
+      )[property] = value;
     });
   }
 
@@ -460,7 +476,9 @@ export class VisualCursor {
     const conflicts: string[] = [];
 
     Object.entries(expectedStyles).forEach(([property, expectedValue]) => {
-      const actualValue = (computedStyles as any)[property];
+      const actualValue = (
+        computedStyles as CSSStyleDeclaration & Record<string, string>
+      )[property];
       if (actualValue && actualValue !== expectedValue) {
         conflicts.push(
           `${property}: expected '${expectedValue}', got '${actualValue}'`
