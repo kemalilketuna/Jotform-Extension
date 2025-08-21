@@ -1,5 +1,5 @@
-import { AutomationEngine } from '../automation/AutomationEngine';
-import { LoggingService } from '../services/LoggingService';
+import { AutomationEngine } from '@/automation/AutomationEngine';
+import { LoggingService } from '@/services/LoggingService';
 import {
   AutomationMessage,
   ExecuteSequenceMessage,
@@ -11,7 +11,7 @@ import {
   NavigationDetectedMessage,
   AutomationStateRequestMessage,
   AutomationStateResponseMessage,
-} from '../types/AutomationTypes';
+} from '@/types/AutomationTypes';
 
 /**
  * Navigation detection and content script coordination

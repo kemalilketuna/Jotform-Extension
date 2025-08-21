@@ -5,11 +5,11 @@ import {
   NavigationAction,
   TypeAction,
   WaitAction,
-} from '../types/AutomationTypes';
-import { LoggingService } from '../services/LoggingService';
-import { ElementSelectors } from '../constants/ElementSelectors';
-import { NavigationUrls } from '../constants/NavigationUrls';
-import { AutomationError } from '../errors/AutomationErrors';
+} from '@/types/AutomationTypes';
+import { LoggingService } from '@/services/LoggingService';
+import { ElementSelectors } from '@/constants/ElementSelectors';
+import { NavigationUrls } from '@/constants/NavigationUrls';
+import { AutomationError } from '@/errors/AutomationErrors';
 
 export interface ServerAutomationStep {
   action: 'click' | 'navigate' | 'wait' | 'type';

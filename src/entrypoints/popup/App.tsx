@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import jotformLogo from '@/assets/jotform-logo.svg';
-import { AutomationServerService } from '../../services/AutomationServerService';
-import { ExecuteSequenceMessage } from '../../types/AutomationTypes';
-import { LoggingService } from '../../services/LoggingService';
-import { UserMessages } from '../../constants/UserMessages';
-import { NavigationUrls } from '../../constants/NavigationUrls';
+import { AutomationServerService } from '@/services/AutomationServerService';
+import { ExecuteSequenceMessage } from '@/types/AutomationTypes';
+import { LoggingService } from '@/services/LoggingService';
+import { UserMessages } from '@/constants/UserMessages';
+import { NavigationUrls } from '@/constants/NavigationUrls';
 
 import './App.css';
 

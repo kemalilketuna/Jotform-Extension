@@ -10,18 +10,18 @@ import {
   ExecuteSequenceMessage,
   StepProgressUpdateMessage,
   SequenceCompleteMessage,
-} from '../types/AutomationTypes';
-import { LoggingService } from '../services/LoggingService';
-import { UserMessages } from '../constants/UserMessages';
-import { NavigationUrls } from '../constants/NavigationUrls';
-import { ElementSelectors } from '../constants/ElementSelectors';
+} from '@/types/AutomationTypes';
+import { LoggingService } from '@/services/LoggingService';
+import { UserMessages } from '@/constants/UserMessages';
+import { NavigationUrls } from '@/constants/NavigationUrls';
+import { ElementSelectors } from '@/constants/ElementSelectors';
 import {
   AutomationError,
   ElementNotFoundError,
   NavigationError,
   ActionExecutionError,
   SequenceExecutionError,
-} from '../errors/AutomationErrors';
+} from '@/errors/AutomationErrors';
 import { VisualCursor } from './VisualCursor';
 
 /**
