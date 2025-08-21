@@ -2,7 +2,7 @@
  * Centralized management of all DOM element selectors and XPaths
  */
 export class ElementSelectors {
-  private constructor() { } // Prevent instantiation
+  private constructor() {} // Prevent instantiation
 
   // Form Creation Flow Selectors
   static readonly FORM_CREATION = {
@@ -25,7 +25,8 @@ export class ElementSelectors {
 
   // Modal Elements
   static readonly MODAL = {
-    CLOSE_BUTTON: '#portal-root > div > div > div > div > div > div.jfModal-header > div.jfModal-title > div.jfModal-close',
+    CLOSE_BUTTON:
+      '#portal-root > div > div > div > div > div > div.jfModal-header > div.jfModal-title > div.jfModal-close',
   } as const;
 
   /**
@@ -44,6 +45,4 @@ export class ElementSelectors {
 
     return selector.trim();
   }
-
-
 }

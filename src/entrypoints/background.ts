@@ -55,8 +55,14 @@ class AutomationCoordinator {
   /**
    * Initialize automation sequence and store state
    */
-  async startAutomation(sequence: AutomationSequence, tabId: number): Promise<void> {
-    this.logger.info(`Starting persistent automation: ${sequence.name}`, 'AutomationCoordinator');
+  async startAutomation(
+    sequence: AutomationSequence,
+    tabId: number
+  ): Promise<void> {
+    this.logger.info(
+      `Starting persistent automation: ${sequence.name}`,
+      'AutomationCoordinator'
+    );
 
     this.automationState = {
       isActive: true,
@@ -77,11 +83,17 @@ class AutomationCoordinator {
    * Continue automation after navigation
    */
   async continueAutomation(tabId: number, url: string): Promise<void> {
-    if (!this.automationState.isActive || !this.automationState.currentSequence) {
+    if (
+      !this.automationState.isActive ||
+      !this.automationState.currentSequence
+    ) {
       return;
     }
 
-    this.logger.info(`Continuing automation after navigation to: ${url}`, 'AutomationCoordinator');
+    this.logger.info(
+      `Continuing automation after navigation to: ${url}`,
+      'AutomationCoordinator'
+    );
     this.automationState.lastUrl = url;
 
     // Wait for page to stabilize before continuing
@@ -105,7 +117,10 @@ class AutomationCoordinator {
    * Handle automation completion
    */
   handleAutomationComplete(sequenceId: string): void {
-    this.logger.info(`Automation sequence completed: ${sequenceId}`, 'AutomationCoordinator');
+    this.logger.info(
+      `Automation sequence completed: ${sequenceId}`,
+      'AutomationCoordinator'
+    );
     this.resetAutomationState();
   }
 
@@ -113,7 +128,10 @@ class AutomationCoordinator {
    * Handle automation error
    */
   handleAutomationError(error: string, step?: number): void {
-    this.logger.error(`Automation error at step ${step}: ${error}`, 'AutomationCoordinator');
+    this.logger.error(
+      `Automation error at step ${step}: ${error}`,
+      'AutomationCoordinator'
+    );
     this.resetAutomationState();
   }
 
@@ -123,7 +141,10 @@ class AutomationCoordinator {
   updateProgress(completedStepIndex: number): void {
     if (this.automationState.isActive && this.automationState.currentSequence) {
       this.automationState.currentStepIndex = completedStepIndex + 1;
-      this.automationState.pendingActions = this.automationState.currentSequence.actions.slice(completedStepIndex + 1);
+      this.automationState.pendingActions =
+        this.automationState.currentSequence.actions.slice(
+          completedStepIndex + 1
+        );
     }
   }
 
@@ -148,18 +169,27 @@ class AutomationCoordinator {
   /**
    * Send message to content script with error handling
    */
-  private async sendToContentScript(tabId: number, message: AutomationMessage): Promise<void> {
+  private async sendToContentScript(
+    tabId: number,
+    message: AutomationMessage
+  ): Promise<void> {
     try {
       await browser.tabs.sendMessage(tabId, message);
     } catch (error) {
-      this.logger.error(`Failed to send message to content script: ${error}`, 'AutomationCoordinator');
+      this.logger.error(
+        `Failed to send message to content script: ${error}`,
+        'AutomationCoordinator'
+      );
       // Content script might not be ready, try to inject it
       await this.ensureContentScriptInjected(tabId);
       // Retry sending message
       try {
         await browser.tabs.sendMessage(tabId, message);
       } catch (retryError) {
-        this.logger.error(`Retry failed: ${retryError}`, 'AutomationCoordinator');
+        this.logger.error(
+          `Retry failed: ${retryError}`,
+          'AutomationCoordinator'
+        );
       }
     }
   }
@@ -173,9 +203,15 @@ class AutomationCoordinator {
         target: { tabId },
         files: ['content-scripts/content.js'],
       });
-      this.logger.info(`Content script injected into tab ${tabId}`, 'AutomationCoordinator');
+      this.logger.info(
+        `Content script injected into tab ${tabId}`,
+        'AutomationCoordinator'
+      );
     } catch (error) {
-      this.logger.error(`Failed to inject content script: ${error}`, 'AutomationCoordinator');
+      this.logger.error(
+        `Failed to inject content script: ${error}`,
+        'AutomationCoordinator'
+      );
     }
   }
 }
@@ -193,49 +229,85 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener(
     async (message: AutomationMessage, sender, sendResponse) => {
       try {
-        logger.info(`Background received message: ${message.type} from ${sender.tab ? 'content script' : 'popup'}`, 'BackgroundScript');
-        logger.debug(`Message details:`, 'BackgroundScript', { message, sender });
+        logger.info(
+          `Background received message: ${message.type} from ${sender.tab ? 'content script' : 'popup'}`,
+          'BackgroundScript'
+        );
+        logger.debug(`Message details:`, 'BackgroundScript', {
+          message,
+          sender,
+        });
 
         switch (message.type) {
           case 'EXECUTE_SEQUENCE': {
             const executeMessage = message as ExecuteSequenceMessage;
-            logger.info(`Processing EXECUTE_SEQUENCE message`, 'BackgroundScript');
-            
+            logger.info(
+              `Processing EXECUTE_SEQUENCE message`,
+              'BackgroundScript'
+            );
+
             if (executeMessage.payload) {
               // If message comes from popup, get active tab
               let targetTabId = sender.tab?.id;
-              
+
               if (!targetTabId) {
-                logger.info('Message from popup, getting active tab', 'BackgroundScript');
+                logger.info(
+                  'Message from popup, getting active tab',
+                  'BackgroundScript'
+                );
                 try {
-                  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+                  const tabs = await browser.tabs.query({
+                    active: true,
+                    currentWindow: true,
+                  });
                   if (tabs[0]?.id) {
                     targetTabId = tabs[0].id;
-                    logger.info(`Found active tab: ${targetTabId}`, 'BackgroundScript');
+                    logger.info(
+                      `Found active tab: ${targetTabId}`,
+                      'BackgroundScript'
+                    );
                   } else {
                     logger.error('No active tab found', 'BackgroundScript');
                     return;
                   }
                 } catch (error) {
-                  logger.error(`Failed to get active tab: ${error}`, 'BackgroundScript');
+                  logger.error(
+                    `Failed to get active tab: ${error}`,
+                    'BackgroundScript'
+                  );
                   return;
                 }
               }
-              
-              logger.info(`Starting automation on tab ${targetTabId}`, 'BackgroundScript');
-              await coordinator.startAutomation(executeMessage.payload, targetTabId);
-              
+
+              logger.info(
+                `Starting automation on tab ${targetTabId}`,
+                'BackgroundScript'
+              );
+              await coordinator.startAutomation(
+                executeMessage.payload,
+                targetTabId
+              );
+
               // Send response back to popup
-              sendResponse({ type: 'SEQUENCE_STARTED', payload: { success: true } });
+              sendResponse({
+                type: 'SEQUENCE_STARTED',
+                payload: { success: true },
+              });
             } else {
-              logger.error('EXECUTE_SEQUENCE message missing payload', 'BackgroundScript');
+              logger.error(
+                'EXECUTE_SEQUENCE message missing payload',
+                'BackgroundScript'
+              );
             }
             break;
           }
 
           case 'CONTENT_SCRIPT_READY': {
             const readyMessage = message as ContentScriptReadyMessage;
-            await coordinator.continueAutomation(readyMessage.payload.tabId, readyMessage.payload.url);
+            await coordinator.continueAutomation(
+              readyMessage.payload.tabId,
+              readyMessage.payload.url
+            );
             break;
           }
 
@@ -257,26 +329,39 @@ export default defineBackground(() => {
 
           case 'SEQUENCE_COMPLETE': {
             const completeMessage = message as SequenceCompleteMessage;
-            coordinator.handleAutomationComplete(completeMessage.payload.sequenceId);
+            coordinator.handleAutomationComplete(
+              completeMessage.payload.sequenceId
+            );
             break;
           }
 
           case 'SEQUENCE_ERROR': {
             const errorMessage = message as SequenceErrorMessage;
-            coordinator.handleAutomationError(errorMessage.payload.error, errorMessage.payload.step);
+            coordinator.handleAutomationError(
+              errorMessage.payload.error,
+              errorMessage.payload.step
+            );
             break;
           }
 
           case 'NAVIGATION_DETECTED': {
             const navMessage = message as NavigationDetectedMessage;
-            await coordinator.continueAutomation(navMessage.payload.tabId, navMessage.payload.toUrl);
+            await coordinator.continueAutomation(
+              navMessage.payload.tabId,
+              navMessage.payload.toUrl
+            );
             break;
           }
 
           case 'STEP_PROGRESS_UPDATE': {
             const progressMessage = message as StepProgressUpdateMessage;
-            coordinator.updateProgress(progressMessage.payload.completedStepIndex);
-            logger.info(`Step ${progressMessage.payload.completedStepIndex} completed for sequence ${progressMessage.payload.sequenceId}`, 'BackgroundScript');
+            coordinator.updateProgress(
+              progressMessage.payload.completedStepIndex
+            );
+            logger.info(
+              `Step ${progressMessage.payload.completedStepIndex} completed for sequence ${progressMessage.payload.sequenceId}`,
+              'BackgroundScript'
+            );
             break;
           }
         }

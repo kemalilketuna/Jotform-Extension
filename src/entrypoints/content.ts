@@ -88,7 +88,10 @@ class NavigationDetector {
       const oldUrl = this.currentUrl;
       this.currentUrl = newUrl;
 
-      this.logger.info(`Navigation detected: ${oldUrl} -> ${newUrl}`, 'NavigationDetector');
+      this.logger.info(
+        `Navigation detected: ${oldUrl} -> ${newUrl}`,
+        'NavigationDetector'
+      );
 
       // Notify background script about navigation
       this.notifyNavigationDetected(oldUrl, newUrl);
@@ -109,14 +112,20 @@ class NavigationDetector {
       };
       await browser.runtime.sendMessage(message);
     } catch (error) {
-      this.logger.error(`Failed to notify background script: ${error}`, 'NavigationDetector');
+      this.logger.error(
+        `Failed to notify background script: ${error}`,
+        'NavigationDetector'
+      );
     }
   }
 
   /**
    * Notify background script about navigation
    */
-  private async notifyNavigationDetected(fromUrl: string, toUrl: string): Promise<void> {
+  private async notifyNavigationDetected(
+    fromUrl: string,
+    toUrl: string
+  ): Promise<void> {
     try {
       const message: NavigationDetectedMessage = {
         type: 'NAVIGATION_DETECTED',
@@ -128,7 +137,10 @@ class NavigationDetector {
       };
       await browser.runtime.sendMessage(message);
     } catch (error) {
-      this.logger.error(`Failed to notify navigation: ${error}`, 'NavigationDetector');
+      this.logger.error(
+        `Failed to notify navigation: ${error}`,
+        'NavigationDetector'
+      );
     }
   }
 
@@ -137,7 +149,10 @@ class NavigationDetector {
    */
   private async getCurrentTabId(): Promise<number> {
     try {
-      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+      const tabs = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
       return tabs[0]?.id || 0;
     } catch {
       return 0;
@@ -174,8 +189,14 @@ class ContentScriptCoordinator {
   async initialize(): Promise<void> {
     if (this.isReady) return;
 
-    this.logger.info('Initializing content script coordinator', 'ContentScriptCoordinator');
-    this.logger.debug(`Current URL: ${window.location.href}`, 'ContentScriptCoordinator');
+    this.logger.info(
+      'Initializing content script coordinator',
+      'ContentScriptCoordinator'
+    );
+    this.logger.debug(
+      `Current URL: ${window.location.href}`,
+      'ContentScriptCoordinator'
+    );
 
     // Initialize navigation detection
     this.navigationDetector.initialize();
@@ -184,7 +205,10 @@ class ContentScriptCoordinator {
     await this.checkForActiveAutomation();
 
     this.isReady = true;
-    this.logger.info('Content script coordinator initialization complete', 'ContentScriptCoordinator');
+    this.logger.info(
+      'Content script coordinator initialization complete',
+      'ContentScriptCoordinator'
+    );
   }
 
   /**
@@ -197,14 +221,25 @@ class ContentScriptCoordinator {
         payload: { tabId: 0 }, // Will be filled by background script
       };
 
-      const response = await browser.runtime.sendMessage(request) as AutomationStateResponseMessage;
+      const response = (await browser.runtime.sendMessage(
+        request
+      )) as AutomationStateResponseMessage;
 
-      if (response?.payload?.hasActiveAutomation && response.payload.pendingActions?.length) {
-        this.logger.info('Found active automation to continue', 'ContentScriptCoordinator');
+      if (
+        response?.payload?.hasActiveAutomation &&
+        response.payload.pendingActions?.length
+      ) {
+        this.logger.info(
+          'Found active automation to continue',
+          'ContentScriptCoordinator'
+        );
         // The background script will send the continuation sequence
       }
     } catch (error) {
-      this.logger.error(`Failed to check automation state: ${error}`, 'ContentScriptCoordinator');
+      this.logger.error(
+        `Failed to check automation state: ${error}`,
+        'ContentScriptCoordinator'
+      );
     }
   }
 
@@ -217,19 +252,31 @@ class ContentScriptCoordinator {
     sendResponse: MessageResponse
   ): Promise<void> {
     try {
-      this.logger.info(`Content script received message: ${message.type}`, 'ContentScriptCoordinator');
-       this.logger.debug('Message details:', 'ContentScriptCoordinator', { messageType: message.type, payload: message.payload });
-      
+      this.logger.info(
+        `Content script received message: ${message.type}`,
+        'ContentScriptCoordinator'
+      );
+      this.logger.debug('Message details:', 'ContentScriptCoordinator', {
+        messageType: message.type,
+        payload: message.payload,
+      });
+
       if (!this.isReady) {
-        this.logger.warn('Content script not ready, ignoring message', 'ContentScriptCoordinator');
+        this.logger.warn(
+          'Content script not ready, ignoring message',
+          'ContentScriptCoordinator'
+        );
         return;
       }
 
-      this.logger.info('Processing message in content script', 'ContentScriptCoordinator');
+      this.logger.info(
+        'Processing message in content script',
+        'ContentScriptCoordinator'
+      );
 
       // Delegate message handling to automation engine
       await this.automationEngine.handleMessage(message);
-      
+
       // Send success response for EXECUTE_SEQUENCE messages
       if (message.type === 'EXECUTE_SEQUENCE') {
         const executeMessage = message as ExecuteSequenceMessage;

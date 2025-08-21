@@ -51,16 +51,25 @@ export class AutomationEngine {
    * Handle incoming automation messages
    */
   async handleMessage(message: AutomationMessage): Promise<void> {
-    this.logger.info(`AutomationEngine received message: ${message.type}`, 'AutomationEngine');
-    this.logger.debug('Message payload:', 'AutomationEngine', { messageType: message.type, hasPayload: !!message.payload });
-    
+    this.logger.info(
+      `AutomationEngine received message: ${message.type}`,
+      'AutomationEngine'
+    );
+    this.logger.debug('Message payload:', 'AutomationEngine', {
+      messageType: message.type,
+      hasPayload: !!message.payload,
+    });
+
     try {
       switch (message.type) {
         case 'EXECUTE_SEQUENCE': {
           const executeMessage = message as ExecuteSequenceMessage;
           if (executeMessage.payload) {
-            this.logger.info(`Executing sequence: ${executeMessage.payload.name}`, 'AutomationEngine');
-            
+            this.logger.info(
+              `Executing sequence: ${executeMessage.payload.name}`,
+              'AutomationEngine'
+            );
+
             // Default visual animation configuration
             const visualConfig: Partial<VisualAnimationConfig> = {
               enabled: true,
@@ -68,15 +77,21 @@ export class AutomationEngine {
               hoverDuration: 800,
               clickDuration: 300,
             };
-            
+
             await this.executeSequence(executeMessage.payload, visualConfig);
           } else {
-            this.logger.error('EXECUTE_SEQUENCE message missing payload', 'AutomationEngine');
+            this.logger.error(
+              'EXECUTE_SEQUENCE message missing payload',
+              'AutomationEngine'
+            );
           }
           break;
         }
         default:
-          this.logger.warn(`Unknown message type: ${message.type}`, 'AutomationEngine');
+          this.logger.warn(
+            `Unknown message type: ${message.type}`,
+            'AutomationEngine'
+          );
           break;
       }
     } catch (error) {
@@ -235,7 +250,7 @@ export class AutomationEngine {
       `Starting click action for selector: ${validatedSelector}`,
       'AutomationEngine'
     );
-    
+
     // Check if element exists immediately
     const immediateElement = document.querySelector(validatedSelector);
     this.logger.info(
@@ -268,7 +283,7 @@ export class AutomationEngine {
 
     // Perform actual click
     this.simulateClick(element);
-    
+
     this.logger.info(
       `Click completed for: ${validatedSelector}`,
       'AutomationEngine'
@@ -579,7 +594,10 @@ export class AutomationEngine {
   /**
    * Send progress update to background script
    */
-  private async sendProgressUpdate(completedStepIndex: number, sequenceId: string): Promise<void> {
+  private async sendProgressUpdate(
+    completedStepIndex: number,
+    sequenceId: string
+  ): Promise<void> {
     try {
       const progressMessage: StepProgressUpdateMessage = {
         type: 'STEP_PROGRESS_UPDATE',
@@ -588,11 +606,17 @@ export class AutomationEngine {
           sequenceId,
         },
       };
-      
+
       await browser.runtime.sendMessage(progressMessage);
-      this.logger.info(`Progress update sent: step ${completedStepIndex} completed`, 'AutomationEngine');
+      this.logger.info(
+        `Progress update sent: step ${completedStepIndex} completed`,
+        'AutomationEngine'
+      );
     } catch (error) {
-      this.logger.error(`Failed to send progress update: ${error}`, 'AutomationEngine');
+      this.logger.error(
+        `Failed to send progress update: ${error}`,
+        'AutomationEngine'
+      );
     }
   }
 
@@ -607,11 +631,17 @@ export class AutomationEngine {
           sequenceId,
         },
       };
-      
+
       await browser.runtime.sendMessage(completeMessage);
-      this.logger.info(`Sequence completion message sent: ${sequenceId}`, 'AutomationEngine');
+      this.logger.info(
+        `Sequence completion message sent: ${sequenceId}`,
+        'AutomationEngine'
+      );
     } catch (error) {
-      this.logger.error(`Failed to send sequence completion message: ${error}`, 'AutomationEngine');
+      this.logger.error(
+        `Failed to send sequence completion message: ${error}`,
+        'AutomationEngine'
+      );
     }
   }
 

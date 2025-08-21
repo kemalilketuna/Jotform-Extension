@@ -25,8 +25,6 @@ export class StorageService {
     return StorageService.instance;
   }
 
-
-
   /**
    * Store user preferences
    */
