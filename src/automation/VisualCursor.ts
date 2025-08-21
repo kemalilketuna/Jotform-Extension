@@ -4,8 +4,8 @@ import {
   VisualCursorState,
 } from '../types/AutomationTypes';
 import { LoggingService } from '../services/LoggingService';
-import cursorStyles from './styles/cursor.css?inline';
-import cursorTemplate from './templates/cursor.html?raw';
+import cursorStyles from '../assets/cursor.css?inline';
+import cursorTemplate from '../assets/cursor.html?raw';
 
 /**
  * Visual cursor component for showing automation actions to users
