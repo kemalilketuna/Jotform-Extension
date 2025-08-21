@@ -4,6 +4,8 @@ import {
   VisualCursorState,
 } from '../types/AutomationTypes';
 import { LoggingService } from '../services/LoggingService';
+import cursorStyles from './styles/cursor.css?inline';
+import cursorTemplate from './templates/cursor.html?raw';
 
 /**
  * Visual cursor component for showing automation actions to users
@@ -100,7 +102,7 @@ export class VisualCursor {
 
     // Ensure styles are properly applied before showing
     this.reapplyStyles();
-    
+
     this.state.isVisible = true;
     this.cursorElement.style.display = 'block';
     this.cursorElement.style.opacity = '1';
@@ -188,10 +190,8 @@ export class VisualCursor {
   private createCursorElement(): void {
     this.cursorElement = document.createElement('div');
     this.cursorElement.id = 'jotform-automation-cursor';
-    this.cursorElement.innerHTML = `
-            <div class="cursor-pointer"></div>
-            <div class="cursor-click-ripple"></div>
-        `;
+
+    this.cursorElement.innerHTML = cursorTemplate;
 
     // Apply comprehensive style isolation
     const styles = {
@@ -209,7 +209,8 @@ export class VisualCursor {
       border: 'none',
       background: 'transparent',
       boxSizing: 'border-box',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       fontSize: '14px',
       lineHeight: '1',
       color: 'initial',
@@ -235,7 +236,7 @@ export class VisualCursor {
       clip: 'auto',
       clipPath: 'none',
       mask: 'none',
-      mixBlendMode: 'normal'
+      mixBlendMode: 'normal',
     };
 
     // Apply all styles with proper typing
@@ -265,125 +266,8 @@ export class VisualCursor {
 
     const style = document.createElement('style');
     style.id = styleId;
-    style.textContent = `
-            /* Isolated styles for JotForm automation cursor */
-            #jotform-automation-cursor {
-                width: 20px !important;
-                height: 20px !important;
-                /* DO NOT use !important on transform - it breaks animations */
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-                font-size: 14px !important;
-                line-height: 1 !important;
-                color: initial !important;
-                background: transparent !important;
-                border: none !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                box-sizing: border-box !important;
-                text-align: left !important;
-                direction: ltr !important;
-                unicode-bidi: normal !important;
-                white-space: normal !important;
-                word-spacing: normal !important;
-                letter-spacing: normal !important;
-                text-transform: none !important;
-                text-indent: 0 !important;
-                text-shadow: none !important;
-                display: block !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: auto !important;
-                bottom: auto !important;
-                z-index: 2147483647 !important;
-                pointer-events: none !important;
-                user-select: none !important;
-                -webkit-user-select: none !important;
-                -moz-user-select: none !important;
-                -ms-user-select: none !important;
-            }
 
-            #jotform-automation-cursor .cursor-pointer {
-                width: 20px !important;
-                height: 20px !important;
-                background: linear-gradient(45deg, #4A90E2, #357ABD) !important;
-                border: 2px solid white !important;
-                border-radius: 50% !important;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
-                transition: all 0.2s ease !important;
-                position: relative !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                display: block !important;
-                float: none !important;
-                clear: none !important;
-                overflow: visible !important;
-                opacity: 1 !important;
-                visibility: visible !important;
-                transform: none !important;
-                animation: none !important;
-                filter: none !important;
-                backdrop-filter: none !important;
-                clip: auto !important;
-                clip-path: none !important;
-                mask: none !important;
-                mix-blend-mode: normal !important;
-            }
-
-            #jotform-automation-cursor .cursor-pointer::before {
-                content: '' !important;
-                position: absolute !important;
-                top: 50% !important;
-                left: 50% !important;
-                width: 8px !important;
-                height: 8px !important;
-                background: white !important;
-                border-radius: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                opacity: 0.8 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                border: none !important;
-                box-shadow: none !important;
-                display: block !important;
-                z-index: 1 !important;
-            }
-
-            #jotform-automation-cursor.cursor-hover .cursor-pointer {
-                transform: scale(1.2) !important;
-                background: linear-gradient(45deg, #5BA0F2, #4A90E2) !important;
-                box-shadow: 0 3px 12px rgba(74, 144, 226, 0.4) !important;
-            }
-
-            #jotform-automation-cursor.cursor-clicking .cursor-pointer {
-                transform: scale(0.8) !important;
-                background: linear-gradient(45deg, #357ABD, #2E6BA8) !important;
-            }
-
-            #jotform-automation-cursor .cursor-click-ripple {
-                position: absolute !important;
-                top: 50% !important;
-                left: 50% !important;
-                width: 40px !important;
-                height: 40px !important;
-                background: radial-gradient(circle, rgba(74, 144, 226, 0.3) 0%, transparent 70%) !important;
-                border-radius: 50% !important;
-                transform: translate(-50%, -50%) scale(0) !important;
-                opacity: 0 !important;
-                transition: all 0.3s ease !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                border: none !important;
-                display: block !important;
-                pointer-events: none !important;
-                z-index: 0 !important;
-            }
-
-            #jotform-automation-cursor.cursor-clicking .cursor-click-ripple {
-                transform: translate(-50%, -50%) scale(1) !important;
-                opacity: 1 !important;
-            }
-        `;
+    style.textContent = cursorStyles;
 
     document.head.appendChild(style);
   }
@@ -516,7 +400,10 @@ export class VisualCursor {
     // Create a mutation observer to watch for style changes
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'style'
+        ) {
           // Re-apply our styles if they've been modified
           this.reapplyStyles();
         }
@@ -526,7 +413,7 @@ export class VisualCursor {
     // Observe the cursor element for style changes
     observer.observe(this.cursorElement, {
       attributes: true,
-      attributeFilter: ['style', 'class']
+      attributeFilter: ['style', 'class'],
     });
 
     // Store observer for cleanup
@@ -550,7 +437,7 @@ export class VisualCursor {
       userSelect: 'none',
       webkitUserSelect: 'none',
       mozUserSelect: 'none',
-      msUserSelect: 'none'
+      msUserSelect: 'none',
     };
 
     // Check for style conflicts before applying
@@ -575,7 +462,9 @@ export class VisualCursor {
     Object.entries(expectedStyles).forEach(([property, expectedValue]) => {
       const actualValue = (computedStyles as any)[property];
       if (actualValue && actualValue !== expectedValue) {
-        conflicts.push(`${property}: expected '${expectedValue}', got '${actualValue}'`);
+        conflicts.push(
+          `${property}: expected '${expectedValue}', got '${actualValue}'`
+        );
       }
     });
 
