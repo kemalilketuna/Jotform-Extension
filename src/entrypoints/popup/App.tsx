@@ -119,6 +119,46 @@ function App() {
     }
   };
 
+  /**
+   * Fetch form building automation sequence from server
+   */
+  const fetchFormBuildingSequence = async () => {
+    setStatus('Fetching form building steps from server...');
+    const serverService = AutomationServerService.getInstance();
+    const serverResponse = await serverService.fetchFormBuildingSteps();
+
+    setStatus('Converting server response...');
+    return serverService.convertToAutomationSequence(serverResponse);
+  };
+
+  /**
+   * Handle form building automation
+   */
+  const buildForm = async () => {
+    if (isExecuting) return;
+
+    try {
+      setIsExecuting(true);
+      setStatus('Starting form building automation...');
+      logger.info('Starting form building from popup', 'PopupApp');
+
+      const tab = await getCurrentTab();
+      await ensureJotformPage(tab);
+      const sequence = await fetchFormBuildingSequence();
+      await executeAutomationSequence(sequence);
+
+      setTimeout(() => {
+        window.close();
+      }, 1500);
+    } catch (error) {
+      logger.logError(error as Error, 'PopupApp');
+      setStatus(
+        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      setIsExecuting(false);
+    }
+  };
+
   return (
     <div className="ai-form-popup">
       <header className="popup-header">
@@ -147,6 +187,13 @@ function App() {
             disabled={isExecuting}
           >
             {isExecuting ? 'Creating...' : 'Create Form'}
+          </button>
+          <button
+            className={`build-form-btn ${isExecuting ? 'executing' : ''}`}
+            onClick={buildForm}
+            disabled={isExecuting}
+          >
+            {isExecuting ? 'Building...' : 'Build Form'}
           </button>
         </div>
 

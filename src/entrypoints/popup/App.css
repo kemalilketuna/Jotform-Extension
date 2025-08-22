@@ -149,6 +149,36 @@
   box-shadow: none;
 }
 
+.build-form-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #4c6ef5;
+  color: white;
+}
+
+.build-form-btn:hover {
+  background: #364fc7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.build-form-btn.executing {
+  background: #868e96;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.build-form-btn.executing:hover {
+  background: #868e96;
+  transform: none;
+  box-shadow: none;
+}
+
 .status-message {
   margin-bottom: 15px;
   padding: 10px;

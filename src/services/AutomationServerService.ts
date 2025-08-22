@@ -45,6 +45,44 @@ export class AutomationServerService {
   }
 
   /**
+   * Get form building steps
+   */
+  private getFormBuildingSteps(): ServerAutomationStep[] {
+    return [
+      {
+        action: 'wait',
+        description: 'Wait for page to initialize',
+        delay: 3000,
+      },
+      {
+        action: 'click',
+        selector: ElementSelectors.FORM_BUILDING.HEADING_FORM,
+        description: 'Click on heading form element',
+        delay: 1000,
+      },
+      {
+        action: 'click',
+        selector: ElementSelectors.FORM_BUILDING.SETTINGS_BUTTON,
+        description: 'Click settings button',
+        delay: 1000,
+      },
+      {
+        action: 'type',
+        selector: ElementSelectors.FORM_BUILDING.TEXT_FIELD,
+        text: 'Course Registration',
+        description: 'Enter form title text',
+        delay: 500,
+      },
+      {
+        action: 'click',
+        selector: ElementSelectors.FORM_BUILDING.SETTINGS_CLOSE_BUTTON,
+        description: 'Close settings menu',
+        delay: 500,
+      },
+    ];
+  }
+
+  /**
    * Get default form creation steps
    */
   private getDefaultFormCreationSteps(): ServerAutomationStep[] {
@@ -121,6 +159,35 @@ export class AutomationServerService {
     } catch (error) {
       this.logger.logError(error as Error, 'AutomationServerService');
       throw new AutomationError('Failed to fetch form creation steps');
+    }
+  }
+
+  /**
+   * Fetch form building steps (simulated server response)
+   */
+  async fetchFormBuildingSteps(): Promise<ServerAutomationResponse> {
+    try {
+      this.logger.debug(
+        'Fetching form building steps from server',
+        'AutomationServerService'
+      );
+
+      await this.simulateApiDelay();
+
+      const response: ServerAutomationResponse = {
+        sequenceId: 'form-building-v1',
+        name: 'Build Form Elements',
+        steps: this.getFormBuildingSteps(),
+      };
+
+      this.logger.debug(
+        'Form building steps fetched successfully',
+        'AutomationServerService'
+      );
+      return response;
+    } catch (error) {
+      this.logger.logError(error as Error, 'AutomationServerService');
+      throw new AutomationError('Failed to fetch form building steps');
     }
   }
 
@@ -272,12 +339,7 @@ export class AutomationServerService {
 
       const actions: AutomationAction[] = serverResponse.steps.map(
         (step, index) => {
-          try {
-            return this.convertServerStep(step, index);
-          } catch (error) {
-            this.logger.logError(error as Error, 'AutomationServerService');
-            throw error;
-          }
+          return this.convertServerStep(step, index);
         }
       );
 
@@ -293,7 +355,6 @@ export class AutomationServerService {
       );
       return sequence;
     } catch (error) {
-      this.logger.logError(error as Error, 'AutomationServerService');
       throw new AutomationError(
         'Failed to convert server response to automation sequence'
       );
