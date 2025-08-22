@@ -45,6 +45,57 @@ export class AutomationServerService {
   }
 
   /**
+   * Get default form creation steps
+   */
+  private getDefaultFormCreationSteps(): ServerAutomationStep[] {
+    return [
+      {
+        action: 'navigate',
+        url: NavigationUrls.WORKSPACE,
+        description: 'Navigate to Jotform workspace',
+        delay: 3000,
+      },
+      {
+        action: 'click',
+        selector: ElementSelectors.FORM_CREATION.CREATE_BUTTON,
+        description: 'Click Create button',
+        delay: 1000,
+      },
+      {
+        action: 'click',
+        selector: ElementSelectors.FORM_CREATION.FORM_BUTTON,
+        description: 'Click Form button',
+        delay: 1000,
+      },
+      {
+        action: 'click',
+        selector: ElementSelectors.FORM_CREATION.START_FROM_SCRATCH_BUTTON,
+        description: 'Click Start from scratch',
+        delay: 1000,
+      },
+      {
+        action: 'click',
+        selector: ElementSelectors.FORM_CREATION.CLASSIC_FORM_BUTTON,
+        description: 'Click Classic form',
+        delay: 500,
+      },
+      {
+        action: 'click',
+        selector: ElementSelectors.MODAL.CLOSE_BUTTON,
+        description: 'Close modal dialog',
+        delay: 1000,
+      },
+    ];
+  }
+
+  /**
+   * Simulate API delay
+   */
+  private async simulateApiDelay(ms: number = 500): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
    * Fetch form creation steps (simulated server response)
    */
   async fetchFormCreationSteps(): Promise<ServerAutomationResponse> {
@@ -54,53 +105,12 @@ export class AutomationServerService {
         'AutomationServerService'
       );
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await this.simulateApiDelay();
 
-      // Server-provided selectors - in future these will come from API
-
-      // Return dummy data as if from server, with dynamic overrides
       const response: ServerAutomationResponse = {
         sequenceId: 'form-creation-v1',
         name: 'Create New Form',
-        steps: [
-          {
-            action: 'navigate',
-            url: NavigationUrls.WORKSPACE,
-            description: 'Navigate to Jotform workspace',
-            delay: 3000,
-          },
-          {
-            action: 'click',
-            selector: ElementSelectors.FORM_CREATION.CREATE_BUTTON,
-            description: 'Click Create button',
-            delay: 1000,
-          },
-          {
-            action: 'click',
-            selector: ElementSelectors.FORM_CREATION.FORM_BUTTON,
-            description: 'Click Form button',
-            delay: 1000,
-          },
-          {
-            action: 'click',
-            selector: ElementSelectors.FORM_CREATION.START_FROM_SCRATCH_BUTTON,
-            description: 'Click Start from scratch',
-            delay: 1000,
-          },
-          {
-            action: 'click',
-            selector: ElementSelectors.FORM_CREATION.CLASSIC_FORM_BUTTON,
-            description: 'Click Classic form',
-            delay: 500,
-          },
-          {
-            action: 'click',
-            selector: ElementSelectors.MODAL.CLOSE_BUTTON,
-            description: 'Close modal dialog',
-            delay: 1000,
-          },
-        ],
+        steps: this.getDefaultFormCreationSteps(),
       };
 
       this.logger.debug(
@@ -154,6 +164,101 @@ export class AutomationServerService {
   }
 
   /**
+   * Convert click step to ClickAction
+   */
+  private convertClickStep(
+    step: ServerAutomationStep,
+    stepIndex: number
+  ): ClickAction {
+    if (!step.selector) {
+      throw new AutomationError(
+        `Click action requires selector at step ${stepIndex + 1}`
+      );
+    }
+    return {
+      type: 'CLICK',
+      target: ElementSelectors.validateSelector(step.selector),
+      description: step.description,
+      delay: step.delay,
+    };
+  }
+
+  /**
+   * Convert navigate step to NavigationAction
+   */
+  private convertNavigateStep(
+    step: ServerAutomationStep,
+    stepIndex: number
+  ): NavigationAction {
+    if (!step.url) {
+      throw new AutomationError(
+        `Navigate action requires URL at step ${stepIndex + 1}`
+      );
+    }
+    return {
+      type: 'NAVIGATE',
+      url: NavigationUrls.validateUrl(step.url),
+      description: step.description,
+      delay: step.delay,
+    };
+  }
+
+  /**
+   * Convert wait step to WaitAction
+   */
+  private convertWaitStep(step: ServerAutomationStep): WaitAction {
+    return {
+      type: 'WAIT',
+      description: step.description,
+      delay: step.delay || 1000,
+    };
+  }
+
+  /**
+   * Convert type step to TypeAction
+   */
+  private convertTypeStep(
+    step: ServerAutomationStep,
+    stepIndex: number
+  ): TypeAction {
+    if (!step.selector || !step.text) {
+      throw new AutomationError(
+        `Type action requires selector and text at step ${stepIndex + 1}`
+      );
+    }
+    return {
+      type: 'TYPE',
+      target: ElementSelectors.validateSelector(step.selector),
+      value: step.text,
+      description: step.description,
+      delay: step.delay,
+    };
+  }
+
+  /**
+   * Convert single server step to automation action
+   */
+  private convertServerStep(
+    step: ServerAutomationStep,
+    stepIndex: number
+  ): AutomationAction {
+    switch (step.action) {
+      case 'click':
+        return this.convertClickStep(step, stepIndex);
+      case 'navigate':
+        return this.convertNavigateStep(step, stepIndex);
+      case 'wait':
+        return this.convertWaitStep(step);
+      case 'type':
+        return this.convertTypeStep(step, stepIndex);
+      default:
+        throw new AutomationError(
+          `Unknown action type: ${step.action} at step ${stepIndex + 1}`
+        );
+    }
+  }
+
+  /**
    * Convert server response to automation sequence with type safety
    */
   convertToAutomationSequence(
@@ -168,59 +273,7 @@ export class AutomationServerService {
       const actions: AutomationAction[] = serverResponse.steps.map(
         (step, index) => {
           try {
-            switch (step.action) {
-              case 'click':
-                if (!step.selector) {
-                  throw new AutomationError(
-                    `Click action requires selector at step ${index + 1}`
-                  );
-                }
-                return {
-                  type: 'CLICK',
-                  target: ElementSelectors.validateSelector(step.selector),
-                  description: step.description,
-                  delay: step.delay,
-                } as ClickAction;
-
-              case 'navigate':
-                if (!step.url) {
-                  throw new AutomationError(
-                    `Navigate action requires URL at step ${index + 1}`
-                  );
-                }
-                return {
-                  type: 'NAVIGATE',
-                  url: NavigationUrls.validateUrl(step.url),
-                  description: step.description,
-                  delay: step.delay,
-                } as NavigationAction;
-
-              case 'wait':
-                return {
-                  type: 'WAIT',
-                  description: step.description,
-                  delay: step.delay || 1000,
-                } as WaitAction;
-
-              case 'type':
-                if (!step.selector || !step.text) {
-                  throw new AutomationError(
-                    `Type action requires selector and text at step ${index + 1}`
-                  );
-                }
-                return {
-                  type: 'TYPE',
-                  target: ElementSelectors.validateSelector(step.selector),
-                  value: step.text,
-                  description: step.description,
-                  delay: step.delay,
-                } as TypeAction;
-
-              default:
-                throw new AutomationError(
-                  `Unknown action type: ${step.action} at step ${index + 1}`
-                );
-            }
+            return this.convertServerStep(step, index);
           } catch (error) {
             this.logger.logError(error as Error, 'AutomationServerService');
             throw error;

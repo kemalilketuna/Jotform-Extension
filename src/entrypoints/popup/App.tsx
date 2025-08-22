@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import jotformLogo from '@/assets/jotform-logo.svg';
 import { AutomationServerService } from '@/services/AutomationServerService';
-import { ExecuteSequenceMessage } from '@/types/AutomationTypes';
+import {
+  ExecuteSequenceMessage,
+  AutomationSequence,
+} from '@/types/AutomationTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/constants/UserMessages';
 import { NavigationUrls } from '@/constants/NavigationUrls';
@@ -17,6 +20,78 @@ function App() {
   const logger = LoggingService.getInstance();
 
   /**
+   * Get the current active tab
+   */
+  const getCurrentTab = async () => {
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    if (!tab.id) {
+      throw new Error(UserMessages.ERRORS.NO_ACTIVE_TAB);
+    }
+
+    return tab;
+  };
+
+  /**
+   * Navigate to JotForm workspace if not already there
+   */
+  const ensureJotformPage = async (tab: chrome.tabs.Tab) => {
+    if (!tab.url || !NavigationUrls.isJotformUrl(tab.url)) {
+      setStatus(UserMessages.STATUS.NAVIGATING_TO_WORKSPACE);
+      await browser.tabs.update(tab.id!, { url: NavigationUrls.WORKSPACE });
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  };
+
+  /**
+   * Fetch automation sequence from server
+   */
+  const fetchAutomationSequence = async () => {
+    setStatus(UserMessages.STATUS.FETCHING_FROM_SERVER);
+    const serverService = AutomationServerService.getInstance();
+    const serverResponse = await serverService.fetchFormCreationSteps();
+
+    setStatus(UserMessages.STATUS.CONVERTING_RESPONSE);
+    return serverService.convertToAutomationSequence(serverResponse);
+  };
+
+  /**
+   * Execute automation sequence via background script
+   */
+  const executeAutomationSequence = async (sequence: AutomationSequence) => {
+    setStatus(UserMessages.STATUS.PREPARING_SEQUENCE);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const message: ExecuteSequenceMessage = {
+      type: 'EXECUTE_SEQUENCE',
+      payload: sequence,
+    };
+
+    setStatus(UserMessages.STATUS.EXECUTING_SEQUENCE);
+
+    try {
+      const response = await browser.runtime.sendMessage(message);
+
+      if (response && response.type === 'SEQUENCE_COMPLETE') {
+        setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
+        logger.info('Form creation completed successfully', 'PopupApp');
+      } else if (response && response.type === 'SEQUENCE_ERROR') {
+        throw new Error(
+          response.payload?.error || UserMessages.ERRORS.AUTOMATION_TIMEOUT
+        );
+      } else {
+        setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
+      }
+    } catch (messageError: unknown) {
+      logger.logError(messageError as Error, 'PopupApp');
+      throw messageError;
+    }
+  };
+
+  /**
    * Handle form creation automation
    */
   const createForm = async () => {
@@ -27,69 +102,11 @@ function App() {
       setStatus(UserMessages.STATUS.STARTING_AUTOMATION);
       logger.info('Starting form creation from popup', 'PopupApp');
 
-      // Get the current active tab
-      const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
+      const tab = await getCurrentTab();
+      await ensureJotformPage(tab);
+      const sequence = await fetchAutomationSequence();
+      await executeAutomationSequence(sequence);
 
-      if (!tab.id) {
-        throw new Error(UserMessages.ERRORS.NO_ACTIVE_TAB);
-      }
-
-      // Check if we're on a Jotform page
-      if (!tab.url || !NavigationUrls.isJotformUrl(tab.url)) {
-        setStatus(UserMessages.STATUS.NAVIGATING_TO_WORKSPACE);
-        await browser.tabs.update(tab.id, { url: NavigationUrls.WORKSPACE });
-
-        // Wait for navigation to complete
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-      }
-
-      setStatus(UserMessages.STATUS.FETCHING_FROM_SERVER);
-
-      // Get automation steps from server
-      const serverService = AutomationServerService.getInstance();
-      const serverResponse = await serverService.fetchFormCreationSteps();
-
-      setStatus(UserMessages.STATUS.CONVERTING_RESPONSE);
-      const sequence =
-        serverService.convertToAutomationSequence(serverResponse);
-
-      setStatus(UserMessages.STATUS.PREPARING_SEQUENCE);
-
-      // Wait a moment for content script to load
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Send automation sequence to background script for persistent execution
-      const message: ExecuteSequenceMessage = {
-        type: 'EXECUTE_SEQUENCE',
-        payload: sequence,
-      };
-
-      setStatus(UserMessages.STATUS.EXECUTING_SEQUENCE);
-
-      try {
-        // Send to background script instead of content script directly
-        // Background script will handle persistence across page navigations
-        const response = await browser.runtime.sendMessage(message);
-
-        if (response && response.type === 'SEQUENCE_COMPLETE') {
-          setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
-          logger.info('Form creation completed successfully', 'PopupApp');
-        } else if (response && response.type === 'SEQUENCE_ERROR') {
-          throw new Error(
-            response.payload?.error || UserMessages.ERRORS.AUTOMATION_TIMEOUT
-          );
-        } else {
-          setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
-        }
-      } catch (messageError: unknown) {
-        logger.logError(messageError as Error, 'PopupApp');
-        throw messageError;
-      }
-
-      // Close popup after a short delay
       setTimeout(() => {
         window.close();
       }, 1500);
