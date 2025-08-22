@@ -18,8 +18,8 @@ export class VisualCursor {
   private config: VisualAnimationConfig;
   private animationTimeout: number | null = null;
 
-  private constructor() {
-    this.logger = LoggingService.getInstance();
+  private constructor(logger: LoggingService = LoggingService.getInstance()) {
+    this.logger = logger;
     this.state = {
       isVisible: false,
       position: { x: 0, y: 0 },
@@ -35,11 +35,18 @@ export class VisualCursor {
     };
   }
 
-  static getInstance(): VisualCursor {
+  static getInstance(logger?: LoggingService): VisualCursor {
     if (!VisualCursor.instance) {
-      VisualCursor.instance = new VisualCursor();
+      VisualCursor.instance = new VisualCursor(logger);
     }
     return VisualCursor.instance;
+  }
+
+  /**
+   * Create a new instance for testing purposes
+   */
+  static createInstance(logger: LoggingService): VisualCursor {
+    return new VisualCursor(logger);
   }
 
   /**

@@ -24,6 +24,7 @@ import {
 } from '@/errors/AutomationErrors';
 import { VisualCursor } from './VisualCursor';
 import { HumanTypingSimulator } from '@/utils/HumanTypingSimulator';
+import { TimingConstants } from '@/constants/TimingConstants';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
@@ -33,19 +34,35 @@ export class AutomationEngine {
   private isExecuting = false;
   private readonly logger: LoggingService;
   private readonly visualCursor: VisualCursor;
-  private readonly DEFAULT_TIMEOUT = 10000;
-  private readonly NAVIGATION_TIMEOUT = 10000;
+  private readonly DEFAULT_TIMEOUT = TimingConstants.DEFAULT_TIMEOUT;
+  private readonly NAVIGATION_TIMEOUT = TimingConstants.NAVIGATION_TIMEOUT;
 
-  private constructor() {
-    this.logger = LoggingService.getInstance();
-    this.visualCursor = VisualCursor.getInstance();
+  private constructor(
+    logger: LoggingService = LoggingService.getInstance(),
+    visualCursor: VisualCursor = VisualCursor.getInstance()
+  ) {
+    this.logger = logger;
+    this.visualCursor = visualCursor;
   }
 
-  static getInstance(): AutomationEngine {
+  static getInstance(
+    logger?: LoggingService,
+    visualCursor?: VisualCursor
+  ): AutomationEngine {
     if (!AutomationEngine.instance) {
-      AutomationEngine.instance = new AutomationEngine();
+      AutomationEngine.instance = new AutomationEngine(logger, visualCursor);
     }
     return AutomationEngine.instance;
+  }
+
+  /**
+   * Create a new instance for testing purposes
+   */
+  static createInstance(
+    logger: LoggingService,
+    visualCursor: VisualCursor
+  ): AutomationEngine {
+    return new AutomationEngine(logger, visualCursor);
   }
 
   /**
@@ -362,14 +379,19 @@ export class AutomationEngine {
           }
 
           // Log every 2 seconds to track progress
-          if (attemptCount % 20 === 0) {
+          if (
+            attemptCount %
+              (TimingConstants.ELEMENT_LOG_INTERVAL /
+                TimingConstants.ELEMENT_CHECK_INTERVAL) ===
+            0
+          ) {
             this.logger.debug(
               `Still waiting for element (${elapsed}ms, ${attemptCount} attempts): ${selector}`,
               'AutomationEngine'
             );
           }
 
-          setTimeout(checkElement, 100);
+          setTimeout(checkElement, TimingConstants.ELEMENT_CHECK_INTERVAL);
         } catch (error) {
           this.logger.error(
             `Error checking element: ${selector}`,
@@ -411,7 +433,10 @@ export class AutomationEngine {
   /**
    * Simulate human-like typing with realistic delays and occasional typos
    */
-  private async simulateHumanTyping(element: Element, text: string): Promise<void> {
+  private async simulateHumanTyping(
+    element: Element,
+    text: string
+  ): Promise<void> {
     if (
       !(
         element instanceof HTMLInputElement ||
@@ -425,16 +450,25 @@ export class AutomationEngine {
     }
 
     try {
-      this.logger.debug(`Starting human-like typing: ${text}`, 'AutomationEngine');
+      this.logger.debug(
+        `Starting human-like typing: ${text}`,
+        'AutomationEngine'
+      );
 
       await HumanTypingSimulator.simulateTyping(element, text, {
         speedMultiplier: 1.2, // Slightly faster than default
         onProgress: (currentText) => {
-          this.logger.debug(`Typing progress: "${currentText}"`, 'AutomationEngine');
+          this.logger.debug(
+            `Typing progress: "${currentText}"`,
+            'AutomationEngine'
+          );
         },
         onComplete: () => {
-          this.logger.debug(`Human-like typing completed: ${text}`, 'AutomationEngine');
-        }
+          this.logger.debug(
+            `Human-like typing completed: ${text}`,
+            'AutomationEngine'
+          );
+        },
       });
     } catch (error) {
       throw new ActionExecutionError(
@@ -559,7 +593,10 @@ export class AutomationEngine {
                 resolve();
               } else {
                 // Keep checking for workspace elements
-                setTimeout(checkWorkspaceLoaded, 500);
+                setTimeout(
+                  checkWorkspaceLoaded,
+                  TimingConstants.WORKSPACE_ELEMENT_CHECK_INTERVAL
+                );
               }
             };
 
@@ -572,7 +609,10 @@ export class AutomationEngine {
           );
           resolve();
         } else {
-          setTimeout(checkReadyState, 100);
+          setTimeout(
+            checkReadyState,
+            TimingConstants.READY_STATE_CHECK_INTERVAL
+          );
         }
       };
 
@@ -586,7 +626,7 @@ export class AutomationEngine {
   private async waitForPageStabilization(): Promise<void> {
     return new Promise((resolve) => {
       let lastChange = Date.now();
-      const stabilizationDelay = 500; // Wait 500ms of no DOM changes
+      const stabilizationDelay = TimingConstants.PAGE_STABILIZATION_DELAY;
 
       const observer = new MutationObserver(() => {
         lastChange = Date.now();
@@ -609,7 +649,7 @@ export class AutomationEngine {
           );
           resolve();
         } else {
-          setTimeout(checkStability, 100);
+          setTimeout(checkStability, TimingConstants.ELEMENT_CHECK_INTERVAL);
         }
       };
 
@@ -624,7 +664,7 @@ export class AutomationEngine {
           'AutomationEngine'
         );
         resolve();
-      }, 5000);
+      }, TimingConstants.PAGE_STABILIZATION_TIMEOUT);
     });
   }
 

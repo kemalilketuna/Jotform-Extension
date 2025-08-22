@@ -19,18 +19,12 @@ export interface LogEntry {
 
 export class LoggingService {
   private static instance: LoggingService;
-  private logLevel: LogLevel = LogLevel.INFO;
   private logs: LogEntry[] = [];
-  private maxLogs: number = 1000;
+  private readonly maxLogs = 1000;
+  private readonly logLevel = LogLevel.DEBUG;
 
   private constructor() {
-    // Set log level based on environment
-    if (
-      typeof process !== 'undefined' &&
-      process.env?.NODE_ENV === 'development'
-    ) {
-      this.logLevel = LogLevel.DEBUG;
-    }
+    // Private constructor for singleton
   }
 
   static getInstance(): LoggingService {
@@ -38,13 +32,6 @@ export class LoggingService {
       LoggingService.instance = new LoggingService();
     }
     return LoggingService.instance;
-  }
-
-  /**
-   * Set the minimum log level
-   */
-  setLogLevel(level: LogLevel): void {
-    this.logLevel = level;
   }
 
   /**
@@ -114,7 +101,7 @@ export class LoggingService {
       return;
     }
 
-    const logEntry: LogEntry = {
+    const entry: LogEntry = {
       level,
       message,
       timestamp: new Date(),
@@ -122,16 +109,16 @@ export class LoggingService {
       data: this.sanitizeData(data),
     };
 
-    // Add to internal log storage
-    this.logs.push(logEntry);
+    // Add to in-memory logs
+    this.logs.push(entry);
 
-    // Maintain log size limit
+    // Maintain max log limit
     if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(-this.maxLogs);
+      this.logs.shift();
     }
 
     // Output to console
-    this.outputToConsole(logEntry);
+    this.outputToConsole(entry);
   }
 
   /**

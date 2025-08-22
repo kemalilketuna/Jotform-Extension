@@ -51,11 +51,10 @@ function App() {
    */
   const fetchAutomationSequence = async () => {
     setStatus(UserMessages.STATUS.FETCHING_FROM_SERVER);
-    const serverService = AutomationServerService.getInstance();
-    const serverResponse = await serverService.fetchFormCreationSteps();
+    const response = await AutomationServerService.fetchFormCreationSteps();
 
     setStatus(UserMessages.STATUS.CONVERTING_RESPONSE);
-    return serverService.convertToAutomationSequence(serverResponse);
+    return AutomationServerService.convertToAutomationSequence(response);
   };
 
   /**
@@ -124,11 +123,10 @@ function App() {
    */
   const fetchFormBuildingSequence = async () => {
     setStatus('Fetching form building steps from server...');
-    const serverService = AutomationServerService.getInstance();
-    const serverResponse = await serverService.fetchFormBuildingSteps();
+    const response = await AutomationServerService.fetchFormBuildingSteps();
 
     setStatus('Converting server response...');
-    return serverService.convertToAutomationSequence(serverResponse);
+    return AutomationServerService.convertToAutomationSequence(response);
   };
 
   /**

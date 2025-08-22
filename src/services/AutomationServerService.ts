@@ -30,24 +30,12 @@ export interface ServerAutomationResponse {
  * Service for handling automation server communication and data conversion
  */
 export class AutomationServerService {
-  private static instance: AutomationServerService;
-  private readonly logger: LoggingService;
-
-  private constructor() {
-    this.logger = LoggingService.getInstance();
-  }
-
-  static getInstance(): AutomationServerService {
-    if (!AutomationServerService.instance) {
-      AutomationServerService.instance = new AutomationServerService();
-    }
-    return AutomationServerService.instance;
-  }
+  private static readonly logger = LoggingService.getInstance();
 
   /**
    * Get form building steps
    */
-  private getFormBuildingSteps(): ServerAutomationStep[] {
+  private static getFormBuildingSteps(): ServerAutomationStep[] {
     return [
       {
         action: 'wait',
@@ -85,7 +73,7 @@ export class AutomationServerService {
   /**
    * Get default form creation steps
    */
-  private getDefaultFormCreationSteps(): ServerAutomationStep[] {
+  private static getDefaultFormCreationSteps(): ServerAutomationStep[] {
     return [
       {
         action: 'navigate',
@@ -129,35 +117,38 @@ export class AutomationServerService {
   /**
    * Simulate API delay
    */
-  private async simulateApiDelay(ms: number = 500): Promise<void> {
+  private static async simulateApiDelay(ms: number = 500): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
    * Fetch form creation steps (simulated server response)
    */
-  async fetchFormCreationSteps(): Promise<ServerAutomationResponse> {
+  static async fetchFormCreationSteps(): Promise<ServerAutomationResponse> {
     try {
-      this.logger.debug(
+      AutomationServerService.logger.debug(
         'Fetching form creation steps from server',
         'AutomationServerService'
       );
 
-      await this.simulateApiDelay();
+      await AutomationServerService.simulateApiDelay();
 
       const response: ServerAutomationResponse = {
         sequenceId: 'form-creation-v1',
         name: 'Create New Form',
-        steps: this.getDefaultFormCreationSteps(),
+        steps: AutomationServerService.getDefaultFormCreationSteps(),
       };
 
-      this.logger.debug(
+      AutomationServerService.logger.debug(
         'Form creation steps fetched successfully',
         'AutomationServerService'
       );
       return response;
     } catch (error) {
-      this.logger.logError(error as Error, 'AutomationServerService');
+      AutomationServerService.logger.logError(
+        error as Error,
+        'AutomationServerService'
+      );
       throw new AutomationError('Failed to fetch form creation steps');
     }
   }
@@ -165,28 +156,31 @@ export class AutomationServerService {
   /**
    * Fetch form building steps (simulated server response)
    */
-  async fetchFormBuildingSteps(): Promise<ServerAutomationResponse> {
+  static async fetchFormBuildingSteps(): Promise<ServerAutomationResponse> {
     try {
-      this.logger.debug(
+      AutomationServerService.logger.debug(
         'Fetching form building steps from server',
         'AutomationServerService'
       );
 
-      await this.simulateApiDelay();
+      await AutomationServerService.simulateApiDelay();
 
       const response: ServerAutomationResponse = {
         sequenceId: 'form-building-v1',
         name: 'Build Form Elements',
-        steps: this.getFormBuildingSteps(),
+        steps: AutomationServerService.getFormBuildingSteps(),
       };
 
-      this.logger.debug(
+      AutomationServerService.logger.debug(
         'Form building steps fetched successfully',
         'AutomationServerService'
       );
       return response;
     } catch (error) {
-      this.logger.logError(error as Error, 'AutomationServerService');
+      AutomationServerService.logger.logError(
+        error as Error,
+        'AutomationServerService'
+      );
       throw new AutomationError('Failed to fetch form building steps');
     }
   }
@@ -194,11 +188,11 @@ export class AutomationServerService {
   /**
    * Fetch automation from server (to be implemented later)
    */
-  async fetchAutomationFromServer(
+  static async fetchAutomationFromServer(
     automationId: string
   ): Promise<ServerAutomationResponse> {
     try {
-      this.logger.info(
+      AutomationServerService.logger.info(
         `Fetching automation: ${automationId}`,
         'AutomationServerService'
       );
@@ -216,24 +210,30 @@ export class AutomationServerService {
       }
 
       const result = await response.json();
-      this.logger.debug(
+      AutomationServerService.logger.debug(
         'Automation fetched from server',
         'AutomationServerService'
       );
       return result;
     } catch (error) {
-      this.logger.logError(error as Error, 'AutomationServerService');
+      AutomationServerService.logger.logError(
+        error as Error,
+        'AutomationServerService'
+      );
 
       // Fallback to dummy data
-      this.logger.warn('Falling back to dummy data', 'AutomationServerService');
-      return this.fetchFormCreationSteps();
+      AutomationServerService.logger.warn(
+        'Falling back to dummy data',
+        'AutomationServerService'
+      );
+      return AutomationServerService.fetchFormCreationSteps();
     }
   }
 
   /**
    * Convert click step to ClickAction
    */
-  private convertClickStep(
+  private static convertClickStep(
     step: ServerAutomationStep,
     stepIndex: number
   ): ClickAction {
@@ -253,7 +253,7 @@ export class AutomationServerService {
   /**
    * Convert navigate step to NavigationAction
    */
-  private convertNavigateStep(
+  private static convertNavigateStep(
     step: ServerAutomationStep,
     stepIndex: number
   ): NavigationAction {
@@ -273,7 +273,7 @@ export class AutomationServerService {
   /**
    * Convert wait step to WaitAction
    */
-  private convertWaitStep(step: ServerAutomationStep): WaitAction {
+  private static convertWaitStep(step: ServerAutomationStep): WaitAction {
     return {
       type: 'WAIT',
       description: step.description,
@@ -284,7 +284,7 @@ export class AutomationServerService {
   /**
    * Convert type step to TypeAction
    */
-  private convertTypeStep(
+  private static convertTypeStep(
     step: ServerAutomationStep,
     stepIndex: number
   ): TypeAction {
@@ -305,19 +305,19 @@ export class AutomationServerService {
   /**
    * Convert single server step to automation action
    */
-  private convertServerStep(
+  private static convertServerStep(
     step: ServerAutomationStep,
     stepIndex: number
   ): AutomationAction {
     switch (step.action) {
       case 'click':
-        return this.convertClickStep(step, stepIndex);
+        return AutomationServerService.convertClickStep(step, stepIndex);
       case 'navigate':
-        return this.convertNavigateStep(step, stepIndex);
+        return AutomationServerService.convertNavigateStep(step, stepIndex);
       case 'wait':
-        return this.convertWaitStep(step);
+        return AutomationServerService.convertWaitStep(step);
       case 'type':
-        return this.convertTypeStep(step, stepIndex);
+        return AutomationServerService.convertTypeStep(step, stepIndex);
       default:
         throw new AutomationError(
           `Unknown action type: ${step.action} at step ${stepIndex + 1}`
@@ -328,18 +328,18 @@ export class AutomationServerService {
   /**
    * Convert server response to automation sequence with type safety
    */
-  convertToAutomationSequence(
+  static convertToAutomationSequence(
     serverResponse: ServerAutomationResponse
   ): AutomationSequence {
     try {
-      this.logger.debug(
+      AutomationServerService.logger.debug(
         'Converting server response to automation sequence',
         'AutomationServerService'
       );
 
       const actions: AutomationAction[] = serverResponse.steps.map(
         (step, index) => {
-          return this.convertServerStep(step, index);
+          return AutomationServerService.convertServerStep(step, index);
         }
       );
 
@@ -349,12 +349,12 @@ export class AutomationServerService {
         actions,
       };
 
-      this.logger.debug(
+      AutomationServerService.logger.debug(
         'Server response converted successfully',
         'AutomationServerService'
       );
       return sequence;
-    } catch (error) {
+    } catch {
       throw new AutomationError(
         'Failed to convert server response to automation sequence'
       );

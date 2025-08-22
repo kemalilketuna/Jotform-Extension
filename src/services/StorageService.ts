@@ -35,7 +35,9 @@ export class StorageService {
       await browser.storage.sync.set({ userPreferences: preferences });
       this.memoryCache.set('userPreferences', preferences);
     } catch (error) {
-      this.logger.logError(error as Error, 'StorageService');
+      this.logger.error('Failed to store user preferences', 'StorageService', {
+        error: (error as Error).message,
+      });
       throw new Error('Failed to store user preferences');
     }
   }
@@ -59,7 +61,11 @@ export class StorageService {
       this.memoryCache.set('userPreferences', preferences);
       return preferences;
     } catch (error) {
-      this.logger.logError(error as Error, 'StorageService');
+      this.logger.error(
+        'Failed to retrieve user preferences',
+        'StorageService',
+        { error: (error as Error).message }
+      );
       return {};
     }
   }
@@ -73,7 +79,9 @@ export class StorageService {
       await browser.storage.sync.clear();
       this.memoryCache.clear();
     } catch (error) {
-      this.logger.logError(error as Error, 'StorageService');
+      this.logger.error('Failed to clear storage', 'StorageService', {
+        error: (error as Error).message,
+      });
       throw new Error('Failed to clear storage');
     }
   }
