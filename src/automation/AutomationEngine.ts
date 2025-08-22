@@ -23,6 +23,7 @@ import {
   SequenceExecutionError,
 } from '@/errors/AutomationErrors';
 import { VisualCursor } from './VisualCursor';
+import { HumanTypingSimulator } from '@/utils/HumanTypingSimulator';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
@@ -315,7 +316,7 @@ export class AutomationEngine {
     // Perform visual click to focus the element
     await this.visualCursor.performClick();
 
-    this.simulateTyping(element, action.value);
+    await this.simulateHumanTyping(element, action.value);
   }
 
   /**
@@ -408,9 +409,45 @@ export class AutomationEngine {
   }
 
   /**
-   * Simulate typing text into an input element
+   * Simulate human-like typing with realistic delays and occasional typos
    */
-  private simulateTyping(element: Element, text: string): void {
+  private async simulateHumanTyping(element: Element, text: string): Promise<void> {
+    if (
+      !(
+        element instanceof HTMLInputElement ||
+        element instanceof HTMLTextAreaElement
+      )
+    ) {
+      throw new ActionExecutionError(
+        'TYPE',
+        'Target element is not a valid input element'
+      );
+    }
+
+    try {
+      this.logger.debug(`Starting human-like typing: ${text}`, 'AutomationEngine');
+
+      await HumanTypingSimulator.simulateTyping(element, text, {
+        speedMultiplier: 1.2, // Slightly faster than default
+        onProgress: (currentText) => {
+          this.logger.debug(`Typing progress: "${currentText}"`, 'AutomationEngine');
+        },
+        onComplete: () => {
+          this.logger.debug(`Human-like typing completed: ${text}`, 'AutomationEngine');
+        }
+      });
+    } catch (error) {
+      throw new ActionExecutionError(
+        'TYPE',
+        `Failed to simulate human typing: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Legacy typing method for fallback scenarios
+   */
+  private simulateBasicTyping(element: Element, text: string): void {
     if (
       !(
         element instanceof HTMLInputElement ||
