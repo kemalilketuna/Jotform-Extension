@@ -13,10 +13,10 @@ export class TimingConstants {
 
   // Human Typing Simulator delays
   static readonly TYPING_SPEEDS = {
-    MIN_DELAY: 80,
-    MAX_DELAY: 150,
+    MIN_DELAY: 120,
+    MAX_DELAY: 220,
     PAUSE_DELAY: 600,
-    CORRECTION_DELAY: 120,
+    BACKSPACE_DELAY: 120,
   } as const;
 
   // Visual Cursor animation timings
@@ -56,7 +56,7 @@ export class TimingConstants {
   static getRandomTypingDelay(): number {
     return (
       Math.random() *
-        (this.TYPING_SPEEDS.MAX_DELAY - this.TYPING_SPEEDS.MIN_DELAY) +
+      (this.TYPING_SPEEDS.MAX_DELAY - this.TYPING_SPEEDS.MIN_DELAY) +
       this.TYPING_SPEEDS.MIN_DELAY
     );
   }
@@ -69,9 +69,9 @@ export class TimingConstants {
   }
 
   /**
-   * Get typing correction delay
+   * Get backspace deletion delay
    */
-  static getTypingCorrectionDelay(): number {
-    return this.TYPING_SPEEDS.CORRECTION_DELAY;
+  static getBackspaceDelay(): number {
+    return this.TYPING_SPEEDS.BACKSPACE_DELAY;
   }
 }

@@ -5,40 +5,10 @@ import { TimingConstants } from '@/constants/TimingConstants';
  * Static utility class - no singleton pattern needed
  */
 export class HumanTypingSimulator {
-  private static readonly TYPO_PROBABILITY = 0.33; // 33% chance of typo
-  private static readonly TYPO_CHECK_INTERVAL = 15; // Check every 15 words
-  private static readonly MAX_TYPO_FIX_DISTANCE = 3; // Fix within 3 letters
-  private static readonly COMMON_TYPOS: Record<string, string[]> = {
-    a: ['s', 'q'],
-    b: ['v', 'n'],
-    c: ['x', 'v'],
-    d: ['s', 'f'],
-    e: ['w', 'r'],
-    f: ['d', 'g'],
-    g: ['f', 'h'],
-    h: ['g', 'j'],
-    i: ['u', 'o'],
-    j: ['h', 'k'],
-    k: ['j', 'l'],
-    l: ['k', ';'],
-    m: ['n', ','],
-    n: ['b', 'm'],
-    o: ['i', 'p'],
-    p: ['o', '['],
-    q: ['w', 'a'],
-    r: ['e', 't'],
-    s: ['a', 'd'],
-    t: ['r', 'y'],
-    u: ['y', 'i'],
-    v: ['c', 'b'],
-    w: ['q', 'e'],
-    x: ['z', 'c'],
-    y: ['t', 'u'],
-    z: ['x', 's'],
-  };
+
 
   /**
-   * Simulate human-like typing with realistic delays and occasional typos
+   * Simulate human-like typing with realistic delays
    */
   static async simulateTyping(
     element: HTMLInputElement | HTMLTextAreaElement,
@@ -47,91 +17,20 @@ export class HumanTypingSimulator {
       onProgress?: (currentText: string) => void;
       onComplete?: () => void;
       speedMultiplier?: number;
-      enableTypos?: boolean;
     } = {}
   ): Promise<void> {
-    const { onProgress, onComplete, speedMultiplier = 1, enableTypos = true } = options;
+    const { onProgress, onComplete, speedMultiplier = 1 } = options;
 
-    // Clear existing content
-    element.value = '';
     element.focus();
 
-    let currentText = '';
+    // Clear existing content by simulating backspace
+    await this.simulateBackspaceClearing(element, onProgress, speedMultiplier);
+
+    let currentText = element.value;
     const characters = text.split('');
-    let wordCount = 0;
-    let lastTypoWordIndex = -this.TYPO_CHECK_INTERVAL;
 
     for (let i = 0; i < characters.length; i++) {
       const char = characters[i];
-
-      // Count words (space indicates word boundary)
-      if (char === ' ') {
-        wordCount++;
-      }
-
-      // Check for typo opportunity every 15 words
-      const shouldCheckTypo = enableTypos && 
-        wordCount - lastTypoWordIndex >= this.TYPO_CHECK_INTERVAL &&
-        char !== ' ' && // Don't make typos on spaces
-        this.COMMON_TYPOS[char.toLowerCase()];
-
-      if (shouldCheckTypo && Math.random() < this.TYPO_PROBABILITY) {
-        lastTypoWordIndex = wordCount;
-        
-        // Make a typo
-        const typoChar = this.getRandomTypo(char.toLowerCase());
-        currentText += typoChar;
-        HumanTypingSimulator.updateElementValue(element, currentText);
-        onProgress?.(currentText);
-        
-        // Continue typing 1-3 more characters before noticing
-        const extraChars = Math.floor(Math.random() * this.MAX_TYPO_FIX_DISTANCE) + 1;
-        const remainingChars = characters.length - i - 1;
-        const actualExtraChars = Math.min(extraChars, remainingChars);
-        
-        for (let j = 0; j < actualExtraChars; j++) {
-          await this.wait(this.getRandomDelay(speedMultiplier));
-          currentText += characters[i + j + 1];
-          HumanTypingSimulator.updateElementValue(element, currentText);
-          onProgress?.(currentText);
-        }
-        
-        // Pause as if realizing the mistake
-        await this.wait(TimingConstants.getTypingPauseDelay() / speedMultiplier);
-        
-        // Backspace to remove typo and extra characters
-        const backspaceCount = actualExtraChars + 1;
-        for (let k = 0; k < backspaceCount; k++) {
-          currentText = currentText.slice(0, -1);
-          HumanTypingSimulator.updateElementValue(element, currentText);
-          onProgress?.(currentText);
-          await this.wait(TimingConstants.getTypingCorrectionDelay() / speedMultiplier);
-        }
-        
-        // Type the correct character that was originally intended
-        currentText += char;
-        HumanTypingSimulator.updateElementValue(element, currentText);
-        onProgress?.(currentText);
-        
-        // Type all the extra characters correctly after the correction
-        for (let j = 0; j < actualExtraChars; j++) {
-          await this.wait(this.getRandomDelay(speedMultiplier));
-          currentText += characters[i + j + 1];
-          HumanTypingSimulator.updateElementValue(element, currentText);
-          onProgress?.(currentText);
-        }
-        
-        // Skip the extra characters we already typed
-        i += actualExtraChars;
-        
-        // Add delay after correction if not at the end
-        if (i < characters.length - 1) {
-          await this.wait(this.getRandomDelay(speedMultiplier));
-        }
-        
-        // Continue to next iteration to avoid double-typing
-        continue;
-      }
 
       // Type the correct character
       currentText += char;
@@ -148,6 +47,47 @@ export class HumanTypingSimulator {
   }
 
   /**
+   * Simulate human-like backspace clearing of existing text
+   */
+  private static async simulateBackspaceClearing(
+    element: HTMLInputElement | HTMLTextAreaElement,
+    onProgress?: (currentText: string) => void,
+    speedMultiplier: number = 1
+  ): Promise<void> {
+    let currentText = element.value;
+
+    while (currentText.length > 0) {
+      // Remove last character
+      currentText = currentText.slice(0, -1);
+
+      // Simulate backspace keydown event
+      const backspaceKeydown = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        code: 'Backspace',
+        bubbles: true,
+        cancelable: true,
+      });
+      element.dispatchEvent(backspaceKeydown);
+
+      // Update element value
+      HumanTypingSimulator.updateElementValue(element, currentText);
+      onProgress?.(currentText);
+
+      // Simulate backspace keyup event
+      const backspaceKeyup = new KeyboardEvent('keyup', {
+        key: 'Backspace',
+        code: 'Backspace',
+        bubbles: true,
+        cancelable: true,
+      });
+      element.dispatchEvent(backspaceKeyup);
+
+      // Add delay between backspaces
+       await this.wait(TimingConstants.getBackspaceDelay() / speedMultiplier);
+    }
+  }
+
+  /**
    * Get a random typing delay that mimics human behavior
    */
   private static getRandomDelay(speedMultiplier: number): number {
@@ -156,16 +96,7 @@ export class HumanTypingSimulator {
     return baseDelay / speedMultiplier;
   }
 
-  /**
-   * Get a random typo for a given character
-   */
-  private static getRandomTypo(char: string): string {
-    const typos = this.COMMON_TYPOS[char];
-    if (!typos || typos.length === 0) {
-      return char;
-    }
-    return typos[Math.floor(Math.random() * typos.length)];
-  }
+
 
   /**
    * Update element value and dispatch appropriate events
@@ -208,20 +139,20 @@ export class HumanTypingSimulator {
       onProgress?: (currentText: string) => void;
       onComplete?: () => void;
       speedMultiplier?: number;
-      enableTypos?: boolean;
     } = {}
   ): Promise<void> {
     const {
       onProgress,
       onComplete,
       speedMultiplier = 1,
-      enableTypos = true,
     } = options;
 
-    element.value = '';
     element.focus();
 
-    let currentText = '';
+    // Clear existing content by simulating backspace
+    await this.simulateBackspaceClearing(element, onProgress, speedMultiplier);
+
+    let currentText = element.value;
     const characters = text.split('');
 
     for (let i = 0; i < characters.length; i++) {
