@@ -5,7 +5,9 @@ import { TimingConstants } from '@/constants/TimingConstants';
  * Static utility class - no singleton pattern needed
  */
 export class HumanTypingSimulator {
-  private static readonly TYPO_PROBABILITY = 0.02; // 2% chance of typo
+  private static readonly TYPO_PROBABILITY = 0.33; // 33% chance of typo
+  private static readonly TYPO_CHECK_INTERVAL = 15; // Check every 15 words
+  private static readonly MAX_TYPO_FIX_DISTANCE = 3; // Fix within 3 letters
   private static readonly COMMON_TYPOS: Record<string, string[]> = {
     a: ['s', 'q'],
     b: ['v', 'n'],
@@ -45,9 +47,10 @@ export class HumanTypingSimulator {
       onProgress?: (currentText: string) => void;
       onComplete?: () => void;
       speedMultiplier?: number;
+      enableTypos?: boolean;
     } = {}
   ): Promise<void> {
-    const { onProgress, onComplete, speedMultiplier = 1 } = options;
+    const { onProgress, onComplete, speedMultiplier = 1, enableTypos = true } = options;
 
     // Clear existing content
     element.value = '';
@@ -55,55 +58,79 @@ export class HumanTypingSimulator {
 
     let currentText = '';
     const characters = text.split('');
+    let wordCount = 0;
+    let lastTypoWordIndex = -this.TYPO_CHECK_INTERVAL;
 
     for (let i = 0; i < characters.length; i++) {
       const char = characters[i];
-      const shouldMakeTypo =
-        Math.random() < this.TYPO_PROBABILITY &&
+
+      // Count words (space indicates word boundary)
+      if (char === ' ') {
+        wordCount++;
+      }
+
+      // Check for typo opportunity every 15 words
+      const shouldCheckTypo = enableTypos && 
+        wordCount - lastTypoWordIndex >= this.TYPO_CHECK_INTERVAL &&
+        char !== ' ' && // Don't make typos on spaces
         this.COMMON_TYPOS[char.toLowerCase()];
 
-      if (shouldMakeTypo && i > 2) {
+      if (shouldCheckTypo && Math.random() < this.TYPO_PROBABILITY) {
+        lastTypoWordIndex = wordCount;
+        
         // Make a typo
         const typoChar = this.getRandomTypo(char.toLowerCase());
         currentText += typoChar;
-
-        // Update element and trigger events
         HumanTypingSimulator.updateElementValue(element, currentText);
         onProgress?.(currentText);
-
-        // Brief pause before realizing the mistake
-        await this.wait(this.getRandomDelay(speedMultiplier));
-
-        // Type 1-2 more characters before noticing
-        const extraChars = Math.floor(Math.random() * 2) + 1;
+        
+        // Continue typing 1-3 more characters before noticing
+        const extraChars = Math.floor(Math.random() * this.MAX_TYPO_FIX_DISTANCE) + 1;
         const remainingChars = characters.length - i - 1;
         const actualExtraChars = Math.min(extraChars, remainingChars);
-
+        
         for (let j = 0; j < actualExtraChars; j++) {
-          currentText += characters[i + j + 1];
-          this.updateElementValue(element, currentText);
-          onProgress?.(currentText);
           await this.wait(this.getRandomDelay(speedMultiplier));
+          currentText += characters[i + j + 1];
+          HumanTypingSimulator.updateElementValue(element, currentText);
+          onProgress?.(currentText);
         }
-
-        // Short pause as if realizing the mistake
-        await HumanTypingSimulator.wait(
-          TimingConstants.getTypingPauseDelay() / speedMultiplier
-        );
-
-        // Backspace to correct the typo and extra characters
+        
+        // Pause as if realizing the mistake
+        await this.wait(TimingConstants.getTypingPauseDelay() / speedMultiplier);
+        
+        // Backspace to remove typo and extra characters
         const backspaceCount = actualExtraChars + 1;
         for (let k = 0; k < backspaceCount; k++) {
           currentText = currentText.slice(0, -1);
           HumanTypingSimulator.updateElementValue(element, currentText);
           onProgress?.(currentText);
-          await HumanTypingSimulator.wait(
-            TimingConstants.getTypingCorrectionDelay() / speedMultiplier
-          );
+          await this.wait(TimingConstants.getTypingCorrectionDelay() / speedMultiplier);
         }
-
+        
+        // Type the correct character that was originally intended
+        currentText += char;
+        HumanTypingSimulator.updateElementValue(element, currentText);
+        onProgress?.(currentText);
+        
+        // Type all the extra characters correctly after the correction
+        for (let j = 0; j < actualExtraChars; j++) {
+          await this.wait(this.getRandomDelay(speedMultiplier));
+          currentText += characters[i + j + 1];
+          HumanTypingSimulator.updateElementValue(element, currentText);
+          onProgress?.(currentText);
+        }
+        
         // Skip the extra characters we already typed
         i += actualExtraChars;
+        
+        // Add delay after correction if not at the end
+        if (i < characters.length - 1) {
+          await this.wait(this.getRandomDelay(speedMultiplier));
+        }
+        
+        // Continue to next iteration to avoid double-typing
+        continue;
       }
 
       // Type the correct character
@@ -111,17 +138,10 @@ export class HumanTypingSimulator {
       HumanTypingSimulator.updateElementValue(element, currentText);
       onProgress?.(currentText);
 
-      // Random delay between keystrokes
+      // Random delay between keystrokes (only if not at the end)
       if (i < characters.length - 1) {
         await this.wait(this.getRandomDelay(speedMultiplier));
       }
-    }
-
-    // Final verification - ensure the text matches exactly
-    if (element.value !== text) {
-      element.value = text;
-      this.updateElementValue(element, text);
-      onProgress?.(text);
     }
 
     onComplete?.();
@@ -195,7 +215,7 @@ export class HumanTypingSimulator {
       onProgress,
       onComplete,
       speedMultiplier = 1,
-      enableTypos: _enableTypos = true,
+      enableTypos = true,
     } = options;
 
     element.value = '';
