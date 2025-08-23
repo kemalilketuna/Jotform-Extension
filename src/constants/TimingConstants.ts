@@ -16,7 +16,7 @@ export class TimingConstants {
     MIN_DELAY: 80,
     MAX_DELAY: 150,
     PAUSE_DELAY: 600,
-    CORRECTION_DELAY: 120,
+    BACKSPACE_DELAY: 120,
   } as const;
 
   // Visual Cursor animation timings
@@ -69,9 +69,9 @@ export class TimingConstants {
   }
 
   /**
-   * Get typing correction delay
+   * Get backspace deletion delay
    */
-  static getTypingCorrectionDelay(): number {
-    return this.TYPING_SPEEDS.CORRECTION_DELAY;
+  static getBackspaceDelay(): number {
+    return this.TYPING_SPEEDS.BACKSPACE_DELAY;
   }
 }
