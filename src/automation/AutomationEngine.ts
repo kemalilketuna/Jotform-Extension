@@ -23,7 +23,7 @@ import {
   SequenceExecutionError,
 } from '@/errors/AutomationErrors';
 import { VisualCursor } from './VisualCursor';
-import { HumanTypingSimulator } from '@/utils/HumanTypingSimulator';
+import { HumanTypingSimulator } from '@/utils/HumanTyping';
 import { TimingConstants } from '@/constants/TimingConstants';
 
 /**
