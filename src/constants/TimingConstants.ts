@@ -13,9 +13,9 @@ export class TimingConstants {
 
   // Human Typing Simulator delays
   static readonly TYPING_SPEEDS = {
-    MIN_DELAY: 120,
-    MAX_DELAY: 220,
-    PAUSE_DELAY: 600,
+    MIN_DELAY: 84,
+    MAX_DELAY: 154,
+    PAUSE_DELAY: 420,
     BACKSPACE_DELAY: 80,
   } as const;
 
@@ -56,7 +56,7 @@ export class TimingConstants {
   static getRandomTypingDelay(): number {
     return (
       Math.random() *
-        (this.TYPING_SPEEDS.MAX_DELAY - this.TYPING_SPEEDS.MIN_DELAY) +
+      (this.TYPING_SPEEDS.MAX_DELAY - this.TYPING_SPEEDS.MIN_DELAY) +
       this.TYPING_SPEEDS.MIN_DELAY
     );
   }
