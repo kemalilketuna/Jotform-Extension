@@ -16,7 +16,7 @@ export class TimingConstants {
     MIN_DELAY: 120,
     MAX_DELAY: 220,
     PAUSE_DELAY: 600,
-    BACKSPACE_DELAY: 120,
+    BACKSPACE_DELAY: 80,
   } as const;
 
   // Visual Cursor animation timings
@@ -56,7 +56,7 @@ export class TimingConstants {
   static getRandomTypingDelay(): number {
     return (
       Math.random() *
-      (this.TYPING_SPEEDS.MAX_DELAY - this.TYPING_SPEEDS.MIN_DELAY) +
+        (this.TYPING_SPEEDS.MAX_DELAY - this.TYPING_SPEEDS.MIN_DELAY) +
       this.TYPING_SPEEDS.MIN_DELAY
     );
   }
