@@ -195,14 +195,7 @@ function App() {
           </button>
         </div>
 
-        <div className="features">
-          <h3>{UserMessages.PROMPTS.FEATURES_TITLE}</h3>
-          <ul>
-            {UserMessages.PROMPTS.FEATURES_LIST.map((feature, index) => (
-              <li key={index}>{feature}</li>
-            ))}
-          </ul>
-        </div>
+
       </div>
 
       <footer className="popup-footer">

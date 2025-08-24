@@ -47,13 +47,6 @@ export class UserMessages {
   static readonly PROMPTS = {
     EXTENSION_DESCRIPTION:
       'AI-powered automation for JotForm interactions. Let our intelligent agent help you fill forms efficiently.',
-    FEATURES_TITLE: 'Features:',
-    FEATURES_LIST: [
-      '🤖 Intelligent form detection',
-      '📝 Automated form filling',
-      '⚡ Quick form interactions',
-      '🎯 Smart field recognition',
-    ] as const,
   } as const;
 
   /**
