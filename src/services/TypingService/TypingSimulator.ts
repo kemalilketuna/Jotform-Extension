@@ -43,10 +43,12 @@ export class TypingSimulator {
       EventDispatcher.updateElementValue(element, currentText);
       onProgress?.(currentText);
 
-      // Play keystroke sound
-      this.audioService.playKeystrokeSound().catch(() => {
-        // Ignore audio errors to avoid breaking typing flow
-      });
+      // Play keystroke sound (except for the last character)
+      if (i < characters.length - 1) {
+        this.audioService.playKeystrokeSound().catch(() => {
+          // Ignore audio errors to avoid breaking typing flow
+        });
+      }
 
       // Random delay between keystrokes (only if not at the end)
       if (i < characters.length - 1) {
@@ -98,10 +100,12 @@ export class TypingSimulator {
 
       onProgress?.(currentText);
 
-      // Play keystroke sound
-      this.audioService.playKeystrokeSound().catch(() => {
-        // Ignore audio errors to avoid breaking typing flow
-      });
+      // Play keystroke sound (except for the last character)
+      if (i < characters.length - 1) {
+        this.audioService.playKeystrokeSound().catch(() => {
+          // Ignore audio errors to avoid breaking typing flow
+        });
+      }
 
       // Random delay with occasional longer pauses
       const shouldPause = Math.random() < 0.1; // 10% chance of pause

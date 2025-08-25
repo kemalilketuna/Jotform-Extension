@@ -1,1 +1,0 @@
-export { HumanTypingSimulator } from './HumanTypingSimulator';

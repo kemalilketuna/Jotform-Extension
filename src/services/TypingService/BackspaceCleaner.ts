@@ -1,11 +1,14 @@
 import { TimingConstants } from '@/constants/TimingConstants';
 import { EventDispatcher } from './EventDispatcher';
+import { AudioService } from '@/services/AudioService';
 
 /**
  * Handles backspace clearing simulation with human-like behavior
  * Static utility class for backspace operations
  */
 export class BackspaceCleaner {
+  private static readonly audioService = AudioService.getInstance();
+
   /**
    * Simulate human-like backspace clearing of existing text
    * Only animates deletion of one word, then clears the rest instantly
@@ -20,6 +23,11 @@ export class BackspaceCleaner {
     if (originalText.length === 0) {
       return;
     }
+
+    // Play a single keystroke sound for the entire backspace operation
+    this.audioService.playKeystrokeSound().catch(() => {
+      // Ignore audio errors to avoid breaking backspace flow
+    });
 
     // Find the last word to animate deletion
     const trimmedText = originalText.trimEnd();
