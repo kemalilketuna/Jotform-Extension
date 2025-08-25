@@ -140,7 +140,7 @@ export class AutomationEngine {
       if (visualConfig) {
         this.visualCursor.updateConfig(visualConfig);
       }
-      this.visualCursor.initialize();
+      await this.visualCursor.initialize();
       this.visualCursor.show({ x: 100, y: 100 });
 
       for (let i = 0; i < sequence.actions.length; i++) {

@@ -21,6 +21,12 @@ export default defineConfig({
       extension_pages:
         "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
     },
+    web_accessible_resources: [
+      {
+        resources: ['sounds/radio_select.mp3'],
+        matches: ['<all_urls>'],
+      },
+    ],
   },
   webExt: {
     disabled: true,

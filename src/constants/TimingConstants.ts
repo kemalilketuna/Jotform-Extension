@@ -56,7 +56,7 @@ export class TimingConstants {
   static getRandomTypingDelay(): number {
     return (
       Math.random() *
-      (this.TYPING_SPEEDS.MAX_DELAY - this.TYPING_SPEEDS.MIN_DELAY) +
+        (this.TYPING_SPEEDS.MAX_DELAY - this.TYPING_SPEEDS.MIN_DELAY) +
       this.TYPING_SPEEDS.MIN_DELAY
     );
   }

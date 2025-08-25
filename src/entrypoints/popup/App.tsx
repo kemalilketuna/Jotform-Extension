@@ -194,8 +194,6 @@ function App() {
             {isExecuting ? 'Building...' : 'Build Form'}
           </button>
         </div>
-
-
       </div>
 
       <footer className="popup-footer">

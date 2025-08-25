@@ -4,6 +4,7 @@ import {
   VisualCursorState,
 } from '@/types/AutomationTypes';
 import { LoggingService } from '@/services/LoggingService';
+import { AudioService } from '@/services/AudioService';
 import cursorStyles from '@/assets/cursor.css?inline';
 import cursorTemplate from '@/assets/cursor.html?raw';
 
@@ -13,6 +14,7 @@ import cursorTemplate from '@/assets/cursor.html?raw';
 export class VisualCursor {
   private static instance: VisualCursor;
   private readonly logger: LoggingService;
+  private readonly audioService: AudioService;
   private cursorElement: HTMLElement | null = null;
   private state: VisualCursorState;
   private config: VisualAnimationConfig;
@@ -20,6 +22,7 @@ export class VisualCursor {
 
   private constructor(logger: LoggingService = LoggingService.getInstance()) {
     this.logger = logger;
+    this.audioService = AudioService.getInstance(logger);
     this.state = {
       isVisible: false,
       position: { x: 0, y: 0 },
@@ -52,7 +55,7 @@ export class VisualCursor {
   /**
    * Initialize the visual cursor in the DOM
    */
-  initialize(): void {
+  async initialize(): Promise<void> {
     if (!this.config.enabled || this.cursorElement) {
       return;
     }
@@ -60,6 +63,16 @@ export class VisualCursor {
     this.createCursorElement();
     this.attachStyles();
     this.ensureStyleIsolation();
+
+    // Initialize audio service
+    try {
+      await this.audioService.initialize();
+    } catch (error) {
+      this.logger.warn('Failed to initialize audio service', 'VisualCursor', {
+        error,
+      });
+    }
+
     this.logger.info('Visual cursor initialized', 'VisualCursor');
   }
 
@@ -98,8 +111,10 @@ export class VisualCursor {
       styleElement.remove();
     }
 
-    this.state.isVisible = false;
-    this.logger.debug('Visual cursor destroyed', 'VisualCursor');
+    // Clean up audio service
+    this.audioService.destroy();
+
+    this.logger.info('Visual cursor destroyed', 'VisualCursor');
   }
 
   /**
@@ -382,6 +397,13 @@ export class VisualCursor {
 
     this.state.isClicking = true;
     this.cursorElement.classList.add('cursor-clicking');
+
+    // Play click sound
+    this.audioService.playClickSound().catch((error) => {
+      this.logger.debug('Click sound playback failed', 'VisualCursor', {
+        error,
+      });
+    });
 
     return new Promise<void>((resolve) => {
       setTimeout(() => {
