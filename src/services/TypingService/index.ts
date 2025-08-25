@@ -1,2 +1,6 @@
 export { TypingService } from './TypingService';
-export { TypingError, ElementTypingError, TypingTimeoutError } from './TypingServiceErrors';
+export {
+  TypingError,
+  ElementTypingError,
+  TypingTimeoutError,
+} from './TypingServiceErrors';

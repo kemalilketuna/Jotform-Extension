@@ -64,7 +64,7 @@ export class AudioService {
     try {
       await Promise.all([
         this.preloadClickSound(),
-        this.preloadKeystrokeSound()
+        this.preloadKeystrokeSound(),
       ]);
       this.logger.debug(
         'AudioService initialized successfully',
@@ -128,7 +128,9 @@ export class AudioService {
       await audio.play();
       this.logger.debug('Keystroke sound played successfully', 'AudioService');
     } catch (error) {
-      this.logger.warn('Failed to play keystroke sound', 'AudioService', { error });
+      this.logger.warn('Failed to play keystroke sound', 'AudioService', {
+        error,
+      });
       // Don't throw error for audio playback failures to avoid breaking automation
     }
   }
@@ -263,9 +265,10 @@ export class AudioService {
     }
 
     // Set volume based on audio type
-    audio.volume = audioPath === AudioPaths.KEYSTROKE_SOUND
-      ? AudioConfig.KEYSTROKE_VOLUME
-      : AudioConfig.DEFAULT_VOLUME;
+    audio.volume =
+      audioPath === AudioPaths.KEYSTROKE_SOUND
+        ? AudioConfig.KEYSTROKE_VOLUME
+        : AudioConfig.DEFAULT_VOLUME;
     audio.preload = AudioConfig.PRELOAD_POLICY;
 
     // Add error handling
