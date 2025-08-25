@@ -125,9 +125,13 @@ export class AudioService {
    */
   destroy(): void {
     this.audioCache.forEach((audio) => {
-      audio.pause();
-      audio.src = '';
-      audio.load();
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        // Don't set src to empty or call load() as it triggers error events
+      } catch {
+        // Ignore cleanup errors to prevent console spam
+      }
     });
     this.audioCache.clear();
     this.logger.debug('AudioService destroyed', 'AudioService');
