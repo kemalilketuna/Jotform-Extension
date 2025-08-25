@@ -23,7 +23,7 @@ import {
   SequenceExecutionError,
 } from '@/errors/AutomationErrors';
 import { VisualCursor } from './VisualCursor';
-import { HumanTypingSimulator } from '@/utils/HumanTyping';
+import { TypingService } from '@/services/TypingService';
 import { TimingConstants } from '@/constants/TimingConstants';
 
 /**
@@ -34,23 +34,27 @@ export class AutomationEngine {
   private isExecuting = false;
   private readonly logger: LoggingService;
   private readonly visualCursor: VisualCursor;
+  private readonly typingService: TypingService;
   private readonly DEFAULT_TIMEOUT = TimingConstants.DEFAULT_TIMEOUT;
   private readonly NAVIGATION_TIMEOUT = TimingConstants.NAVIGATION_TIMEOUT;
 
   private constructor(
     logger: LoggingService = LoggingService.getInstance(),
-    visualCursor: VisualCursor = VisualCursor.getInstance()
+    visualCursor: VisualCursor = VisualCursor.getInstance(),
+    typingService: TypingService = TypingService.getInstance()
   ) {
     this.logger = logger;
     this.visualCursor = visualCursor;
+    this.typingService = typingService;
   }
 
   static getInstance(
     logger?: LoggingService,
-    visualCursor?: VisualCursor
+    visualCursor?: VisualCursor,
+    typingService?: TypingService
   ): AutomationEngine {
     if (!AutomationEngine.instance) {
-      AutomationEngine.instance = new AutomationEngine(logger, visualCursor);
+      AutomationEngine.instance = new AutomationEngine(logger, visualCursor, typingService);
     }
     return AutomationEngine.instance;
   }
@@ -60,9 +64,10 @@ export class AutomationEngine {
    */
   static createInstance(
     logger: LoggingService,
-    visualCursor: VisualCursor
+    visualCursor: VisualCursor,
+    typingService: TypingService
   ): AutomationEngine {
-    return new AutomationEngine(logger, visualCursor);
+    return new AutomationEngine(logger, visualCursor, typingService);
   }
 
   /**
@@ -455,9 +460,9 @@ export class AutomationEngine {
         'AutomationEngine'
       );
 
-      await HumanTypingSimulator.simulateTyping(element, text, {
+      await this.typingService.simulateTyping(element, text, {
         speedMultiplier: 1.2, // Slightly faster than default
-        onProgress: (currentText) => {
+        onProgress: (currentText: string) => {
           this.logger.debug(
             `Typing progress: "${currentText}"`,
             'AutomationEngine'

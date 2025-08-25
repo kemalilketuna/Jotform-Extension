@@ -12,7 +12,8 @@ class AudioPaths {
  * Audio configuration constants
  */
 class AudioConfig {
-  static readonly DEFAULT_VOLUME = 1 as const;
+  static readonly DEFAULT_VOLUME = 0.7 as const;
+  static readonly KEYSTROKE_VOLUME = 0.5 as const;
   static readonly PRELOAD_POLICY = 'auto' as const;
 }
 
@@ -261,7 +262,10 @@ export class AudioService {
       audio.src = audioPath;
     }
 
-    audio.volume = AudioConfig.DEFAULT_VOLUME;
+    // Set volume based on audio type
+    audio.volume = audioPath === AudioPaths.KEYSTROKE_SOUND
+      ? AudioConfig.KEYSTROKE_VOLUME
+      : AudioConfig.DEFAULT_VOLUME;
     audio.preload = AudioConfig.PRELOAD_POLICY;
 
     // Add error handling
