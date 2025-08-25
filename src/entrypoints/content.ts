@@ -1,5 +1,6 @@
 import { AutomationEngine } from '@/automation/AutomationEngine';
 import { LoggingService } from '@/services/LoggingService';
+import { AudioService } from '@/services/AudioService';
 import {
   AutomationMessage,
   ExecuteSequenceMessage,
@@ -165,12 +166,14 @@ class ContentScriptCoordinator {
   private readonly logger: LoggingService;
   private readonly automationEngine: AutomationEngine;
   private readonly navigationDetector: NavigationDetector;
+  private readonly audioService: AudioService;
   private isReady = false;
 
   private constructor() {
     this.logger = LoggingService.getInstance();
     this.automationEngine = AutomationEngine.getInstance();
     this.navigationDetector = NavigationDetector.getInstance();
+    this.audioService = AudioService.getInstance();
   }
 
   static getInstance(): ContentScriptCoordinator {
@@ -194,6 +197,21 @@ class ContentScriptCoordinator {
       `Current URL: ${window.location.href}`,
       'ContentScriptCoordinator'
     );
+
+    // Initialize audio service
+    try {
+      await this.audioService.initialize();
+      this.logger.debug(
+        'AudioService initialized successfully',
+        'ContentScriptCoordinator'
+      );
+    } catch (error) {
+      this.logger.warn(
+        'AudioService initialization failed, continuing without audio',
+        'ContentScriptCoordinator',
+        { error }
+      );
+    }
 
     // Initialize navigation detection
     this.navigationDetector.initialize();

@@ -23,7 +23,7 @@ export default defineConfig({
     },
     web_accessible_resources: [
       {
-        resources: ['sounds/radio_select.mp3'],
+        resources: ['sounds/radio_select.mp3', 'sounds/keystroke_soft.mp3'],
         matches: ['<all_urls>'],
       },
     ],

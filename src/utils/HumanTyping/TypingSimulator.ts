@@ -1,12 +1,14 @@
 import { TimingConstants } from '@/constants/TimingConstants';
 import { EventDispatcher } from './EventDispatcher';
 import { BackspaceCleaner } from './BackspaceCleaner';
+import { AudioService } from '@/services/AudioService';
 
 /**
  * Core typing simulation logic with human-like behavior
  * Static utility class for typing operations
  */
 export class TypingSimulator {
+  private static readonly audioService = AudioService.getInstance();
   /**
    * Simulate human-like typing with realistic delays
    */
@@ -40,6 +42,11 @@ export class TypingSimulator {
       currentText += char;
       EventDispatcher.updateElementValue(element, currentText);
       onProgress?.(currentText);
+
+      // Play keystroke sound
+      this.audioService.playKeystrokeSound().catch(() => {
+        // Ignore audio errors to avoid breaking typing flow
+      });
 
       // Random delay between keystrokes (only if not at the end)
       if (i < characters.length - 1) {
@@ -90,6 +97,11 @@ export class TypingSimulator {
       EventDispatcher.dispatchInputEvent(element, char);
 
       onProgress?.(currentText);
+
+      // Play keystroke sound
+      this.audioService.playKeystrokeSound().catch(() => {
+        // Ignore audio errors to avoid breaking typing flow
+      });
 
       // Random delay with occasional longer pauses
       const shouldPause = Math.random() < 0.1; // 10% chance of pause
