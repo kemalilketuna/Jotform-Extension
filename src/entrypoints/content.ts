@@ -1,6 +1,7 @@
 import { AutomationEngine } from '@/automation/AutomationEngine';
 import { LoggingService } from '@/services/LoggingService';
 import { AudioService } from '@/services/AudioService';
+import { JotformAgentDisabler } from '@/services/JotformAgentDisabler';
 import {
   AutomationMessage,
   ExecuteSequenceMessage,
@@ -167,6 +168,7 @@ class ContentScriptCoordinator {
   private readonly automationEngine: AutomationEngine;
   private readonly navigationDetector: NavigationDetector;
   private readonly audioService: AudioService;
+  private readonly jotformAgentDisabler: JotformAgentDisabler;
   private isReady = false;
 
   private constructor() {
@@ -174,6 +176,7 @@ class ContentScriptCoordinator {
     this.automationEngine = AutomationEngine.getInstance();
     this.navigationDetector = NavigationDetector.getInstance();
     this.audioService = AudioService.getInstance();
+    this.jotformAgentDisabler = JotformAgentDisabler.getInstance();
   }
 
   static getInstance(): ContentScriptCoordinator {
@@ -215,6 +218,21 @@ class ContentScriptCoordinator {
 
     // Initialize navigation detection
     this.navigationDetector.initialize();
+
+    // Initialize Jotform agent disabler
+    try {
+      this.jotformAgentDisabler.initialize();
+      this.logger.debug(
+        'JotformAgentDisabler initialized successfully',
+        'ContentScriptCoordinator'
+      );
+    } catch (error) {
+      this.logger.warn(
+        'JotformAgentDisabler initialization failed',
+        'ContentScriptCoordinator',
+        { error: String(error) }
+      );
+    }
 
     // Check if there's an active automation to continue
     await this.checkForActiveAutomation();

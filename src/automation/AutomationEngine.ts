@@ -54,7 +54,11 @@ export class AutomationEngine {
     typingService?: TypingService
   ): AutomationEngine {
     if (!AutomationEngine.instance) {
-      AutomationEngine.instance = new AutomationEngine(logger, visualCursor, typingService);
+      AutomationEngine.instance = new AutomationEngine(
+        logger,
+        visualCursor,
+        typingService
+      );
     }
     return AutomationEngine.instance;
   }

@@ -38,6 +38,13 @@ export class ElementSelectors {
     SETTINGS_CLOSE_BUTTON: '#question-settings-close-btn',
   } as const;
 
+  // Jotform Agent Elements
+  static readonly JOTFORM_AGENT = {
+    CHAT_WRAPPER_PATTERN:
+      '[id^="JotformAgent-"] > div > div.ai-agent-chat-avatar-container.chat-button-variant-new-3 > div > div > div.__chat-wrapper',
+    AGENT_CONTAINER_PATTERN: '[id^="JotformAgent-"]',
+  } as const;
+
   /**
    * Validate CSS selector format
    */
