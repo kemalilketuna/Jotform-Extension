@@ -46,13 +46,18 @@ export class TypingService {
         throw new ElementTypingError('Element is null or undefined', element);
       }
       if (!text) {
-        this.logger.warn('Empty text provided for typing simulation', 'TypingService');
+        this.logger.warn(
+          'Empty text provided for typing simulation',
+          'TypingService'
+        );
         return;
       }
 
       return await this.simulateBasicTyping(element, text, options);
     } catch (error) {
-      this.logger.error('Failed to simulate typing', 'TypingService', { text: text.substring(0, 50) });
+      this.logger.error('Failed to simulate typing', 'TypingService', {
+        text: text.substring(0, 50),
+      });
 
       if (error instanceof TypingError) {
         throw error;
@@ -60,7 +65,11 @@ export class TypingService {
 
       if (error instanceof Error) {
         this.logger.logError(error, 'TypingService.simulateTyping');
-        throw new ElementTypingError(`Typing simulation failed: ${error.message}`, element, error);
+        throw new ElementTypingError(
+          `Typing simulation failed: ${error.message}`,
+          element,
+          error
+        );
       }
 
       throw new TypingError('Unknown error during typing simulation');
@@ -84,13 +93,20 @@ export class TypingService {
         throw new ElementTypingError('Element is null or undefined', element);
       }
       if (!text) {
-        this.logger.warn('Empty text provided for realistic typing simulation', 'TypingService');
+        this.logger.warn(
+          'Empty text provided for realistic typing simulation',
+          'TypingService'
+        );
         return;
       }
 
       return await this.performRealisticTyping(element, text, options);
     } catch (error) {
-      this.logger.error('Failed to simulate realistic typing', 'TypingService', { text: text.substring(0, 50) });
+      this.logger.error(
+        'Failed to simulate realistic typing',
+        'TypingService',
+        { text: text.substring(0, 50) }
+      );
 
       if (error instanceof TypingError) {
         throw error;
@@ -98,7 +114,11 @@ export class TypingService {
 
       if (error instanceof Error) {
         this.logger.logError(error, 'TypingService.simulateRealisticTyping');
-        throw new ElementTypingError(`Realistic typing simulation failed: ${error.message}`, element, error);
+        throw new ElementTypingError(
+          `Realistic typing simulation failed: ${error.message}`,
+          element,
+          error
+        );
       }
 
       throw new TypingError('Unknown error during realistic typing simulation');
