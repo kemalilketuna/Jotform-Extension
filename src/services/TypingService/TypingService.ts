@@ -56,12 +56,8 @@ export class TypingService {
 
       return await this.performBasicTyping(element, text, options);
     } catch (error) {
-      this.logger.error('Failed to simulate typing', 'TypingService', {
-        text: text.substring(0, 50),
-      });
-      throw error instanceof TypingError
-        ? error
-        : new TypingError('Typing simulation failed', error as Error);
+      this.logger.error('Failed to simulate typing', 'TypingService', { text: text.substring(0, 50) });
+      throw error instanceof TypingError ? error : new TypingError('Typing simulation failed', error as Error);
     }
   }
 
@@ -118,7 +114,7 @@ export class TypingService {
       onProgress?.(currentText);
 
       if (i < characters.length - 1) {
-        this.audioService.playKeystrokeSound().catch(() => {});
+        this.audioService.playKeystrokeSound().catch(() => { });
         await this.wait(this.getRandomDelay(speedMultiplier));
       }
     }
@@ -141,7 +137,6 @@ export class TypingService {
 
     for (let i = 0; i < characters.length; i++) {
       const char = characters[i];
-
       this.dispatchKeyboardEvents(element, char);
       currentText += char;
       this.updateElementValue(element, currentText);
@@ -149,7 +144,7 @@ export class TypingService {
       onProgress?.(currentText);
 
       if (i < characters.length - 1) {
-        this.audioService.playKeystrokeSound().catch(() => {});
+        this.audioService.playKeystrokeSound().catch(() => { });
         await this.wait(this.getRandomDelay(speedMultiplier));
       }
     }
@@ -168,7 +163,7 @@ export class TypingService {
       return;
     }
 
-    this.audioService.playKeystrokeSound().catch(() => {});
+    this.audioService.playKeystrokeSound().catch(() => { });
 
     const trimmedText = originalText.trimEnd();
     const lastSpaceIndex = trimmedText.lastIndexOf(' ');
@@ -270,8 +265,8 @@ export class TypingService {
     const baseDelay =
       TimingConstants.TYPING_SPEEDS.MIN_DELAY +
       Math.random() *
-        (TimingConstants.TYPING_SPEEDS.MAX_DELAY -
-          TimingConstants.TYPING_SPEEDS.MIN_DELAY);
+      (TimingConstants.TYPING_SPEEDS.MAX_DELAY -
+        TimingConstants.TYPING_SPEEDS.MIN_DELAY);
     return baseDelay / speedMultiplier;
   }
 
