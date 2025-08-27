@@ -2,7 +2,7 @@ import { TimingConstants } from '@/constants/TimingConstants';
 import { EventDispatcher } from './EventDispatcher';
 import { BackspaceCleaner } from './BackspaceCleaner';
 import { AudioService } from '@/services/AudioService';
-import { LoggingService } from '../LoggingService';
+import { LoggingService } from '@/services/LoggingService';
 import { TypingError, ElementTypingError } from './TypingServiceErrors';
 
 /**

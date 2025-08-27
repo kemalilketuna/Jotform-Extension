@@ -1,4 +1,4 @@
-import { LoggingService } from '../LoggingService';
+import { LoggingService } from '@/services/LoggingService';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
 import { AudioPaths, AudioConfig } from './AudioConfig';
 import { AudioError } from './AudioErrors';

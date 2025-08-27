@@ -9,7 +9,7 @@ import {
   AutomationStateRequestMessage,
   AutomationStateResponseMessage,
 } from '@/services/AutomationEngine/MessageTypes';
-import { MessageResponse, MessageSender } from '@/types';
+import { MessageResponse, MessageSender } from './ExtensionTypes';
 import { NavigationDetector } from './NavigationDetector';
 
 /**
