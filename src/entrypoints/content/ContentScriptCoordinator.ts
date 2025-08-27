@@ -1,7 +1,6 @@
 import { AutomationEngine } from '@/automation/AutomationEngine';
 import { LoggingService } from '@/services/LoggingService';
 import { AudioService } from '@/services/AudioService';
-import { JotformAgentDisabler } from '@/services/JotformAgentDisabler';
 import {
   AutomationMessage,
   ExecuteSequenceMessage,
@@ -23,7 +22,6 @@ export class ContentScriptCoordinator {
   private readonly automationEngine: AutomationEngine;
   private readonly navigationDetector: NavigationDetector;
   private readonly audioService: AudioService;
-  private readonly jotformAgentDisabler: JotformAgentDisabler;
   private isReady = false;
   private isProcessingMessage = false;
   private readonly contentScriptId: string;
@@ -34,7 +32,6 @@ export class ContentScriptCoordinator {
     this.automationEngine = AutomationEngine.getInstance();
     this.navigationDetector = NavigationDetector.getInstance();
     this.audioService = AudioService.getInstance();
-    this.jotformAgentDisabler = JotformAgentDisabler.getInstance();
   }
 
   static getInstance(contentScriptId?: string): ContentScriptCoordinator {
@@ -82,20 +79,8 @@ export class ContentScriptCoordinator {
     // Initialize navigation detection
     this.navigationDetector.initialize();
 
-    // Initialize Jotform agent disabler
-    try {
-      this.jotformAgentDisabler.initialize();
-      this.logger.debug(
-        'JotformAgentDisabler initialized successfully',
-        'ContentScriptCoordinator'
-      );
-    } catch (error) {
-      this.logger.warn(
-        'JotformAgentDisabler initialization failed',
-        'ContentScriptCoordinator',
-        { error: String(error) }
-      );
-    }
+    // JotformAgentDisabler is already initialized by ServiceInitializer
+    // No need to initialize it again here
 
     // Check if there's an active automation to continue
     await this.checkForActiveAutomation();

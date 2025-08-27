@@ -32,7 +32,7 @@ export class VisualCursorService {
       this.audioService,
       logger
     );
-    
+
     this.state = {
       isVisible: false,
       position: { x: 0, y: 0 },
@@ -40,7 +40,7 @@ export class VisualCursorService {
       isHovering: false,
       isClicking: false,
     };
-    
+
     this.config = { ...VisualCursorConfig.DEFAULT_ANIMATION_CONFIG };
   }
 
@@ -70,11 +70,17 @@ export class VisualCursorService {
       this.domManager.createCursorElement();
       await this.audioService.initialize();
       this.isInitialized = true;
-      this.logger.info('Visual cursor service initialized', 'VisualCursorService');
+      this.logger.info(
+        'Visual cursor service initialized',
+        'VisualCursorService'
+      );
     } catch (error) {
-      throw new CursorInitializationError('Failed to initialize visual cursor service', {
-        error,
-      });
+      throw new CursorInitializationError(
+        'Failed to initialize visual cursor service',
+        {
+          error,
+        }
+      );
     }
   }
 
@@ -104,7 +110,7 @@ export class VisualCursorService {
 
     this.domManager.show();
     this.state.isVisible = true;
-    
+
     this.logger.debug(
       `Cursor shown at position (${this.state.position.x}, ${this.state.position.y})`,
       'VisualCursorService'
@@ -174,7 +180,7 @@ export class VisualCursorService {
 
     this.state.isHovering = true;
     this.state.isClicking = true;
-    
+
     try {
       await this.animationManager.performClickSequence(this.config);
     } finally {

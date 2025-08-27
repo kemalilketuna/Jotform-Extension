@@ -46,8 +46,12 @@ export class CursorAnimationManager {
         const easeProgress = this.easeInOutCubic(progress);
 
         const currentPos: CursorPosition = {
-          x: startPosition.x + (targetPosition.x - startPosition.x) * easeProgress,
-          y: startPosition.y + (targetPosition.y - startPosition.y) * easeProgress,
+          x:
+            startPosition.x +
+            (targetPosition.x - startPosition.x) * easeProgress,
+          y:
+            startPosition.y +
+            (targetPosition.y - startPosition.y) * easeProgress,
         };
 
         this.domManager.updatePosition(currentPos);
@@ -56,7 +60,10 @@ export class CursorAnimationManager {
           requestAnimationFrame(animate);
         } else {
           this.isAnimating = false;
-          this.logger.debug('Cursor animation completed', 'CursorAnimationManager');
+          this.logger.debug(
+            'Cursor animation completed',
+            'CursorAnimationManager'
+          );
           resolve(currentPos);
         }
       };
@@ -86,7 +93,10 @@ export class CursorAnimationManager {
    * Perform complete click animation sequence
    */
   async performClickSequence(config: VisualAnimationConfig): Promise<void> {
-    this.logger.debug('Starting click animation sequence', 'CursorAnimationManager');
+    this.logger.debug(
+      'Starting click animation sequence',
+      'CursorAnimationManager'
+    );
 
     // Start hover animation
     await this.startHover(config.hoverDuration);
@@ -107,7 +117,10 @@ export class CursorAnimationManager {
 
     return new Promise<void>((resolve) => {
       this.animationTimeout = window.setTimeout(() => {
-        this.logger.debug('Hover animation completed', 'CursorAnimationManager');
+        this.logger.debug(
+          'Hover animation completed',
+          'CursorAnimationManager'
+        );
         resolve();
       }, duration);
     });
@@ -122,13 +135,20 @@ export class CursorAnimationManager {
 
     // Play click sound
     this.audioService.playClickSound().catch((error) => {
-      this.logger.debug('Click sound playback failed', 'CursorAnimationManager', { error });
+      this.logger.debug(
+        'Click sound playback failed',
+        'CursorAnimationManager',
+        { error }
+      );
     });
 
     return new Promise<void>((resolve) => {
       setTimeout(() => {
         this.domManager.removeClass(clicking);
-        this.logger.debug('Click animation completed', 'CursorAnimationManager');
+        this.logger.debug(
+          'Click animation completed',
+          'CursorAnimationManager'
+        );
         resolve();
       }, duration);
     });
@@ -145,8 +165,13 @@ export class CursorAnimationManager {
   /**
    * Calculate distance between two positions
    */
-  private calculateDistance(pos1: CursorPosition, pos2: CursorPosition): number {
-    return Math.sqrt(Math.pow(pos2.x - pos1.x, 2) + Math.pow(pos2.y - pos1.y, 2));
+  private calculateDistance(
+    pos1: CursorPosition,
+    pos2: CursorPosition
+  ): number {
+    return Math.sqrt(
+      Math.pow(pos2.x - pos1.x, 2) + Math.pow(pos2.y - pos1.y, 2)
+    );
   }
 
   /**

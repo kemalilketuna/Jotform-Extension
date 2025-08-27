@@ -1,7 +1,10 @@
 import { CursorPosition } from '@/types/AutomationTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorConfig } from './VisualCursorConfig';
-import { CursorInitializationError, CursorStyleError } from './VisualCursorErrors';
+import {
+  CursorInitializationError,
+  CursorStyleError,
+} from './VisualCursorErrors';
 import cursorStyles from '@/assets/cursor.css?inline';
 import cursorTemplate from '@/assets/cursor.html?raw';
 
@@ -59,7 +62,9 @@ export class CursorDOMManager {
    */
   updatePosition(position: CursorPosition): void {
     if (!this.cursorElement) {
-      throw new CursorStyleError('Cannot update position: cursor element not found');
+      throw new CursorStyleError(
+        'Cannot update position: cursor element not found'
+      );
     }
 
     const { offsetX, offsetY } = VisualCursorConfig.CURSOR_DIMENSIONS;
@@ -148,7 +153,8 @@ export class CursorDOMManager {
       border: 'none',
       background: 'transparent',
       boxSizing: 'border-box',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       fontSize: '14px',
       lineHeight: '1',
       color: 'initial',
@@ -178,7 +184,10 @@ export class CursorDOMManager {
     };
 
     Object.entries(styles).forEach(([property, value]) => {
-      (this.cursorElement!.style as CSSStyleDeclaration & Record<string, string>)[property] = value;
+      (
+        this.cursorElement!.style as CSSStyleDeclaration &
+          Record<string, string>
+      )[property] = value;
     });
   }
 
@@ -190,7 +199,8 @@ export class CursorDOMManager {
       return;
     }
 
-    const { dataAttribute, role, ariaHidden } = VisualCursorConfig.DOM_ATTRIBUTES;
+    const { dataAttribute, role, ariaHidden } =
+      VisualCursorConfig.DOM_ATTRIBUTES;
     this.cursorElement.setAttribute(dataAttribute, 'true');
     this.cursorElement.setAttribute('role', role);
     this.cursorElement.setAttribute('aria-hidden', ariaHidden);
@@ -242,7 +252,10 @@ export class CursorDOMManager {
 
     this.styleObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'style'
+        ) {
           this.reapplyStyles();
         }
       });
@@ -276,7 +289,10 @@ export class CursorDOMManager {
     this.detectStyleConflicts(criticalStyles);
 
     Object.entries(criticalStyles).forEach(([property, value]) => {
-      (this.cursorElement!.style as CSSStyleDeclaration & Record<string, string>)[property] = value;
+      (
+        this.cursorElement!.style as CSSStyleDeclaration &
+          Record<string, string>
+      )[property] = value;
     });
   }
 
@@ -292,9 +308,13 @@ export class CursorDOMManager {
     const conflicts: string[] = [];
 
     Object.entries(expectedStyles).forEach(([property, expectedValue]) => {
-      const actualValue = (computedStyles as CSSStyleDeclaration & Record<string, string>)[property];
+      const actualValue = (
+        computedStyles as CSSStyleDeclaration & Record<string, string>
+      )[property];
       if (actualValue && actualValue !== expectedValue) {
-        conflicts.push(`${property}: expected '${expectedValue}', got '${actualValue}'`);
+        conflicts.push(
+          `${property}: expected '${expectedValue}', got '${actualValue}'`
+        );
       }
     });
 

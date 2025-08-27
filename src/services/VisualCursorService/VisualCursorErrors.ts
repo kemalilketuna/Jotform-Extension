@@ -2,7 +2,10 @@
  * Custom error classes for Visual Cursor Service
  */
 export class VisualCursorError extends Error {
-  constructor(message: string, public readonly context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    public readonly context?: Record<string, unknown>
+  ) {
     super(message);
     this.name = 'VisualCursorError';
   }
