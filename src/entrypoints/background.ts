@@ -10,7 +10,7 @@ import {
   SequenceCompleteMessage,
   SequenceErrorMessage,
   StepProgressUpdateMessage,
-} from '@/types/AutomationTypes';
+} from '@/types';
 
 /**
  * Persistent automation state interface

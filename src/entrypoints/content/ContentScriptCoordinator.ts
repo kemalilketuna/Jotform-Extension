@@ -10,7 +10,7 @@ import {
   MessageSender,
   AutomationStateRequestMessage,
   AutomationStateResponseMessage,
-} from '@/types/AutomationTypes';
+} from '@/types';
 import { NavigationDetector } from './NavigationDetector';
 
 /**

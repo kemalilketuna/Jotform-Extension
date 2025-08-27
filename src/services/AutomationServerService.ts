@@ -5,7 +5,7 @@ import {
   NavigationAction,
   TypeAction,
   WaitAction,
-} from '@/types/AutomationTypes';
+} from '@/types';
 import { LoggingService } from '@/services/LoggingService';
 import { ElementSelectors } from '@/constants/ElementSelectors';
 import { NavigationUrls } from '@/constants/NavigationUrls';

@@ -1,4 +1,4 @@
-import { VisualAnimationConfig } from '@/types/AutomationTypes';
+import { VisualAnimationConfig } from '@/types';
 
 /**
  * Configuration constants for visual cursor animations

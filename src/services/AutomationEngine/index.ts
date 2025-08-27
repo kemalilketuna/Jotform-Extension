@@ -27,4 +27,4 @@ export type {
   AutomationActionType,
   VisualAnimationConfig,
   CursorPosition,
-} from '@/types/AutomationTypes';
+} from '@/types';

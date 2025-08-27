@@ -3,7 +3,7 @@ import {
   VisualAnimationConfig,
   AutomationMessage,
   ExecuteSequenceMessage,
-} from '@/types/AutomationTypes';
+} from '@/types';
 import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/constants/UserMessages';
 import { AutomationError, SequenceExecutionError } from './AutomationErrors';

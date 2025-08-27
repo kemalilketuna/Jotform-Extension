@@ -1,67 +1,5 @@
-// Action Types
-export type AutomationActionType = 'NAVIGATE' | 'CLICK' | 'WAIT' | 'TYPE';
+import type { AutomationSequence, AutomationAction } from './ActionTypes';
 
-// Visual Animation Types
-export interface CursorPosition {
-  x: number;
-  y: number;
-}
-
-export interface VisualAnimationConfig {
-  enabled: boolean;
-  animationSpeed: number; // ms per pixel
-  hoverDuration: number; // ms to hover before click
-  clickDuration: number; // ms for click animation
-}
-
-export interface VisualCursorState {
-  isVisible: boolean;
-  position: CursorPosition;
-  isAnimating: boolean;
-  isHovering: boolean;
-  isClicking: boolean;
-}
-
-export interface BaseAutomationAction {
-  type: AutomationActionType;
-  description: string;
-  delay?: number;
-}
-
-export interface NavigationAction extends BaseAutomationAction {
-  type: 'NAVIGATE';
-  url: string;
-}
-
-export interface ClickAction extends BaseAutomationAction {
-  type: 'CLICK';
-  target: string;
-}
-
-export interface TypeAction extends BaseAutomationAction {
-  type: 'TYPE';
-  target: string;
-  value: string;
-}
-
-export interface WaitAction extends BaseAutomationAction {
-  type: 'WAIT';
-  delay: number;
-}
-
-export type AutomationAction =
-  | NavigationAction
-  | ClickAction
-  | TypeAction
-  | WaitAction;
-
-export interface AutomationSequence {
-  id: string;
-  name: string;
-  actions: AutomationAction[];
-}
-
-// Message Types
 export type AutomationMessageType =
   | 'EXECUTE_SEQUENCE'
   | 'SEQUENCE_COMPLETE'
@@ -144,19 +82,3 @@ export type AutomationMessage =
   | NavigationDetectedMessage
   | ContentScriptReadyMessage
   | StepProgressUpdateMessage;
-
-// Browser Extension Types
-export interface ExtensionTab {
-  id?: number;
-  url?: string;
-  title?: string;
-}
-
-export interface MessageSender {
-  tab?: ExtensionTab;
-  frameId?: number;
-  id?: string;
-  url?: string;
-}
-
-export type MessageResponse = (response?: AutomationMessage) => void;

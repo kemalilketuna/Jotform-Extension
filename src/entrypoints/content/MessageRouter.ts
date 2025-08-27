@@ -1,9 +1,5 @@
 import { LoggingService } from '@/services/LoggingService';
-import {
-  AutomationMessage,
-  MessageResponse,
-  MessageSender,
-} from '@/types/AutomationTypes';
+import { AutomationMessage, MessageResponse, MessageSender } from '@/types';
 import { ContentScriptCoordinator } from './ContentScriptCoordinator';
 
 /**
