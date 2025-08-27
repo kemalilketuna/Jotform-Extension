@@ -6,11 +6,10 @@ import {
   ExecuteSequenceMessage,
   SequenceCompleteMessage,
   SequenceErrorMessage,
-  MessageResponse,
-  MessageSender,
   AutomationStateRequestMessage,
   AutomationStateResponseMessage,
-} from '@/types';
+} from '@/services/AutomationEngine/MessageTypes';
+import { MessageResponse, MessageSender } from '@/types';
 import { NavigationDetector } from './NavigationDetector';
 
 /**

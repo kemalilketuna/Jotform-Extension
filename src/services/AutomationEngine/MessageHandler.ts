@@ -3,7 +3,7 @@ import {
   ExecuteSequenceMessage,
   StepProgressUpdateMessage,
   SequenceCompleteMessage,
-} from '@/types';
+} from './MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
 
 /**

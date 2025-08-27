@@ -1,4 +1,4 @@
-import { CursorPosition, VisualAnimationConfig } from '@/types';
+import { CursorPosition, VisualAnimationConfig } from './VisualTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { AudioService } from '@/services/AudioService';
 import { CursorDOMManager } from './CursorDOMManager';

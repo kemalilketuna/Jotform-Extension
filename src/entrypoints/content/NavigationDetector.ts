@@ -1,5 +1,8 @@
 import { LoggingService } from '@/services/LoggingService';
-import { ContentScriptReadyMessage, NavigationDetectedMessage } from '@/types';
+import {
+  ContentScriptReadyMessage,
+  NavigationDetectedMessage,
+} from '@/services/AutomationEngine/MessageTypes';
 
 /**
  * Navigation detection and content script coordination

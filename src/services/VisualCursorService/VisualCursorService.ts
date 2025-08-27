@@ -2,7 +2,7 @@ import {
   CursorPosition,
   VisualAnimationConfig,
   VisualCursorState,
-} from '@/types';
+} from './VisualTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { AudioService } from '@/services/AudioService';
 import { CursorDOMManager } from './CursorDOMManager';

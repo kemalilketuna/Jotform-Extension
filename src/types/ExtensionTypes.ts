@@ -1,4 +1,4 @@
-import type { AutomationMessage } from './MessageTypes';
+import type { AutomationMessage } from '../services/AutomationEngine/MessageTypes';
 
 export interface ExtensionTab {
   id?: number;

@@ -1,8 +1,10 @@
 import { LoggingService } from '@/services/LoggingService';
 import {
-  AutomationMessage,
   AutomationSequence,
   AutomationAction,
+} from '@/services/AutomationEngine';
+import {
+  AutomationMessage,
   ExecuteSequenceMessage,
   AutomationStateResponseMessage,
   NavigationDetectedMessage,
@@ -10,7 +12,7 @@ import {
   SequenceCompleteMessage,
   SequenceErrorMessage,
   StepProgressUpdateMessage,
-} from '@/types';
+} from '@/services/AutomationEngine/MessageTypes';
 
 /**
  * Persistent automation state interface

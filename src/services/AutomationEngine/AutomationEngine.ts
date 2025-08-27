@@ -1,9 +1,6 @@
-import {
-  AutomationSequence,
-  VisualAnimationConfig,
-  AutomationMessage,
-  ExecuteSequenceMessage,
-} from '@/types';
+import { AutomationSequence } from './ActionTypes';
+import { AutomationMessage, ExecuteSequenceMessage } from './MessageTypes';
+import { VisualAnimationConfig } from '@/services/VisualCursorService';
 import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/constants/UserMessages';
 import { AutomationError, SequenceExecutionError } from './AutomationErrors';

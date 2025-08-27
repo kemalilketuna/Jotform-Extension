@@ -23,8 +23,7 @@ export {
 export type {
   AutomationAction,
   AutomationSequence,
-  AutomationMessage,
   AutomationActionType,
-  VisualAnimationConfig,
-  CursorPosition,
-} from '@/types';
+} from './ActionTypes';
+
+export type { AutomationMessage } from './MessageTypes';

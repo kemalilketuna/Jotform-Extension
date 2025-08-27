@@ -4,7 +4,7 @@ import {
   TypeAction,
   WaitAction,
   AutomationAction,
-} from '@/types';
+} from './ActionTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';

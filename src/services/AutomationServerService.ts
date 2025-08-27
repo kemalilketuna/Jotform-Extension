@@ -1,11 +1,13 @@
 import {
   AutomationSequence,
   AutomationAction,
+} from '@/services/AutomationEngine';
+import {
   ClickAction,
   NavigationAction,
   TypeAction,
   WaitAction,
-} from '@/types';
+} from '@/services/AutomationEngine/ActionTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { ElementSelectors } from '@/constants/ElementSelectors';
 import { NavigationUrls } from '@/constants/NavigationUrls';

@@ -8,3 +8,10 @@ export {
 } from './VisualCursorErrors';
 export { CursorDOMManager } from './CursorDOMManager';
 export { CursorAnimationManager } from './CursorAnimationManager';
+
+// Export types
+export type {
+  CursorPosition,
+  VisualAnimationConfig,
+  VisualCursorState,
+} from './VisualTypes';

@@ -1,4 +1,4 @@
-import { CursorPosition } from '@/types';
+import { CursorPosition } from './VisualTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorConfig } from './VisualCursorConfig';
 import {
