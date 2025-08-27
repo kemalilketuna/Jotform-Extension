@@ -9,7 +9,7 @@ import {
 import { LoggingService } from '@/services/LoggingService';
 import { ElementSelectors } from '@/constants/ElementSelectors';
 import { NavigationUrls } from '@/constants/NavigationUrls';
-import { AutomationError } from '@/errors/AutomationErrors';
+import { AutomationError } from '@/services/AutomationEngine';
 
 export interface ServerAutomationStep {
   action: 'click' | 'navigate' | 'wait' | 'type';

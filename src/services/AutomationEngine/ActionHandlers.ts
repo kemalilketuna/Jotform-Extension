@@ -15,7 +15,7 @@ import {
   NavigationError,
   ElementNotFoundError,
   ActionExecutionError,
-} from '@/errors/AutomationErrors';
+} from './AutomationErrors';
 import { ElementUtils } from '@/services/AutomationEngine/ElementUtils';
 
 /**

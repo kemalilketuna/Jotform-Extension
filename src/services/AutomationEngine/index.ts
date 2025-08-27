@@ -8,6 +8,17 @@ export { ActionHandlers } from './ActionHandlers';
 export { ElementUtils } from './ElementUtils';
 export { MessageHandler } from './MessageHandler';
 
+// Export error classes
+export {
+  AutomationError,
+  ElementNotFoundError,
+  NavigationError,
+  ActionExecutionError,
+  SequenceExecutionError,
+  StringError,
+  ContentScriptError,
+} from './AutomationErrors';
+
 // Re-export types that might be needed by consumers
 export type {
   AutomationAction,
