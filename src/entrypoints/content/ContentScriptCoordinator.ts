@@ -1,4 +1,4 @@
-import { AutomationEngine } from '@/automation/AutomationEngine';
+import { AutomationEngine } from '@/services/AutomationEngine';
 import { LoggingService } from '@/services/LoggingService';
 import { AudioService } from '@/services/AudioService';
 import {
