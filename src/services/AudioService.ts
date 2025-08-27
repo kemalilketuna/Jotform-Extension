@@ -1,4 +1,5 @@
 import { LoggingService } from './LoggingService';
+import { ExtensionUtils } from '@/utils/ExtensionUtils';
 
 /**
  * Audio file paths managed through OOP pattern
@@ -61,6 +62,15 @@ export class AudioService {
    * Initialize the audio service and preload sounds
    */
   async initialize(): Promise<void> {
+    // Skip initialization if not in extension context
+    if (!ExtensionUtils.isExtensionContext()) {
+      this.logger.info(
+        'AudioService skipping initialization - not in extension context',
+        'AudioService'
+      );
+      return;
+    }
+
     try {
       await Promise.all([
         this.preloadClickSound(),
@@ -93,6 +103,15 @@ export class AudioService {
       return;
     }
 
+    // Skip if not in extension context
+    if (!ExtensionUtils.isExtensionContext()) {
+      this.logger.debug(
+        'Audio playback skipped - not in extension context',
+        'AudioService'
+      );
+      return;
+    }
+
     try {
       const audio = this.getOrCreateAudio(AudioPaths.CLICK_SOUND);
 
@@ -114,6 +133,15 @@ export class AudioService {
     if (!this.isEnabled) {
       this.logger.debug(
         'Audio playback disabled, skipping keystroke sound',
+        'AudioService'
+      );
+      return;
+    }
+
+    // Skip if not in extension context
+    if (!ExtensionUtils.isExtensionContext()) {
+      this.logger.debug(
+        'Audio playback skipped - not in extension context',
         'AudioService'
       );
       return;

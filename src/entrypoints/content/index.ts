@@ -139,7 +139,7 @@ let isMessageListenerRegistered = false;
  */
 async function initializeContentScript(): Promise<void> {
   const logger = LoggingService.getInstance();
-  
+
   logger.info(
     `JotForm Extension content script loaded [${CONTENT_SCRIPT_ID}]`,
     'ContentScript'
@@ -171,7 +171,7 @@ async function initializeContentScript(): Promise<void> {
   try {
     const contentScript = new ContentScriptMain();
     await contentScript.initialize();
-    
+
     isMessageListenerRegistered = true;
     logger.info(
       `Content script initialization completed [${CONTENT_SCRIPT_ID}]`,
@@ -222,7 +222,11 @@ if (typeof document !== 'undefined') {
   }
 } else {
   // In build environment, skip initialization
-  console.log('Content script loaded in build environment, skipping initialization');
+  const logger = LoggingService.getInstance();
+  logger.info(
+    'Content script loaded in build environment, skipping initialization',
+    'ContentScript'
+  );
 }
 
 // WXT content script definition

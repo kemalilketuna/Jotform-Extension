@@ -42,7 +42,9 @@ export class ContentScriptCoordinator {
       if (!contentScriptId) {
         contentScriptId = `content-script-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       }
-      ContentScriptCoordinator.instance = new ContentScriptCoordinator(contentScriptId);
+      ContentScriptCoordinator.instance = new ContentScriptCoordinator(
+        contentScriptId
+      );
     }
     return ContentScriptCoordinator.instance;
   }

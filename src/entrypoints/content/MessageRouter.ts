@@ -92,10 +92,7 @@ export class MessageRouter {
     try {
       await this.coordinator.handleMessage(message, sender, sendResponse);
     } catch (error) {
-      this.logger.error(
-        `Message routing failed: ${error}`,
-        'MessageRouter'
-      );
+      this.logger.error(`Message routing failed: ${error}`, 'MessageRouter');
     }
   }
 

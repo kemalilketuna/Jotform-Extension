@@ -1,5 +1,6 @@
 import { LoggingService } from './LoggingService';
 import { ElementSelectors } from '@/constants/ElementSelectors';
+import { ExtensionUtils } from '@/utils/ExtensionUtils';
 
 /**
  * Service to disable Jotform agent components using mutation observer
@@ -29,6 +30,15 @@ export class JotformAgentDisabler {
     if (this.isObserving) {
       this.logger.warn(
         'JotformAgentDisabler already initialized',
+        'JotformAgentDisabler'
+      );
+      return;
+    }
+
+    // Skip initialization if not in extension context
+    if (!ExtensionUtils.isExtensionContext()) {
+      this.logger.info(
+        'JotformAgentDisabler skipping initialization - not in extension context',
         'JotformAgentDisabler'
       );
       return;
