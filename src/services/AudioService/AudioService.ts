@@ -1,35 +1,7 @@
-import { LoggingService } from './LoggingService';
+import { LoggingService } from '../LoggingService';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
-
-/**
- * Audio file paths managed through OOP pattern
- */
-class AudioPaths {
-  static readonly CLICK_SOUND = 'sounds/radio_select.mp3' as const;
-  static readonly KEYSTROKE_SOUND = 'sounds/keystroke_soft.mp3' as const;
-}
-
-/**
- * Audio configuration constants
- */
-class AudioConfig {
-  static readonly DEFAULT_VOLUME = 0.7 as const;
-  static readonly KEYSTROKE_VOLUME = 0.5 as const;
-  static readonly PRELOAD_POLICY = 'auto' as const;
-}
-
-/**
- * Custom error class for audio-related errors
- */
-export class AudioError extends Error {
-  constructor(
-    message: string,
-    public readonly cause?: Error
-  ) {
-    super(message);
-    this.name = 'AudioError';
-  }
-}
+import { AudioPaths, AudioConfig } from './AudioConfig';
+import { AudioError } from './AudioErrors';
 
 /**
  * Service for managing audio playback in the browser extension
