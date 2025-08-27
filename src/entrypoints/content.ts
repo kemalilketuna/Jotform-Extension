@@ -16,6 +16,15 @@ import {
 } from '@/types/AutomationTypes';
 
 /**
+ * Extended window interface for content script tracking
+ */
+interface ExtendedWindow extends Window {
+  __JOTFORM_EXTENSION_ACTIVE__?: string;
+}
+
+declare const window: ExtendedWindow;
+
+/**
  * Navigation detection and content script coordination
  */
 class NavigationDetector {
@@ -170,6 +179,7 @@ class ContentScriptCoordinator {
   private readonly audioService: AudioService;
   private readonly jotformAgentDisabler: JotformAgentDisabler;
   private isReady = false;
+  private isProcessingMessage = false;
 
   private constructor() {
     this.logger = LoggingService.getInstance();
@@ -284,11 +294,12 @@ class ContentScriptCoordinator {
     sender: MessageSender,
     sendResponse: MessageResponse
   ): Promise<void> {
+    this.logger.info(
+      `Content script received message: ${message.type} [${CONTENT_SCRIPT_ID}]`,
+      'ContentScriptCoordinator'
+    );
+
     try {
-      this.logger.info(
-        `Content script received message: ${message.type}`,
-        'ContentScriptCoordinator'
-      );
       this.logger.debug('Message details:', 'ContentScriptCoordinator', {
         messageType: message.type,
         payload: message.payload,
@@ -302,10 +313,24 @@ class ContentScriptCoordinator {
         return;
       }
 
+      // Prevent concurrent message processing for EXECUTE_SEQUENCE
+      if (message.type === 'EXECUTE_SEQUENCE' && this.isProcessingMessage) {
+        this.logger.warn(
+          'Already processing a message, ignoring duplicate EXECUTE_SEQUENCE',
+          'ContentScriptCoordinator'
+        );
+        return;
+      }
+
       this.logger.info(
-        'Processing message in content script',
+        `Processing message in content script [${CONTENT_SCRIPT_ID}]`,
         'ContentScriptCoordinator'
       );
+
+      // Set processing flag for EXECUTE_SEQUENCE messages
+      if (message.type === 'EXECUTE_SEQUENCE') {
+        this.isProcessingMessage = true;
+      }
 
       // Delegate message handling to automation engine
       await this.automationEngine.handleMessage(message);
@@ -333,9 +358,24 @@ class ContentScriptCoordinator {
 
       // Also notify background script
       await browser.runtime.sendMessage(errorResponse);
+    } finally {
+      // Always reset processing flag for EXECUTE_SEQUENCE messages
+      if (message.type === 'EXECUTE_SEQUENCE') {
+        this.isProcessingMessage = false;
+      }
     }
   }
 }
+
+/**
+ * Global flag to prevent multiple message listeners
+ */
+let isMessageListenerRegistered = false;
+
+/**
+ * Unique identifier for this content script instance
+ */
+const CONTENT_SCRIPT_ID = `content-script-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 /**
  * Content script for JotForm extension automation
@@ -344,14 +384,38 @@ export default defineContentScript({
   matches: ['*://*.jotform.com/*'],
   main() {
     const logger = LoggingService.getInstance();
-    logger.info('JotForm Extension content script loaded', 'ContentScript');
+    logger.info(
+      `JotForm Extension content script loaded [${CONTENT_SCRIPT_ID}]`,
+      'ContentScript'
+    );
+
+    // Check if there's already a content script running
+    if (window.__JOTFORM_EXTENSION_ACTIVE__) {
+      logger.warn(
+        `Content script already active, skipping initialization [${CONTENT_SCRIPT_ID}]`,
+        'ContentScript'
+      );
+      return;
+    }
+
+    // Mark this window as having an active content script
+    window.__JOTFORM_EXTENSION_ACTIVE__ = CONTENT_SCRIPT_ID;
+
+    // Prevent multiple initializations
+    if (isMessageListenerRegistered) {
+      logger.warn(
+        `Content script already initialized, skipping [${CONTENT_SCRIPT_ID}]`,
+        'ContentScript'
+      );
+      return;
+    }
 
     const coordinator = ContentScriptCoordinator.getInstance();
 
     // Initialize coordinator
     coordinator.initialize();
 
-    // Listen for messages from popup/background
+    // Listen for messages from popup/background (only once)
     browser.runtime.onMessage.addListener(
       async (
         message: AutomationMessage,
@@ -362,5 +426,35 @@ export default defineContentScript({
         return true; // Keep message channel open for async responses
       }
     );
+
+    isMessageListenerRegistered = true;
+    logger.info(
+      `Message listener registered successfully [${CONTENT_SCRIPT_ID}]`,
+      'ContentScript'
+    );
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      logger.info(
+        `Content script cleaning up [${CONTENT_SCRIPT_ID}]`,
+        'ContentScript'
+      );
+      delete window.__JOTFORM_EXTENSION_ACTIVE__;
+    });
+
+    // Also cleanup on visibility change (tab switch)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        logger.debug(
+          `Content script visibility hidden [${CONTENT_SCRIPT_ID}]`,
+          'ContentScript'
+        );
+      } else {
+        logger.debug(
+          `Content script visibility visible [${CONTENT_SCRIPT_ID}]`,
+          'ContentScript'
+        );
+      }
+    });
   },
 });

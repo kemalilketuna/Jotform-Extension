@@ -90,6 +90,15 @@ export class AutomationEngine {
     try {
       switch (message.type) {
         case 'EXECUTE_SEQUENCE': {
+          // Check if automation is already running before processing
+          if (this.isExecuting) {
+            this.logger.warn(
+              'Automation already running, ignoring duplicate EXECUTE_SEQUENCE message',
+              'AutomationEngine'
+            );
+            return;
+          }
+
           const executeMessage = message as ExecuteSequenceMessage;
           if (executeMessage.payload) {
             this.logger.info(
