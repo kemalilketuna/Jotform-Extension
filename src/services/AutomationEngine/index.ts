@@ -4,6 +4,7 @@
  */
 
 export { AutomationEngine } from './AutomationEngine';
+export { AutomationConfig } from './AutomationConfig';
 export { ActionHandlers } from './ActionHandlers';
 export { ElementUtils } from './ElementUtils';
 export { MessageHandler } from './MessageHandler';

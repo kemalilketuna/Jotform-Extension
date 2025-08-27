@@ -1,14 +1,15 @@
 import { LoggingService } from '@/services/LoggingService';
 import { ElementSelectors } from '@/constants/ElementSelectors';
-import { TimingConstants } from '@/constants/TimingConstants';
+import { AutomationConfig } from './AutomationConfig';
 
 /**
  * Utilities for element waiting, DOM manipulation, and page state management
  */
 export class ElementUtils {
   private readonly logger: LoggingService;
-  private readonly DEFAULT_TIMEOUT = TimingConstants.DEFAULT_TIMEOUT;
-  private readonly NAVIGATION_TIMEOUT = TimingConstants.NAVIGATION_TIMEOUT;
+  private readonly DEFAULT_TIMEOUT = AutomationConfig.TIMEOUTS.DEFAULT_TIMEOUT;
+  private readonly NAVIGATION_TIMEOUT =
+    AutomationConfig.TIMEOUTS.NAVIGATION_TIMEOUT;
 
   constructor(logger: LoggingService) {
     this.logger = logger;
@@ -52,8 +53,8 @@ export class ElementUtils {
           // Log every 2 seconds to track progress
           if (
             attemptCount %
-              (TimingConstants.ELEMENT_LOG_INTERVAL /
-                TimingConstants.ELEMENT_CHECK_INTERVAL) ===
+              (AutomationConfig.INTERVALS.ELEMENT_LOG_INTERVAL /
+                AutomationConfig.INTERVALS.ELEMENT_CHECK_INTERVAL) ===
             0
           ) {
             this.logger.debug(
@@ -62,7 +63,10 @@ export class ElementUtils {
             );
           }
 
-          setTimeout(checkElement, TimingConstants.ELEMENT_CHECK_INTERVAL);
+          setTimeout(
+            checkElement,
+            AutomationConfig.INTERVALS.ELEMENT_CHECK_INTERVAL
+          );
         } catch (error) {
           this.logger.error(
             `Error checking element: ${selector}`,
@@ -114,7 +118,7 @@ export class ElementUtils {
                 // Keep checking for workspace elements
                 setTimeout(
                   checkWorkspaceLoaded,
-                  TimingConstants.WORKSPACE_ELEMENT_CHECK_INTERVAL
+                  AutomationConfig.INTERVALS.WORKSPACE_ELEMENT_CHECK_INTERVAL
                 );
               }
             };
@@ -130,7 +134,7 @@ export class ElementUtils {
         } else {
           setTimeout(
             checkReadyState,
-            TimingConstants.READY_STATE_CHECK_INTERVAL
+            AutomationConfig.INTERVALS.READY_STATE_CHECK_INTERVAL
           );
         }
       };
@@ -145,7 +149,8 @@ export class ElementUtils {
   async waitForPageStabilization(): Promise<void> {
     return new Promise((resolve) => {
       let lastChange = Date.now();
-      const stabilizationDelay = TimingConstants.PAGE_STABILIZATION_DELAY;
+      const stabilizationDelay =
+        AutomationConfig.DELAYS.PAGE_STABILIZATION_DELAY;
 
       const observer = new MutationObserver(() => {
         lastChange = Date.now();
@@ -168,7 +173,10 @@ export class ElementUtils {
           );
           resolve();
         } else {
-          setTimeout(checkStability, TimingConstants.ELEMENT_CHECK_INTERVAL);
+          setTimeout(
+            checkStability,
+            AutomationConfig.INTERVALS.ELEMENT_CHECK_INTERVAL
+          );
         }
       };
 
@@ -180,7 +188,7 @@ export class ElementUtils {
         observer.disconnect();
         this.logger.debug('Page stabilization timeout reached', 'ElementUtils');
         resolve();
-      }, TimingConstants.PAGE_STABILIZATION_TIMEOUT);
+      }, AutomationConfig.TIMEOUTS.PAGE_STABILIZATION_TIMEOUT);
     });
   }
 }

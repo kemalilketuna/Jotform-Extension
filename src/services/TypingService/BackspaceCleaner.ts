@@ -1,4 +1,4 @@
-import { TimingConstants } from '@/constants/TimingConstants';
+import { TypingConfig } from './TypingConfig';
 import { EventDispatcher } from './EventDispatcher';
 import { AudioService } from '@/services/AudioService';
 
@@ -50,7 +50,7 @@ export class BackspaceCleaner {
       onProgress?.(currentText);
 
       // Add delay between backspaces
-      await this.wait(TimingConstants.getBackspaceDelay() / speedMultiplier);
+      await this.wait(TypingConfig.getBackspaceDelay() / speedMultiplier);
     }
 
     // After animating deletion of the last word, clear any remaining text instantly

@@ -1,4 +1,4 @@
-import { TimingConstants } from '@/constants/TimingConstants';
+import { TypingConfig } from './TypingConfig';
 import { EventDispatcher } from './EventDispatcher';
 import { BackspaceCleaner } from './BackspaceCleaner';
 import { AudioService } from '@/services/AudioService';
@@ -227,7 +227,7 @@ export class TypingService {
       // Random delay with occasional longer pauses
       const shouldPause = Math.random() < 0.1; // 10% chance of pause
       const delay = shouldPause
-        ? TimingConstants.getTypingPauseDelay() / speedMultiplier
+        ? TypingConfig.getTypingPauseDelay() / speedMultiplier
         : this.getRandomDelay(speedMultiplier);
 
       if (i < characters.length - 1) {
@@ -242,7 +242,7 @@ export class TypingService {
    * Get a random typing delay that mimics human behavior
    */
   private getRandomDelay(speedMultiplier: number): number {
-    const baseDelay = TimingConstants.getRandomTypingDelay();
+    const baseDelay = TypingConfig.getRandomTypingDelay();
     return baseDelay / speedMultiplier;
   }
 

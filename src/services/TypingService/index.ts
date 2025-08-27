@@ -1,4 +1,5 @@
 export { TypingService } from './TypingService';
+export { TypingConfig } from './TypingConfig';
 export {
   TypingError,
   ElementTypingError,
