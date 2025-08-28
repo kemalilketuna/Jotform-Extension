@@ -2,7 +2,7 @@ import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { LoggingService } from './LoggingService';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
-import { RedSquareComponent } from '@/components/RedSquareComponent';
+import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
 
 /**
  * Service to manage React components rendered by the extension
@@ -53,7 +53,7 @@ export class ComponentService {
       );
 
       this.createComponentContainer();
-      this.renderRedSquareComponent();
+      this.renderAiTextFieldComponent();
       this.isInitialized = true;
 
       this.logger.info(
@@ -107,9 +107,9 @@ export class ComponentService {
   }
 
   /**
-   * Render the red square React component
+   * Render the AI text field React component
    */
-  private renderRedSquareComponent(): void {
+  private renderAiTextFieldComponent(): void {
     try {
       if (!this.containerElement) {
         throw new Error('Container element not found');
@@ -118,22 +118,22 @@ export class ComponentService {
       // Create React root
       this.reactRoot = createRoot(this.containerElement);
 
-      // Render the red square component
+      // Render the AI text field component
       this.reactRoot.render(
-        React.createElement(RedSquareComponent, {
-          onClick: () => {
-            this.logger.info('Red square clicked', 'ComponentService');
+        React.createElement(AiTextFieldComponent, {
+          onSubmit: (text: string) => {
+            this.logger.info('AI text submitted', 'ComponentService', { text });
           }
         })
       );
 
       this.logger.info(
-        'Red square component rendered successfully',
+        'AI text field component rendered successfully',
         'ComponentService'
       );
     } catch (error) {
       this.logger.error(
-        'Failed to render red square component',
+        'Failed to render AI text field component',
         'ComponentService',
         { error: String(error) }
       );
