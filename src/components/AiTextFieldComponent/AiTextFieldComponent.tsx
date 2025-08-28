@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LoggingService } from '../../services/LoggingService';
 
 /**
  * AI text field component that appears when the extension is active
@@ -18,7 +19,11 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputText.trim()) {
-      console.log('AI text submitted:', inputText);
+      LoggingService.getInstance().info(
+        'AI text submitted',
+        'AiTextFieldComponent',
+        { inputText }
+      );
       onSubmit?.(inputText.trim());
       setInputText('');
     }
