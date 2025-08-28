@@ -40,11 +40,11 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 
   return (
     <div
-      className={`fixed bottom-5 right-5 z-[999999] pointer-events-auto transition-all duration-300 ${isFocused ? 'w-80' : 'w-64'
-        } ${className}`}
+      className={`fixed bottom-5 right-5 z-[999999] pointer-events-auto transition-all duration-300 ${isFocused ? 'w-80' : 'w-64'} ${className}`
+      }
     >
-      <form onSubmit={handleSubmit} className="relative">
-        <div className="relative">
+      <form onSubmit={handleSubmit} className="relative" >
+        <div className="relative" >
           <AiTextInput
             value={inputText}
             onChange={setInputText}
@@ -59,4 +59,10 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
   );
 };
 
+// Export sub-components
+export { AiTextInput, type AiTextInputProps } from './AiTextInput';
+export { SubmitButton, type SubmitButtonProps } from './SubmitButton';
+export { SendIcon, type SendIconProps } from './SendIcon';
+
+// Default export
 export default AiTextFieldComponent;
