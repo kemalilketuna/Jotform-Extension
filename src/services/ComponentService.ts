@@ -47,10 +47,7 @@ export class ComponentService {
     }
 
     try {
-      this.logger.info(
-        'Initializing ComponentService',
-        'ComponentService'
-      );
+      this.logger.info('Initializing ComponentService', 'ComponentService');
 
       this.createComponentContainer();
       this.renderAiTextFieldComponent();
@@ -80,7 +77,7 @@ export class ComponentService {
       // Create the container element
       this.containerElement = document.createElement('div');
       this.containerElement.id = 'jotform-extension-components';
-      
+
       // Set container styles to ensure proper positioning
       this.containerElement.style.position = 'fixed';
       this.containerElement.style.top = '0';
@@ -89,7 +86,7 @@ export class ComponentService {
       this.containerElement.style.height = '100%';
       this.containerElement.style.pointerEvents = 'none';
       this.containerElement.style.zIndex = '999998';
-      
+
       // Add to document body
       document.body.appendChild(this.containerElement);
 
@@ -123,7 +120,7 @@ export class ComponentService {
         React.createElement(AiTextFieldComponent, {
           onSubmit: (text: string) => {
             this.logger.info('AI text submitted', 'ComponentService', { text });
-          }
+          },
         })
       );
 
@@ -162,7 +159,9 @@ export class ComponentService {
       }
 
       // Also remove any existing containers by ID
-      const existingContainer = document.getElementById('jotform-extension-components');
+      const existingContainer = document.getElementById(
+        'jotform-extension-components'
+      );
       if (existingContainer && existingContainer.parentNode) {
         existingContainer.parentNode.removeChild(existingContainer);
       }
@@ -183,10 +182,7 @@ export class ComponentService {
       this.removeComponentContainer();
       this.isInitialized = false;
 
-      this.logger.info(
-        'ComponentService destroyed',
-        'ComponentService'
-      );
+      this.logger.info('ComponentService destroyed', 'ComponentService');
     } catch (error) {
       this.logger.error(
         'Error destroying ComponentService',
@@ -207,8 +203,10 @@ export class ComponentService {
    * Check if components are currently rendered
    */
   areComponentsVisible(): boolean {
-    return this.containerElement !== null && 
-           this.containerElement.parentNode !== null &&
-           this.reactRoot !== null;
+    return (
+      this.containerElement !== null &&
+      this.containerElement.parentNode !== null &&
+      this.reactRoot !== null
+    );
   }
 }
