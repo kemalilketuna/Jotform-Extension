@@ -1,6 +1,7 @@
 import { LoggingService } from '@/services/LoggingService';
 import { AudioService } from '@/services/AudioService';
 import { JotformAgentDisabler } from '@/services/JotformAgentDisabler';
+import { ComponentService } from '@/services/ComponentService';
 
 /**
  * Service initialization and setup for content script
@@ -44,6 +45,9 @@ export class ServiceInitializer {
     // Initialize Jotform agent disabler
     await this.initializeJotformAgentDisabler();
 
+    // Initialize component service
+    await this.initializeComponentService();
+
     this.isInitialized = true;
     this.logger.info(
       'All content script services initialized successfully',
@@ -85,6 +89,26 @@ export class ServiceInitializer {
     } catch (error) {
       this.logger.warn(
         'JotformAgentDisabler initialization failed',
+        'ServiceInitializer',
+        { error: String(error) }
+      );
+    }
+  }
+
+  /**
+   * Initialize component service with error handling
+   */
+  private async initializeComponentService(): Promise<void> {
+    try {
+      const componentService = ComponentService.getInstance();
+      componentService.initialize();
+      this.logger.debug(
+        'ComponentService initialized successfully',
+        'ServiceInitializer'
+      );
+    } catch (error) {
+      this.logger.warn(
+        'ComponentService initialization failed',
         'ServiceInitializer',
         { error: String(error) }
       );
