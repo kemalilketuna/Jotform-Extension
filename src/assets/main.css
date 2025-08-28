@@ -8,10 +8,22 @@
   --color-jotform-danger: #dc3545;
   --color-jotform-dark: #343a40;
   --color-jotform-light: #f8f9fa;
-  --font-family-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
   --animate-fade-in: fadeIn 0.2s ease-in-out;
   --animate-slide-up: slideUp 0.3s ease-out;
   --animate-pulse-soft: pulseSoft 2s infinite;
+  --keyframes-fadeIn: {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  };
+  --keyframes-slideUp: {
+    0% { transform: translateY(10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  };
+  --keyframes-pulseSoft: {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  };
 }
 
 /* Keyframe definitions */

@@ -6,4 +6,5 @@ export default {
     './src/components/**/*.{js,ts,jsx,tsx}',
     './public/**/*.html',
   ],
+  plugins: [],
 };
