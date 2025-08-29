@@ -164,6 +164,7 @@ export class ContentScriptCoordinator {
         'ContentScriptCoordinator'
       );
 
+      // Handle different message types
       // Set processing flag for EXECUTE_SEQUENCE messages
       if (message.type === 'EXECUTE_SEQUENCE') {
         this.isProcessingMessage = true;

@@ -6,6 +6,7 @@ import { UserMessages } from '@/constants/UserMessages';
 import { AutomationError, SequenceExecutionError } from './AutomationErrors';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
+import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 import { ActionHandlers } from './ActionHandlers';
 import { ElementUtils } from './ElementUtils';
 import { MessageHandler } from './MessageHandler';
@@ -19,6 +20,7 @@ export class AutomationEngine {
   private readonly logger: LoggingService;
   private readonly visualCursor: VisualCursorService;
   private readonly typingService: TypingService;
+  private readonly userInteractionBlocker: UserInteractionBlocker;
   private readonly actionHandlers: ActionHandlers;
   private readonly elementUtils: ElementUtils;
   private readonly messageHandler: MessageHandler;
@@ -31,6 +33,7 @@ export class AutomationEngine {
     this.logger = logger;
     this.visualCursor = visualCursor;
     this.typingService = typingService;
+    this.userInteractionBlocker = UserInteractionBlocker.getInstance();
     this.elementUtils = new ElementUtils(logger);
     this.messageHandler = new MessageHandler(logger);
     this.actionHandlers = new ActionHandlers(
@@ -134,6 +137,9 @@ export class AutomationEngine {
     );
 
     try {
+      // Enable user interaction blocking to prevent real clicks
+      this.userInteractionBlocker.enableBlocking();
+
       // Initialize visual cursor with config
       if (visualConfig) {
         this.visualCursor.updateConfig(visualConfig);
@@ -166,6 +172,17 @@ export class AutomationEngine {
       // Send sequence completion message to background script
       await this.messageHandler.sendSequenceComplete(sequence.id);
     } catch (error) {
+      // Ensure interaction blocking is disabled on error
+      try {
+        this.userInteractionBlocker.disableBlocking();
+      } catch {
+        this.logger.warn(
+          'Failed to disable interaction blocking on error, forcing cleanup',
+          'AutomationEngine'
+        );
+        this.userInteractionBlocker.forceCleanup();
+      }
+
       const sequenceError = new SequenceExecutionError(
         sequence.id,
         error instanceof Error ? error.message : 'Unknown error',
@@ -175,6 +192,10 @@ export class AutomationEngine {
       throw sequenceError;
     } finally {
       this.isExecuting = false;
+
+      // Disable user interaction blocking to restore normal clicking
+      this.userInteractionBlocker.disableBlocking();
+
       // Hide cursor after sequence completion
       this.visualCursor.hide();
       setTimeout(() => {

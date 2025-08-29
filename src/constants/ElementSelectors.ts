@@ -45,6 +45,18 @@ export class ElementSelectors {
     AGENT_CONTAINER_PATTERN: '[id^="JotformAgent-"]',
   } as const;
 
+  // Extension Component Identification
+  static readonly EXTENSION_COMPONENTS = {
+    // CSS class to mark extension components as always clickable
+    EXTENSION_COMPONENT_CLASS: 'jotform-extension-component',
+    // CSS class for the interaction blocker overlay
+    INTERACTION_BLOCKER_CLASS: 'jotform-extension-interaction-blocker',
+    // Selector for all extension components
+    EXTENSION_COMPONENT_SELECTOR: '.jotform-extension-component',
+    // Selector for the interaction blocker
+    INTERACTION_BLOCKER_SELECTOR: '.jotform-extension-interaction-blocker',
+  } as const;
+
   /**
    * Validate CSS selector format
    */

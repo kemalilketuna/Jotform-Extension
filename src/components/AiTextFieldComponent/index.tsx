@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LoggingService } from '../../services/LoggingService';
+import { ElementSelectors } from '@/constants/ElementSelectors';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
 
@@ -40,7 +41,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 
   return (
     <div
-      className={`fixed bottom-5 right-5 z-[999999] pointer-events-auto transition-all duration-300 ${isFocused ? 'w-80' : 'w-64'} ${className}`}
+      className={`fixed bottom-5 right-5 z-[999999] pointer-events-auto transition-all duration-300 ${isFocused ? 'w-80' : 'w-64'} ${ElementSelectors.EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
     >
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">

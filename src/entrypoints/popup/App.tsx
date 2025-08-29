@@ -6,6 +6,7 @@ import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes
 import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/constants/UserMessages';
 import { NavigationUrls } from '@/constants/NavigationUrls';
+import { ElementSelectors } from '@/constants/ElementSelectors';
 
 import './App.css';
 
@@ -156,7 +157,9 @@ function App() {
   };
 
   return (
-    <div className="ai-form-popup">
+    <div
+      className={`ai-form-popup ${ElementSelectors.EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS}`}
+    >
       <header className="popup-header">
         <img src={jotformLogo} className="logo" alt="JotForm logo" />
         <div className="header-text">
