@@ -4,7 +4,9 @@ export interface SendIconProps {
   className?: string;
 }
 
-export const SendIcon: React.FC<SendIconProps> = ({ className = 'w-4 h-4' }) => {
+export const SendIcon: React.FC<SendIconProps> = ({
+  className = 'w-4 h-4',
+}) => {
   return (
     <svg
       className={className}

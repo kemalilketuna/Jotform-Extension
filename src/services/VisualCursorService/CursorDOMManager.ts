@@ -81,7 +81,14 @@ export class CursorDOMManager {
 
     this.reapplyStyles();
     this.cursorElement.style.display = 'block';
-    this.cursorElement.style.opacity = '1';
+    this.cursorElement.style.opacity = '0';
+
+    // Trigger fade-in animation (opposite of fade-out)
+    requestAnimationFrame(() => {
+      if (this.cursorElement) {
+        this.cursorElement.style.opacity = '1';
+      }
+    });
   }
 
   /**
