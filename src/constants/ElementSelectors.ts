@@ -40,9 +40,29 @@ export class ElementSelectors {
 
   // Jotform Agent Elements
   static readonly JOTFORM_AGENT = {
+    // Main container with dynamic ID
+    AGENT_CONTAINER_PATTERN: '[id^="JotformAgent-"]',
+    // Embedded agent container
+    EMBEDDED_CONTAINER: '.embedded-agent-container',
+    // Chat avatar container
+    CHAT_AVATAR_CONTAINER: '.ai-agent-chat-avatar-container',
+    // Chat wrapper (original pattern)
     CHAT_WRAPPER_PATTERN:
       '[id^="JotformAgent-"] > div > div.ai-agent-chat-avatar-container.chat-button-variant-new-3 > div > div > div.__chat-wrapper',
-    AGENT_CONTAINER_PATTERN: '[id^="JotformAgent-"]',
+    // First message bubble
+    FIRST_MESSAGE_BUBBLE: '.first-message-bubble',
+    // Chat animation container
+    CHAT_ANIMATION_CONTAINER: '.ai-agent-chat-animation-container',
+    // Agent iframe
+    AGENT_IFRAME: '#form-agent-helper',
+    // Comprehensive patterns for different states
+    ALL_AGENT_PATTERNS: [
+      '[id^="JotformAgent-"]',
+      '.embedded-agent-container',
+      '.ai-agent-chat-avatar-container',
+      '.ai-agent-chat-animation-container',
+      '#form-agent-helper',
+    ],
   } as const;
 
   // Extension Component Identification

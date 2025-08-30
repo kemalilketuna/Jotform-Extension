@@ -75,19 +75,31 @@ export class JotformAgentDisabler {
    */
   private disableExistingAgentComponents(): void {
     try {
-      const existingElements = document.querySelectorAll(
-        ElementSelectors.JOTFORM_AGENT.CHAT_WRAPPER_PATTERN
-      );
+      let foundElements = 0;
 
-      if (existingElements.length > 0) {
+      // Check all possible agent patterns
+      ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS.forEach((pattern) => {
+        const elements = document.querySelectorAll(pattern);
+        elements.forEach((element) => {
+          this.disableAgentComponent(element as HTMLElement);
+          foundElements++;
+        });
+      });
+
+      // Also check for the main container pattern specifically
+      const mainContainers = document.querySelectorAll(
+        ElementSelectors.JOTFORM_AGENT.AGENT_CONTAINER_PATTERN
+      );
+      mainContainers.forEach((container) => {
+        this.disableAgentComponent(container as HTMLElement);
+        foundElements++;
+      });
+
+      if (foundElements > 0) {
         this.logger.info(
-          `Found ${existingElements.length} existing Jotform agent components`,
+          `Found and disabled ${foundElements} existing Jotform agent components`,
           'JotformAgentDisabler'
         );
-
-        existingElements.forEach((element) => {
-          this.disableAgentComponent(element as HTMLElement);
-        });
       } else {
         this.logger.info(
           'No existing Jotform agent components found',
@@ -145,32 +157,44 @@ export class JotformAgentDisabler {
    */
   private checkAndDisableAgentComponents(element: Element): void {
     try {
-      // Check if the element itself matches the agent container pattern
+      let foundComponents = 0;
+
+      // Check if the element itself matches any agent pattern
+      ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS.forEach((pattern) => {
+        if (element.matches && element.matches(pattern)) {
+          this.disableAgentComponent(element as HTMLElement);
+          foundComponents++;
+          this.logger.info(
+            `Detected new Jotform agent component: ${pattern}`,
+            'JotformAgentDisabler'
+          );
+        }
+      });
+
+      // Check descendants for all agent patterns
+      ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS.forEach((pattern) => {
+        const descendants = element.querySelectorAll(pattern);
+        descendants.forEach((descendant) => {
+          this.disableAgentComponent(descendant as HTMLElement);
+          foundComponents++;
+        });
+      });
+
+      // Special handling for main container pattern
       if (
         element.matches &&
         element.matches(ElementSelectors.JOTFORM_AGENT.AGENT_CONTAINER_PATTERN)
       ) {
-        this.logger.info(
-          'Detected new Jotform agent container',
-          'JotformAgentDisabler'
-        );
-
-        // Look for chat wrapper within this container
-        const chatWrapper = element.querySelector(
-          ElementSelectors.JOTFORM_AGENT.CHAT_WRAPPER_PATTERN
-        );
-        if (chatWrapper) {
-          this.disableAgentComponent(chatWrapper as HTMLElement);
-        }
+        this.disableAgentComponent(element as HTMLElement);
+        foundComponents++;
       }
 
-      // Also check descendants for chat wrapper pattern
-      const chatWrappers = element.querySelectorAll(
-        ElementSelectors.JOTFORM_AGENT.CHAT_WRAPPER_PATTERN
-      );
-      chatWrappers.forEach((wrapper) => {
-        this.disableAgentComponent(wrapper as HTMLElement);
-      });
+      if (foundComponents > 0) {
+        this.logger.info(
+          `Disabled ${foundComponents} agent components from mutation`,
+          'JotformAgentDisabler'
+        );
+      }
     } catch (error) {
       this.logger.error(
         'Error checking element for agent components',
@@ -190,8 +214,8 @@ export class JotformAgentDisabler {
         return;
       }
 
-      // Hide the element
-      element.style.display = 'none';
+      // Multiple removal strategies for better reliability
+      this.applyRemovalStrategies(element);
       this.disabledElements.add(element);
 
       this.logger.info(
@@ -206,6 +230,44 @@ export class JotformAgentDisabler {
     } catch (error) {
       this.logger.error(
         'Failed to disable agent component',
+        'JotformAgentDisabler',
+        { error: String(error) }
+      );
+    }
+  }
+
+  /**
+   * Apply multiple removal strategies for better reliability
+   */
+  private applyRemovalStrategies(element: HTMLElement): void {
+    try {
+      // Strategy 1: Hide with display none
+      element.style.display = 'none';
+
+      // Strategy 2: Hide with visibility hidden
+      element.style.visibility = 'hidden';
+
+      // Strategy 3: Move off-screen
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.top = '-9999px';
+
+      // Strategy 4: Set opacity to 0
+      element.style.opacity = '0';
+
+      // Strategy 5: Set pointer events to none
+      element.style.pointerEvents = 'none';
+
+      // Strategy 6: Add a marker class for identification
+      element.classList.add('jotform-extension-disabled');
+
+      // Strategy 7: Remove from DOM if it's safe to do so
+      if (element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
+    } catch (error) {
+      this.logger.warn(
+        'Some removal strategies failed, but element should still be disabled',
         'JotformAgentDisabler',
         { error: String(error) }
       );
@@ -250,5 +312,16 @@ export class JotformAgentDisabler {
    */
   isCurrentlyObserving(): boolean {
     return this.isObserving;
+  }
+
+  /**
+   * Manually trigger a comprehensive check for agent components
+   * Useful for debugging or when components are detected but not removed
+   */
+  forceCheck(): void {
+    this.logger.info('Manual force check triggered', 'JotformAgentDisabler');
+
+    // Run the same logic as initialization
+    this.disableExistingAgentComponents();
   }
 }
