@@ -169,18 +169,20 @@ export class LoggingService {
     const contextStr = entry.context ? ` [${entry.context}]` : '';
     const fullMessage = `${prefix}${contextStr} ${entry.message}`;
 
+    const logArgs = entry.data ? [fullMessage, entry.data] : [fullMessage];
+
     switch (entry.level) {
       case LogLevel.DEBUG:
-        console.debug(fullMessage, entry.data);
+        console.debug(...logArgs);
         break;
       case LogLevel.INFO:
-        console.info(fullMessage, entry.data);
+        console.info(...logArgs);
         break;
       case LogLevel.WARN:
-        console.warn(fullMessage, entry.data);
+        console.warn(...logArgs);
         break;
       case LogLevel.ERROR:
-        console.error(fullMessage, entry.data);
+        console.error(...logArgs);
         break;
     }
   }
