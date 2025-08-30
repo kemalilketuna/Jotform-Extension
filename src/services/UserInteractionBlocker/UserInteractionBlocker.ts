@@ -1,6 +1,7 @@
 import { LoggingService } from '@/services/LoggingService';
 import { ElementSelectors } from '@/constants/ElementSelectors';
 import { UserMessages } from '@/constants/UserMessages';
+import { AutomationStateManager, AutomationState, AutomationStateChangeListener } from '../AutomationStateManager';
 
 /**
  * Service for blocking user interactions during automation while keeping extension components clickable
@@ -10,9 +11,12 @@ export class UserInteractionBlocker {
   private readonly logger: LoggingService;
   private isBlocking = false;
   private blockerElement: HTMLElement | null = null;
+  private stateManager = AutomationStateManager.getInstance();
+  private stateChangeListener: AutomationStateChangeListener | null = null;
 
   private constructor() {
     this.logger = LoggingService.getInstance();
+    this.setupAutomationStateListener();
   }
 
   static getInstance(): UserInteractionBlocker {
@@ -60,6 +64,36 @@ export class UserInteractionBlocker {
         'UserInteractionBlocker'
       );
     }
+  }
+
+  private setupAutomationStateListener(): void {
+    this.stateChangeListener = (event) => {
+      this.logger.debug(
+        `Automation state changed from ${event.previousState} to ${event.currentState}`,
+        'UserInteractionBlocker'
+      );
+
+      switch (event.currentState) {
+        case AutomationState.RUNNING:
+          this.enableBlocking();
+          break;
+        case AutomationState.PAUSED:
+        case AutomationState.STOPPED:
+          this.disableBlocking();
+          break;
+      }
+    };
+
+    this.stateManager.addStateChangeListener(this.stateChangeListener);
+  }
+
+  public destroy(): void {
+    if (this.stateChangeListener) {
+      this.stateManager.removeStateChangeListener(this.stateChangeListener);
+      this.stateChangeListener = null;
+    }
+    this.disableBlocking();
+    this.logger.debug('UserInteractionBlocker destroyed', 'UserInteractionBlocker');
   }
 
   /**

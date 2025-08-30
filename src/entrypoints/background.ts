@@ -12,6 +12,12 @@ import {
   SequenceCompleteMessage,
   SequenceErrorMessage,
   StepProgressUpdateMessage,
+  PauseAutomationMessage,
+  ResumeAutomationMessage,
+  StopAutomationMessage,
+  AutomationPausedMessage,
+  AutomationResumedMessage,
+  AutomationStoppedMessage,
 } from '@/services/AutomationEngine/MessageTypes';
 
 /**
@@ -157,7 +163,7 @@ class AutomationCoordinator {
   /**
    * Reset automation state
    */
-  private resetAutomationState(): void {
+  public resetAutomationState(): void {
     this.automationState = {
       isActive: false,
       currentStepIndex: 0,
@@ -168,7 +174,7 @@ class AutomationCoordinator {
   /**
    * Send message to content script with error handling
    */
-  private async sendToContentScript(
+  public async sendToContentScript(
     tabId: number,
     message: AutomationMessage
   ): Promise<void> {
@@ -358,6 +364,65 @@ export default defineBackground(() => {
             );
             logger.info(
               `Step ${progressMessage.payload.completedStepIndex} completed for sequence ${progressMessage.payload.sequenceId}`,
+              'BackgroundScript'
+            );
+            break;
+          }
+
+          case 'PAUSE_AUTOMATION': {
+            const pauseMessage = message as PauseAutomationMessage;
+            const targetTabId = pauseMessage.payload.tabId || sender.tab?.id;
+            if (targetTabId) {
+              await coordinator.sendToContentScript(targetTabId, pauseMessage);
+              logger.info(`Pause automation forwarded to tab ${targetTabId}`, 'BackgroundScript');
+            }
+            break;
+          }
+
+          case 'RESUME_AUTOMATION': {
+            const resumeMessage = message as ResumeAutomationMessage;
+            const targetTabId = resumeMessage.payload.tabId || sender.tab?.id;
+            if (targetTabId) {
+              await coordinator.sendToContentScript(targetTabId, resumeMessage);
+              logger.info(`Resume automation forwarded to tab ${targetTabId}`, 'BackgroundScript');
+            }
+            break;
+          }
+
+          case 'STOP_AUTOMATION': {
+            const stopMessage = message as StopAutomationMessage;
+            const targetTabId = stopMessage.payload.tabId || sender.tab?.id;
+            if (targetTabId) {
+              await coordinator.sendToContentScript(targetTabId, stopMessage);
+              coordinator.resetAutomationState();
+              logger.info(`Stop automation forwarded to tab ${targetTabId}`, 'BackgroundScript');
+            }
+            break;
+          }
+
+          case 'AUTOMATION_PAUSED': {
+            const pausedMessage = message as AutomationPausedMessage;
+            logger.info(
+              `Automation paused for sequence ${pausedMessage.payload.sequenceId} at step ${pausedMessage.payload.currentStepIndex}`,
+              'BackgroundScript'
+            );
+            break;
+          }
+
+          case 'AUTOMATION_RESUMED': {
+            const resumedMessage = message as AutomationResumedMessage;
+            logger.info(
+              `Automation resumed for sequence ${resumedMessage.payload.sequenceId} at step ${resumedMessage.payload.currentStepIndex}`,
+              'BackgroundScript'
+            );
+            break;
+          }
+
+          case 'AUTOMATION_STOPPED': {
+            const stoppedMessage = message as AutomationStoppedMessage;
+            coordinator.resetAutomationState();
+            logger.info(
+              `Automation stopped for sequence ${stoppedMessage.payload.sequenceId}: ${stoppedMessage.payload.reason}`,
               'BackgroundScript'
             );
             break;

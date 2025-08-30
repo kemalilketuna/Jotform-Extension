@@ -11,6 +11,9 @@ importers:
       '@jotforminc/jotform.css':
         specifier: ^2.5.8
         version: 2.5.8
+      '@jotforminc/svg-icons':
+        specifier: ^9.21.0
+        version: 9.21.0
       react:
         specifier: ^19.1.0
         version: 19.1.1
@@ -568,6 +571,9 @@ packages:
     resolution: {integrity: sha512-XLW92+rJIo6XeJlTp7Z28Z64XW0cmEEPalAOQRbdOnlpqOmUvJKqeRGRmuhlk8SqczSVoFpClM2gQWsqxFlZ8w==}
     engines: {pnpm: 9.7.1}
 
+  '@jotforminc/svg-icons@9.21.0':
+    resolution: {integrity: sha512-TzbwCWc4b46GdWLeHhhdTSFCNTr4Vl/ivyvXvLIuaos6QODRbiIksMQEIiN5m+59aAUZbvTxQk0K0Up0DlnqRw==}
+
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
 
@@ -714,6 +720,9 @@ packages:
     resolution: {integrity: sha512-CvUo2ixeIQGtF6WvuB87XWqPQkoFAFqW+HUo/WzHwuHDvIwZCtjdWXoYCcr06iKGydiqTclC4jU/TNObC/xKZg==}
     cpu: [x64]
     os: [win32]
+
+  '@swc/helpers@0.5.12':
+    resolution: {integrity: sha512-KMZNXiGibsW9kvZAO1Pam2JPTDBm+KSHMMHWdsyI/1DbIZjT2A6Gy3hblVXUMEDvUAKq+e0vL0X0o54owWji7g==}
 
   '@tailwindcss/node@4.1.12':
     resolution: {integrity: sha512-3hm9brwvQkZFe++SBt+oLjo4OLDtkvlE8q2WalaD/7QWaeM7KEJbAiY/LJZUaCs7Xa8aUu4xy3uoyX4q54UVdQ==}
@@ -1263,6 +1272,10 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  core-js@3.22.2:
+    resolution: {integrity: sha512-Z5I2vzDnEIqO2YhELVMFcL1An2CIsFe9Q7byZhs8c/QxummxZlAHw33TUHbIte987LkisOgL0LwQ1P9D6VISnA==}
+    deprecated: core-js@<3.23.3 is no longer maintained and not recommended for usage due to the number of issues. Because of the V8 engine whims, feature detection in old core-js versions could cause a slowdown up to 100x even if nothing is polyfilled. Some versions have web compatibility issues. Please, upgrade your dependencies to the actual version of core-js.
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -2694,6 +2707,10 @@ packages:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
     engines: {node: '>=0.10.0'}
 
+  react@18.3.0:
+    resolution: {integrity: sha512-RPutkJftSAldDibyrjuku7q11d3oy6wKOyPe5K1HA/HwwrXcEqBdHsLypkC2FFYjP7bPUa6gbzSBhw4sY2JcDg==}
+    engines: {node: '>=0.10.0'}
+
   react@19.1.1:
     resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
     engines: {node: '>=0.10.0'}
@@ -2716,6 +2733,9 @@ packages:
   reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}
     engines: {node: '>= 0.4'}
+
+  regenerator-runtime@0.13.9:
+    resolution: {integrity: sha512-p3VT+cOEgxFsRRA9X4lkI1E+k2/CtnKtU4gcxyaCUreilL/vqI6CdZ3wxVUx3UOUg+gnUOQQcRI7BmSI656MYA==}
 
   regenerator-runtime@0.14.1:
     resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
@@ -3738,6 +3758,13 @@ snapshots:
       '@fullhuman/postcss-purgecss': 4.1.3(postcss@8.4.12)
       postcss: 8.4.12
 
+  '@jotforminc/svg-icons@9.21.0':
+    dependencies:
+      '@swc/helpers': 0.5.12
+      core-js: 3.22.2
+      react: 18.3.0
+      regenerator-runtime: 0.13.9
+
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -3844,6 +3871,10 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.46.2':
     optional: true
+
+  '@swc/helpers@0.5.12':
+    dependencies:
+      tslib: 2.8.1
 
   '@tailwindcss/node@4.1.12':
     dependencies:
@@ -4473,6 +4504,8 @@ snapshots:
   consola@3.4.2: {}
 
   convert-source-map@2.0.0: {}
+
+  core-js@3.22.2: {}
 
   core-util-is@1.0.3: {}
 
@@ -6023,6 +6056,10 @@ snapshots:
 
   react-refresh@0.17.0: {}
 
+  react@18.3.0:
+    dependencies:
+      loose-envify: 1.4.0
+
   react@19.1.1: {}
 
   readable-stream@2.3.8:
@@ -6055,6 +6092,8 @@ snapshots:
       get-intrinsic: 1.3.0
       get-proto: 1.0.1
       which-builtin-type: 1.2.1
+
+  regenerator-runtime@0.13.9: {}
 
   regenerator-runtime@0.14.1: {}
 
