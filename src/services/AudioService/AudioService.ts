@@ -179,7 +179,10 @@ export class AudioService {
   /**
    * Common method for preloading audio with consistent error handling
    */
-  private async preloadSound(audioPath: string, soundType: string): Promise<void> {
+  private async preloadSound(
+    audioPath: string,
+    soundType: string
+  ): Promise<void> {
     try {
       const audio = this.getOrCreateAudio(audioPath);
 

@@ -206,7 +206,12 @@ export class UserInteractionBlocker {
     }
 
     // For focus/blur events, allow them to proceed to maintain proper focus management
-    if (event.type === 'focus' || event.type === 'blur' || event.type === 'focusin' || event.type === 'focusout') {
+    if (
+      event.type === 'focus' ||
+      event.type === 'blur' ||
+      event.type === 'focusin' ||
+      event.type === 'focusout'
+    ) {
       return;
     }
 
@@ -271,7 +276,10 @@ export class UserInteractionBlocker {
         event.stopImmediatePropagation();
       };
 
-      document.addEventListener(eventType, handler, { capture: true, passive: false });
+      document.addEventListener(eventType, handler, {
+        capture: true,
+        passive: false,
+      });
       this.globalKeyboardListeners.push({ event: eventType, handler });
     });
   }
