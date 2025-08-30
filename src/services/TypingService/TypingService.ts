@@ -41,39 +41,18 @@ export class TypingService {
       speedMultiplier?: number;
     } = {}
   ): Promise<void> {
-    try {
-      if (!element) {
-        throw new ElementTypingError('Element is null or undefined', element);
-      }
-      if (!text) {
-        this.logger.warn(
-          'Empty text provided for typing simulation',
-          'TypingService'
-        );
-        return;
-      }
-
-      return await this.simulateBasicTyping(element, text, options);
-    } catch (error) {
-      this.logger.error('Failed to simulate typing', 'TypingService', {
-        text: text.substring(0, 50),
-      });
-
-      if (error instanceof TypingError) {
-        throw error;
-      }
-
-      if (error instanceof Error) {
-        this.logger.logError(error, 'TypingService.simulateTyping');
-        throw new ElementTypingError(
-          `Typing simulation failed: ${error.message}`,
-          element,
-          error
-        );
-      }
-
-      throw new TypingError('Unknown error during typing simulation');
-    }
+    return this.executeTypingWithErrorHandling(
+      element,
+      text,
+      options,
+      'typing simulation',
+      'Empty text provided for typing simulation',
+      'Failed to simulate typing',
+      'TypingService.simulateTyping',
+      'Typing simulation failed',
+      'Unknown error during typing simulation',
+      (el, txt, opts) => this.simulateBasicTyping(el, txt, opts)
+    );
   }
 
   /**
@@ -88,40 +67,76 @@ export class TypingService {
       speedMultiplier?: number;
     } = {}
   ): Promise<void> {
+    return this.executeTypingWithErrorHandling(
+      element,
+      text,
+      options,
+      'realistic typing simulation',
+      'Empty text provided for realistic typing simulation',
+      'Failed to simulate realistic typing',
+      'TypingService.simulateRealisticTyping',
+      'Realistic typing simulation failed',
+      'Unknown error during realistic typing simulation',
+      (el, txt, opts) => this.performRealisticTyping(el, txt, opts)
+    );
+  }
+
+  /**
+   * Common error handling wrapper for typing operations
+   */
+  private async executeTypingWithErrorHandling(
+    element: HTMLInputElement | HTMLTextAreaElement,
+    text: string,
+    options: {
+      onProgress?: (currentText: string) => void;
+      onComplete?: () => void;
+      speedMultiplier?: number;
+    },
+    operationType: string,
+    emptyTextWarning: string,
+    errorLogMessage: string,
+    errorLogContext: string,
+    elementErrorPrefix: string,
+    unknownErrorMessage: string,
+    typingFunction: (
+      el: HTMLInputElement | HTMLTextAreaElement,
+      txt: string,
+      opts: {
+        onProgress?: (currentText: string) => void;
+        onComplete?: () => void;
+        speedMultiplier?: number;
+      }
+    ) => Promise<void>
+  ): Promise<void> {
     try {
       if (!element) {
         throw new ElementTypingError('Element is null or undefined', element);
       }
       if (!text) {
-        this.logger.warn(
-          'Empty text provided for realistic typing simulation',
-          'TypingService'
-        );
+        this.logger.warn(emptyTextWarning, 'TypingService');
         return;
       }
 
-      return await this.performRealisticTyping(element, text, options);
+      return await typingFunction(element, text, options);
     } catch (error) {
-      this.logger.error(
-        'Failed to simulate realistic typing',
-        'TypingService',
-        { text: text.substring(0, 50) }
-      );
+      this.logger.error(errorLogMessage, 'TypingService', {
+        text: text.substring(0, 50),
+      });
 
       if (error instanceof TypingError) {
         throw error;
       }
 
       if (error instanceof Error) {
-        this.logger.logError(error, 'TypingService.simulateRealisticTyping');
+        this.logger.logError(error, errorLogContext);
         throw new ElementTypingError(
-          `Realistic typing simulation failed: ${error.message}`,
+          `${elementErrorPrefix}: ${error.message}`,
           element,
           error
         );
       }
 
-      throw new TypingError('Unknown error during realistic typing simulation');
+      throw new TypingError(unknownErrorMessage);
     }
   }
 

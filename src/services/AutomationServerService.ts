@@ -127,54 +127,50 @@ export class AutomationServerService {
    * Fetch form creation steps (simulated server response)
    */
   static async fetchFormCreationSteps(): Promise<ServerAutomationResponse> {
-    try {
-      AutomationServerService.logger.debug(
-        'Fetching form creation steps from server',
-        'AutomationServerService'
-      );
-
-      await AutomationServerService.simulateApiDelay();
-
-      const response: ServerAutomationResponse = {
+    return AutomationServerService.fetchStepsWithErrorHandling(
+      'form creation steps',
+      {
         sequenceId: 'form-creation-v1',
         name: 'Create New Form',
         steps: AutomationServerService.getDefaultFormCreationSteps(),
-      };
-
-      AutomationServerService.logger.debug(
-        'Form creation steps fetched successfully',
-        'AutomationServerService'
-      );
-      return response;
-    } catch (error) {
-      AutomationServerService.logger.logError(
-        error as Error,
-        'AutomationServerService'
-      );
-      throw new AutomationError('Failed to fetch form creation steps');
-    }
+      },
+      'Failed to fetch form creation steps'
+    );
   }
 
   /**
    * Fetch form building steps (simulated server response)
    */
   static async fetchFormBuildingSteps(): Promise<ServerAutomationResponse> {
+    return AutomationServerService.fetchStepsWithErrorHandling(
+      'form building steps',
+      {
+        sequenceId: 'form-building-v1',
+        name: 'Build Form Elements',
+        steps: AutomationServerService.getFormBuildingSteps(),
+      },
+      'Failed to fetch form building steps'
+    );
+  }
+
+  /**
+   * Common method for fetching steps with consistent error handling and logging
+   */
+  private static async fetchStepsWithErrorHandling(
+    stepType: string,
+    response: ServerAutomationResponse,
+    errorMessage: string
+  ): Promise<ServerAutomationResponse> {
     try {
       AutomationServerService.logger.debug(
-        'Fetching form building steps from server',
+        `Fetching ${stepType} from server`,
         'AutomationServerService'
       );
 
       await AutomationServerService.simulateApiDelay();
 
-      const response: ServerAutomationResponse = {
-        sequenceId: 'form-building-v1',
-        name: 'Build Form Elements',
-        steps: AutomationServerService.getFormBuildingSteps(),
-      };
-
       AutomationServerService.logger.debug(
-        'Form building steps fetched successfully',
+        `${stepType.charAt(0).toUpperCase() + stepType.slice(1)} fetched successfully`,
         'AutomationServerService'
       );
       return response;
@@ -183,7 +179,7 @@ export class AutomationServerService {
         error as Error,
         'AutomationServerService'
       );
-      throw new AutomationError('Failed to fetch form building steps');
+      throw new AutomationError(errorMessage);
     }
   }
 
