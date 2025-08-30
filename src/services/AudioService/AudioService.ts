@@ -67,50 +67,34 @@ export class AudioService {
    * Play the click sound for visual cursor
    */
   async playClickSound(): Promise<void> {
-    if (!this.isEnabled) {
-      this.logger.debug(
-        'Audio playback disabled, skipping click sound',
-        'AudioService'
-      );
-      return;
-    }
-
-    // Skip if not in extension context
-    if (!ExtensionUtils.isExtensionContext()) {
-      this.logger.debug(
-        'Audio playback skipped - not in extension context',
-        'AudioService'
-      );
-      return;
-    }
-
-    try {
-      const audio = this.getOrCreateAudio(AudioPaths.CLICK_SOUND);
-
-      // Wait for audio to be ready before playing to prevent corruption
-      await this.ensureAudioReady(audio);
-
-      // Only reset if audio is not at the beginning to prevent corruption
-      if (audio.currentTime > 0.1) {
-        audio.currentTime = 0;
-      }
-
-      await audio.play();
-    } catch (error) {
-      this.logger.warn('Failed to play click sound', 'AudioService', { error });
-      // Don't throw error for audio playback failures to avoid breaking automation
-    }
+    await this.playSound(
+      AudioPaths.CLICK_SOUND,
+      'click sound',
+      'Audio playback disabled, skipping click sound'
+    );
   }
 
   /**
    * Play the keystroke sound for typing simulation
    */
   async playKeystrokeSound(): Promise<void> {
+    await this.playSound(
+      AudioPaths.KEYSTROKE_SOUND,
+      'keystroke sound',
+      'Audio playback disabled, skipping keystroke sound'
+    );
+  }
+
+  /**
+   * Common method for playing audio with consistent error handling and validation
+   */
+  private async playSound(
+    audioPath: string,
+    soundType: string,
+    disabledMessage: string
+  ): Promise<void> {
     if (!this.isEnabled) {
-      this.logger.debug(
-        'Audio playback disabled, skipping keystroke sound',
-        'AudioService'
-      );
+      this.logger.debug(disabledMessage, 'AudioService');
       return;
     }
 
@@ -124,7 +108,7 @@ export class AudioService {
     }
 
     try {
-      const audio = this.getOrCreateAudio(AudioPaths.KEYSTROKE_SOUND);
+      const audio = this.getOrCreateAudio(audioPath);
 
       // Wait for audio to be ready before playing to prevent corruption
       await this.ensureAudioReady(audio);
@@ -136,7 +120,7 @@ export class AudioService {
 
       await audio.play();
     } catch (error) {
-      this.logger.warn('Failed to play keystroke sound', 'AudioService', {
+      this.logger.warn(`Failed to play ${soundType}`, 'AudioService', {
         error,
       });
       // Don't throw error for audio playback failures to avoid breaking automation
@@ -182,41 +166,22 @@ export class AudioService {
    * Preload the click sound for better performance
    */
   private async preloadClickSound(): Promise<void> {
-    try {
-      const audio = this.getOrCreateAudio(AudioPaths.CLICK_SOUND);
-
-      return new Promise<void>((resolve, reject) => {
-        const handleLoad = () => {
-          audio.removeEventListener('canplaythrough', handleLoad);
-          audio.removeEventListener('error', handleError);
-          resolve();
-        };
-
-        const handleError = (_event: Event) => {
-          audio.removeEventListener('canplaythrough', handleLoad);
-          audio.removeEventListener('error', handleError);
-          reject(new AudioError('Failed to preload click sound'));
-        };
-
-        audio.addEventListener('canplaythrough', handleLoad);
-        audio.addEventListener('error', handleError);
-
-        // If already loaded, resolve immediately
-        if (audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
-          handleLoad();
-        }
-      });
-    } catch (error) {
-      throw new AudioError('Failed to preload click sound', error as Error);
-    }
+    return this.preloadSound(AudioPaths.CLICK_SOUND, 'click sound');
   }
 
   /**
    * Preload the keystroke sound for better performance
    */
   private async preloadKeystrokeSound(): Promise<void> {
+    return this.preloadSound(AudioPaths.KEYSTROKE_SOUND, 'keystroke sound');
+  }
+
+  /**
+   * Common method for preloading audio with consistent error handling
+   */
+  private async preloadSound(audioPath: string, soundType: string): Promise<void> {
     try {
-      const audio = this.getOrCreateAudio(AudioPaths.KEYSTROKE_SOUND);
+      const audio = this.getOrCreateAudio(audioPath);
 
       return new Promise<void>((resolve, reject) => {
         const handleLoad = () => {
@@ -228,7 +193,7 @@ export class AudioService {
         const handleError = (_event: Event) => {
           audio.removeEventListener('canplaythrough', handleLoad);
           audio.removeEventListener('error', handleError);
-          reject(new AudioError('Failed to preload keystroke sound'));
+          reject(new AudioError(`Failed to preload ${soundType}`));
         };
 
         audio.addEventListener('canplaythrough', handleLoad);
@@ -240,7 +205,7 @@ export class AudioService {
         }
       });
     } catch (error) {
-      throw new AudioError('Failed to preload keystroke sound', error as Error);
+      throw new AudioError(`Failed to preload ${soundType}`, error as Error);
     }
   }
 

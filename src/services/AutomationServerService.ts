@@ -42,7 +42,7 @@ export class AutomationServerService {
       {
         action: 'wait',
         description: 'Wait for page to initialize',
-        delay: 3000,
+        delay: 1000,
       },
       {
         action: 'click',
@@ -81,7 +81,7 @@ export class AutomationServerService {
         action: 'navigate',
         url: NavigationUrls.WORKSPACE,
         description: 'Navigate to Jotform workspace',
-        delay: 3000,
+        delay: 2000,
       },
       {
         action: 'click',
