@@ -37,45 +37,34 @@ export class LoggingService {
   /**
    * Log debug message
    */
-  debug(
-    message: string,
-    context?: string,
-    data?: Record<string, unknown>
-  ): void {
-    this.log(LogLevel.DEBUG, message, context, data);
-  }
+  debug = this.createLogMethod(LogLevel.DEBUG);
 
   /**
    * Log info message
    */
-  info(
-    message: string,
-    context?: string,
-    data?: Record<string, unknown>
-  ): void {
-    this.log(LogLevel.INFO, message, context, data);
-  }
+  info = this.createLogMethod(LogLevel.INFO);
 
   /**
    * Log warning message
    */
-  warn(
-    message: string,
-    context?: string,
-    data?: Record<string, unknown>
-  ): void {
-    this.log(LogLevel.WARN, message, context, data);
-  }
+  warn = this.createLogMethod(LogLevel.WARN);
 
   /**
    * Log error message
    */
-  error(
-    message: string,
-    context?: string,
-    data?: Record<string, unknown>
-  ): void {
-    this.log(LogLevel.ERROR, message, context, data);
+  error = this.createLogMethod(LogLevel.ERROR);
+
+  /**
+   * Create a logging method for a specific log level
+   */
+  private createLogMethod(level: LogLevel) {
+    return (
+      message: string,
+      context?: string,
+      data?: Record<string, unknown>
+    ): void => {
+      this.log(level, message, context, data);
+    };
   }
 
   /**
