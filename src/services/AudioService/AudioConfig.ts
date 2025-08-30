@@ -12,5 +12,5 @@ export class AudioPaths {
 export class AudioConfig {
   static readonly DEFAULT_VOLUME = 0.7 as const;
   static readonly KEYSTROKE_VOLUME = 0.5 as const;
-  static readonly PRELOAD_POLICY = 'auto' as const;
+  static readonly PRELOAD_POLICY = 'metadata' as const; // Changed from 'auto' to prevent corruption
 }

@@ -87,8 +87,13 @@ export class AudioService {
     try {
       const audio = this.getOrCreateAudio(AudioPaths.CLICK_SOUND);
 
-      // Reset audio to beginning if it's already playing
-      audio.currentTime = 0;
+      // Wait for audio to be ready before playing to prevent corruption
+      await this.ensureAudioReady(audio);
+
+      // Only reset if audio is not at the beginning to prevent corruption
+      if (audio.currentTime > 0.1) {
+        audio.currentTime = 0;
+      }
 
       await audio.play();
     } catch (error) {
@@ -121,8 +126,13 @@ export class AudioService {
     try {
       const audio = this.getOrCreateAudio(AudioPaths.KEYSTROKE_SOUND);
 
-      // Reset audio to beginning if it's already playing
-      audio.currentTime = 0;
+      // Wait for audio to be ready before playing to prevent corruption
+      await this.ensureAudioReady(audio);
+
+      // Only reset if audio is not at the beginning to prevent corruption
+      if (audio.currentTime > 0.1) {
+        audio.currentTime = 0;
+      }
 
       await audio.play();
     } catch (error) {
@@ -249,33 +259,71 @@ export class AudioService {
   }
 
   /**
+   * Ensure audio element is ready for playback to prevent corruption
+   */
+  private async ensureAudioReady(audio: HTMLAudioElement): Promise<void> {
+    // If audio is already ready, return immediately
+    if (audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+      return;
+    }
+
+    // Wait for audio to be ready with timeout to prevent hanging
+    return new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        audio.removeEventListener('canplaythrough', handleReady);
+        audio.removeEventListener('error', handleError);
+        resolve(); // Don't reject, just proceed to prevent blocking
+      }, 1000); // 1 second timeout
+
+      const handleReady = () => {
+        clearTimeout(timeout);
+        audio.removeEventListener('canplaythrough', handleReady);
+        audio.removeEventListener('error', handleError);
+        resolve();
+      };
+
+      const handleError = () => {
+        clearTimeout(timeout);
+        audio.removeEventListener('canplaythrough', handleReady);
+        audio.removeEventListener('error', handleError);
+        resolve(); // Don't reject, just proceed to prevent blocking
+      };
+
+      audio.addEventListener('canplaythrough', handleReady);
+      audio.addEventListener('error', handleError);
+    });
+  }
+
+  /**
    * Create a new audio element with proper configuration
    */
   private createAudioElement(audioPath: string): HTMLAudioElement {
     const audio = new Audio();
 
-    // Use chrome.runtime.getURL for extension resources
-    if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
-      audio.src = chrome.runtime.getURL(audioPath);
-    } else {
-      // Fallback for testing environments
-      audio.src = audioPath;
-    }
+    // Set preload policy first to prevent corruption
+    audio.preload = AudioConfig.PRELOAD_POLICY;
 
-    // Set volume based on audio type
+    // Set volume based on audio type before setting src
     audio.volume =
       audioPath === AudioPaths.KEYSTROKE_SOUND
         ? AudioConfig.KEYSTROKE_VOLUME
         : AudioConfig.DEFAULT_VOLUME;
-    audio.preload = AudioConfig.PRELOAD_POLICY;
 
-    // Add error handling
+    // Add error handling before setting src
     audio.addEventListener('error', (event) => {
       this.logger.error('Audio element error', 'AudioService', {
         audioPath,
         error: event,
       });
     });
+
+    // Set src last to ensure all properties are configured
+    if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
+      audio.src = chrome.runtime.getURL(audioPath);
+    } else {
+      // Fallback for testing environments
+      audio.src = audioPath;
+    }
 
     return audio;
   }
