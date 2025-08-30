@@ -91,7 +91,6 @@ export class AudioService {
       audio.currentTime = 0;
 
       await audio.play();
-      this.logger.debug('Click sound played successfully', 'AudioService');
     } catch (error) {
       this.logger.warn('Failed to play click sound', 'AudioService', { error });
       // Don't throw error for audio playback failures to avoid breaking automation
@@ -126,7 +125,6 @@ export class AudioService {
       audio.currentTime = 0;
 
       await audio.play();
-      this.logger.debug('Keystroke sound played successfully', 'AudioService');
     } catch (error) {
       this.logger.warn('Failed to play keystroke sound', 'AudioService', {
         error,

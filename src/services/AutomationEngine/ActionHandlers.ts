@@ -248,12 +248,6 @@ export class ActionHandlers {
 
       await this.typingService.simulateTyping(element, text, {
         speedMultiplier: 1.2, // Slightly faster than default
-        onProgress: (currentText: string) => {
-          this.logger.debug(
-            `Typing progress: "${currentText}"`,
-            'ActionHandlers'
-          );
-        },
         onComplete: () => {
           this.logger.debug(
             `Human-like typing completed: ${text}`,

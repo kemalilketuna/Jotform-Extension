@@ -10,6 +10,10 @@ export class UserInteractionBlocker {
   private readonly logger: LoggingService;
   private isBlocking = false;
   private blockerElement: HTMLElement | null = null;
+  private globalKeyboardListeners: Array<{
+    event: string;
+    handler: (event: Event) => void;
+  }> = [];
 
   private constructor() {
     this.logger = LoggingService.getInstance();
@@ -36,6 +40,7 @@ export class UserInteractionBlocker {
 
     try {
       this.createBlockerOverlay();
+      this.addGlobalKeyboardBlocking();
       this.isBlocking = true;
       this.logger.info(
         'User interaction blocking enabled',
@@ -54,12 +59,13 @@ export class UserInteractionBlocker {
     if (this.blockerElement && this.blockerElement.parentNode) {
       this.blockerElement.parentNode.removeChild(this.blockerElement);
       this.blockerElement = null;
-      this.isBlocking = false;
-      this.logger.info(
-        'User interaction blocking disabled',
-        'UserInteractionBlocker'
-      );
     }
+    this.removeGlobalKeyboardBlocking();
+    this.isBlocking = false;
+    this.logger.info(
+      'User interaction blocking disabled',
+      'UserInteractionBlocker'
+    );
   }
 
   /**
@@ -190,11 +196,6 @@ export class UserInteractionBlocker {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-
-    this.logger.debug(
-      `Blocked ${event.type} event during automation`,
-      'UserInteractionBlocker'
-    );
   }
 
   /**
@@ -220,6 +221,42 @@ export class UserInteractionBlocker {
   }
 
   /**
+   * Add global keyboard event listeners to prevent user keyboard input
+   */
+  private addGlobalKeyboardBlocking(): void {
+    const keyboardEvents = ['keydown', 'keyup', 'keypress'];
+
+    keyboardEvents.forEach((eventType) => {
+      const handler = (event: Event) => {
+        // Check if the event target is an extension component
+        const target = event.target as Element;
+        if (this.isExtensionComponent(target)) {
+          // Allow the event to proceed for extension components
+          return;
+        }
+
+        // Block keyboard events for all other elements
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+      };
+
+      document.addEventListener(eventType, handler, { capture: true, passive: false });
+      this.globalKeyboardListeners.push({ event: eventType, handler });
+    });
+  }
+
+  /**
+   * Remove global keyboard event listeners
+   */
+  private removeGlobalKeyboardBlocking(): void {
+    this.globalKeyboardListeners.forEach(({ event, handler }) => {
+      document.removeEventListener(event, handler, { capture: true });
+    });
+    this.globalKeyboardListeners = [];
+  }
+
+  /**
    * Force cleanup of interaction blocking - removes all overlays with the blocker class
    * Used as a safety mechanism when normal cleanup fails
    */
@@ -236,6 +273,7 @@ export class UserInteractionBlocker {
       });
 
       this.blockerElement = null;
+      this.removeGlobalKeyboardBlocking();
       this.isBlocking = false;
       this.logger.info(
         'Force cleanup completed - all interaction blockers removed',
