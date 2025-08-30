@@ -10,7 +10,6 @@ import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 import { ActionHandlers } from './ActionHandlers';
 import { ElementUtils } from './ElementUtils';
 import { MessageHandler } from './MessageHandler';
-import { AutomationStateManager, AutomationState } from '@/services/AutomationStateManager';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
@@ -18,9 +17,6 @@ import { AutomationStateManager, AutomationState } from '@/services/AutomationSt
 export class AutomationEngine {
   private static instance: AutomationEngine;
   private isExecuting = false;
-  private isPaused = false;
-  private currentSequence: AutomationSequence | null = null;
-  private currentStepIndex = 0;
   private readonly logger: LoggingService;
   private readonly visualCursor: VisualCursorService;
   private readonly typingService: TypingService;
@@ -28,7 +24,6 @@ export class AutomationEngine {
   private readonly actionHandlers: ActionHandlers;
   private readonly elementUtils: ElementUtils;
   private readonly messageHandler: MessageHandler;
-  private readonly stateManager: AutomationStateManager;
 
   private constructor(
     logger: LoggingService = LoggingService.getInstance(),
@@ -47,7 +42,6 @@ export class AutomationEngine {
       typingService,
       this.elementUtils
     );
-    this.stateManager = AutomationStateManager.getInstance();
   }
 
   static getInstance(
@@ -89,24 +83,10 @@ export class AutomationEngine {
       return;
     }
 
-    // Handle pause/start messages directly
-    switch (message.type) {
-      case 'PAUSE_AUTOMATION':
-        this.pause();
-        return;
-      case 'RESUME_AUTOMATION':
-        this.resume();
-        return;
-      case 'STOP_AUTOMATION':
-        this.stopAutomation();
-        return;
-      default:
-        // Handle other messages through message handler
-        await this.messageHandler.processMessage(
-          message,
-          this.handleExecuteSequence.bind(this)
-        );
-    }
+    await this.messageHandler.processMessage(
+      message,
+      this.handleExecuteSequence.bind(this)
+    );
   }
 
   /**
@@ -151,10 +131,6 @@ export class AutomationEngine {
     }
 
     this.isExecuting = true;
-    this.currentSequence = sequence;
-    this.currentStepIndex = 0;
-    this.stateManager.start();
-    
     this.logger.info(
       `Starting automation sequence: ${sequence.name}`,
       'AutomationEngine'
@@ -172,11 +148,6 @@ export class AutomationEngine {
       this.visualCursor.show({ x: 100, y: 100 });
 
       for (let i = 0; i < sequence.actions.length; i++) {
-        this.currentStepIndex = i;
-        
-        // Check for pause state before executing each action
-        await this.waitForResume();
-        
         const action = sequence.actions[i];
         this.logger.info(
           UserMessages.getStepExecutionMessage(i + 1, action.description),
@@ -221,9 +192,6 @@ export class AutomationEngine {
       throw sequenceError;
     } finally {
       this.isExecuting = false;
-      this.currentSequence = null;
-      this.currentStepIndex = 0;
-      this.stateManager.stop();
 
       // Disable user interaction blocking to restore normal clicking
       this.userInteractionBlocker.disableBlocking();
@@ -263,70 +231,5 @@ export class AutomationEngine {
    */
   get isRunning(): boolean {
     return this.isExecuting;
-  }
-
-  /**
-   * Pause the current automation
-   */
-  pause(): void {
-    if (this.isExecuting && !this.isPaused) {
-      this.isPaused = true;
-      this.stateManager.pause();
-      this.logger.info('Automation paused', 'AutomationEngine');
-    }
-  }
-
-  /**
-   * Resume the paused automation
-   */
-  resume(): void {
-    if (this.isExecuting && this.isPaused) {
-      this.isPaused = false;
-      this.stateManager.resume();
-      this.logger.info('Automation resumed', 'AutomationEngine');
-    }
-  }
-
-  /**
-   * Stop the current automation
-   */
-  stopAutomation(): void {
-    if (this.isExecuting) {
-      this.isPaused = false;
-      this.stateManager.stop();
-      this.logger.info('Automation stopped', 'AutomationEngine');
-      
-      // Clean up resources
-      this.userInteractionBlocker.disableBlocking();
-      this.visualCursor.hide();
-      
-      // Reset state
-      this.isExecuting = false;
-      this.currentSequence = null;
-      this.currentStepIndex = 0;
-    }
-  }
-
-  /**
-   * Wait for automation to be resumed if paused
-   */
-  private async waitForResume(): Promise<void> {
-    while (this.isPaused && this.isExecuting) {
-      await this.wait(100); // Check every 100ms
-    }
-  }
-
-  /**
-   * Get current automation state
-   */
-  getAutomationState(): AutomationState {
-    return this.stateManager.getState();
-  }
-
-  /**
-   * Check if automation is paused
-   */
-  get isPausedState(): boolean {
-    return this.isPaused;
   }
 }

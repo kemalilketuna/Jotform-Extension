@@ -10,13 +10,7 @@ export type AutomationMessageType =
   | 'AUTOMATION_STATE_RESPONSE'
   | 'NAVIGATION_DETECTED'
   | 'CONTENT_SCRIPT_READY'
-  | 'STEP_PROGRESS_UPDATE'
-  | 'PAUSE_AUTOMATION'
-  | 'RESUME_AUTOMATION'
-  | 'STOP_AUTOMATION'
-  | 'AUTOMATION_PAUSED'
-  | 'AUTOMATION_RESUMED'
-  | 'AUTOMATION_STOPPED';
+  | 'STEP_PROGRESS_UPDATE';
 
 export interface BaseAutomationMessage {
   type: AutomationMessageType;
@@ -77,36 +71,6 @@ export interface StepProgressUpdateMessage extends BaseAutomationMessage {
   payload: { completedStepIndex: number; sequenceId: string };
 }
 
-export interface PauseAutomationMessage extends BaseAutomationMessage {
-  type: 'PAUSE_AUTOMATION';
-  payload: { tabId?: number };
-}
-
-export interface ResumeAutomationMessage extends BaseAutomationMessage {
-  type: 'RESUME_AUTOMATION';
-  payload: { tabId?: number };
-}
-
-export interface StopAutomationMessage extends BaseAutomationMessage {
-  type: 'STOP_AUTOMATION';
-  payload: { tabId?: number };
-}
-
-export interface AutomationPausedMessage extends BaseAutomationMessage {
-  type: 'AUTOMATION_PAUSED';
-  payload: { sequenceId: string; currentStepIndex: number };
-}
-
-export interface AutomationResumedMessage extends BaseAutomationMessage {
-  type: 'AUTOMATION_RESUMED';
-  payload: { sequenceId: string; currentStepIndex: number };
-}
-
-export interface AutomationStoppedMessage extends BaseAutomationMessage {
-  type: 'AUTOMATION_STOPPED';
-  payload: { sequenceId: string; reason: string };
-}
-
 export type AutomationMessage =
   | ExecuteSequenceMessage
   | SequenceCompleteMessage
@@ -117,10 +81,4 @@ export type AutomationMessage =
   | AutomationStateResponseMessage
   | NavigationDetectedMessage
   | ContentScriptReadyMessage
-  | StepProgressUpdateMessage
-  | PauseAutomationMessage
-  | ResumeAutomationMessage
-  | StopAutomationMessage
-  | AutomationPausedMessage
-  | AutomationResumedMessage
-  | AutomationStoppedMessage;
+  | StepProgressUpdateMessage;
