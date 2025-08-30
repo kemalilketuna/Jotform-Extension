@@ -139,6 +139,10 @@ export class UserInteractionBlocker {
       'contextmenu',
       'wheel',
       'scroll',
+      'focus',
+      'blur',
+      'focusin',
+      'focusout',
     ];
 
     events.forEach((eventType) => {
@@ -170,6 +174,10 @@ export class UserInteractionBlocker {
       'contextmenu',
       'wheel',
       'scroll',
+      'focus',
+      'blur',
+      'focusin',
+      'focusout',
     ];
 
     events.forEach((eventType) => {
@@ -189,6 +197,16 @@ export class UserInteractionBlocker {
     const target = event.target as Element;
     if (this.isExtensionComponent(target)) {
       // Allow the event to proceed for extension components
+      return;
+    }
+
+    // Special handling for click events - trigger blur on focused extension components
+    if (event.type === 'click') {
+      this.triggerBlurOnExtensionComponents();
+    }
+
+    // For focus/blur events, allow them to proceed to maintain proper focus management
+    if (event.type === 'focus' || event.type === 'blur' || event.type === 'focusin' || event.type === 'focusout') {
       return;
     }
 
@@ -218,6 +236,18 @@ export class UserInteractionBlocker {
     }
 
     return false;
+  }
+
+  /**
+   * Trigger blur events on any currently focused extension components
+   * This ensures proper focus management when clicking outside
+   */
+  private triggerBlurOnExtensionComponents(): void {
+    const activeElement = document.activeElement;
+    if (activeElement && this.isExtensionComponent(activeElement)) {
+      // Trigger blur on the currently focused extension component
+      (activeElement as HTMLElement).blur();
+    }
   }
 
   /**

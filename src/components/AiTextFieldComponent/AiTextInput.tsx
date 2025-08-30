@@ -1,4 +1,5 @@
 import React from 'react';
+import { ElementSelectors } from '@/constants/ElementSelectors';
 
 export interface AiTextInputProps {
   value: string;
@@ -30,7 +31,7 @@ export const AiTextInput: React.FC<AiTextInputProps> = ({
       onBlur={onBlur}
       onKeyDown={onKeyDown}
       placeholder={placeholder}
-      className={`w-full px-4 py-3 pr-12 bg-white border-2 border-blue-500 rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-600 text-gray-800 placeholder-gray-500 transition-all duration-200 ${className}`}
+      className={`w-full px-4 py-3 pr-12 bg-white border-2 border-blue-500 rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-600 text-gray-800 placeholder-gray-500 transition-all duration-200 ${ElementSelectors.EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
       title={title}
     />
   );
