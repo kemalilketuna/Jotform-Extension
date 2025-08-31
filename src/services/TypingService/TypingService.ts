@@ -174,17 +174,28 @@ export class TypingService {
       EventDispatcher.updateElementValue(element, currentText);
       onProgress?.(currentText);
 
-      // Play keystroke sound (except for the last character)
-      if (i < characters.length - 1) {
-        this.audioService.playKeystrokeSound().catch(() => {
-          // Ignore audio errors to avoid breaking typing flow
-        });
-      }
-
       // Random delay between characters
       if (i < characters.length - 1) {
         const delay = this.getRandomDelay(speedMultiplier);
+
+        // Play moderate overlapping keystroke sounds for balanced typing effect
+        const isRapidTyping = delay < 100; // Rapid fire if delay is less than 100ms
+        if (isRapidTyping) {
+          this.audioService.playMultipleKeystrokeSounds(2).catch(() => {
+            // Ignore audio errors to avoid breaking typing flow
+          });
+        } else {
+          this.audioService.playVariedKeystrokeSound().catch(() => {
+            // Ignore audio errors to avoid breaking typing flow
+          });
+        }
+
         await this.wait(delay);
+      } else {
+        // Play single sound for the last character
+        this.audioService.playVariedKeystrokeSound().catch(() => {
+          // Ignore audio errors to avoid breaking typing flow
+        });
       }
     }
 
@@ -232,18 +243,23 @@ export class TypingService {
 
       onProgress?.(currentText);
 
-      // Play keystroke sound (except for the last character)
-      if (i < characters.length - 1) {
-        this.audioService.playKeystrokeSound().catch(() => {
-          // Ignore audio errors to avoid breaking typing flow
-        });
-      }
-
       // Random delay with occasional longer pauses
       const shouldPause = Math.random() < 0.1; // 10% chance of pause
       const delay = shouldPause
         ? TypingConfig.getTypingPauseDelay() / speedMultiplier
         : this.getRandomDelay(speedMultiplier);
+
+      // Play moderate overlapping keystroke sounds for balanced typing effect
+      const isRapidTyping = shouldPause ? false : delay < 100; // Rapid fire if delay is less than 100ms and not pausing
+      if (isRapidTyping) {
+        this.audioService.playMultipleKeystrokeSounds(2).catch(() => {
+          // Ignore audio errors to avoid breaking typing flow
+        });
+      } else {
+        this.audioService.playVariedKeystrokeSound().catch(() => {
+          // Ignore audio errors to avoid breaking typing flow
+        });
+      }
 
       if (i < characters.length - 1) {
         await this.wait(delay);

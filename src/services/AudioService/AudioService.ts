@@ -12,6 +12,8 @@ export class AudioService {
   private audioCache: Map<string, HTMLAudioElement> = new Map();
   private isEnabled: boolean = true;
   private isInitialized: boolean = false;
+  private activeSounds: number = 0;
+  private readonly MAX_CONCURRENT_SOUNDS = 3;
 
   private constructor(logger: LoggingService = LoggingService.getInstance()) {
     this.logger = logger;
@@ -94,6 +96,168 @@ export class AudioService {
       'keystroke sound',
       'Audio playback disabled, skipping keystroke sound'
     );
+  }
+
+  /**
+   * Play keystroke sound with slight volume variation for more realistic typing
+   */
+  async playVariedKeystrokeSound(): Promise<void> {
+    if (!this.isEnabled) {
+      this.logger.debug('Audio playback disabled, skipping varied keystroke sound', 'AudioService');
+      return;
+    }
+
+    if (!ExtensionUtils.isExtensionContext()) {
+      this.logger.debug(
+        'Audio playback skipped - not in extension context',
+        'AudioService'
+      );
+      return;
+    }
+
+    try {
+      // Create new audio instance for overlapping playback instead of reusing cached one
+      const audio = this.createAudioElement(AudioPaths.KEYSTROKE_SOUND);
+      await this.ensureAudioReady(audio);
+
+      // Add volume variation using config constants for more realistic typing
+      const volumeRange = AudioConfig.KEYSTROKE_VOLUME_MAX - AudioConfig.KEYSTROKE_VOLUME_MIN;
+      audio.volume = AudioConfig.KEYSTROKE_VOLUME_MIN + Math.random() * volumeRange;
+
+      await audio.play();
+
+      // Add slight echo effect by playing a second overlapping sound
+      setTimeout(() => {
+        this.playOverlappingKeystrokeSound(0).catch(() => {
+          // Ignore audio errors
+        });
+      }, 50);
+    } catch (error) {
+      this.logger.warn('Failed to play varied keystroke sound', 'AudioService', {
+        error,
+      });
+    }
+  }
+
+  /**
+   * Play enhanced keystroke sound with optional rapid fire effect
+   */
+  async playEnhancedKeystrokeSound(rapidFire: boolean = false): Promise<void> {
+    if (!this.isEnabled) {
+      this.logger.debug(
+        'Audio playback disabled, skipping enhanced keystroke sound',
+        'AudioService'
+      );
+      return;
+    }
+
+    if (!ExtensionUtils.isExtensionContext()) {
+      this.logger.debug(
+        'Audio playback skipped - not in extension context',
+        'AudioService'
+      );
+      return;
+    }
+
+    try {
+      if (rapidFire) {
+        // Play multiple overlapping sounds for rapid typing effect
+        const promises = [];
+        for (let i = 0; i < 3; i++) {
+          promises.push(this.playOverlappingKeystrokeSound(i * 30)); // Start each sound 30ms apart
+        }
+        // Don't await - let them play concurrently
+        Promise.all(promises).catch(() => {
+          // Ignore audio errors to avoid breaking typing flow
+        });
+      } else {
+        await this.playVariedKeystrokeSound();
+      }
+    } catch (error) {
+      this.logger.warn(
+        'Failed to play enhanced keystroke sound',
+        'AudioService',
+        {
+          error,
+        }
+      );
+    }
+  }
+
+  /**
+   * Play keystroke sound with delay for overlapping effects
+   */
+  private async playOverlappingKeystrokeSound(delayMs: number = 0): Promise<void> {
+    if (delayMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+
+    if (!this.isEnabled || !ExtensionUtils.isExtensionContext()) {
+      return;
+    }
+
+    try {
+      // Create a new audio instance for overlapping playback
+      const audio = this.createAudioElement(AudioPaths.KEYSTROKE_SOUND);
+      await this.ensureAudioReady(audio);
+
+      // Apply reduced volume variation to minimize noise when overlapping
+      const volumeRange = AudioConfig.KEYSTROKE_VOLUME_MAX - AudioConfig.KEYSTROKE_VOLUME_MIN;
+      const baseVolume = AudioConfig.KEYSTROKE_VOLUME_MIN + Math.random() * volumeRange;
+      audio.volume = baseVolume * 0.7; // Reduce volume by 30% for overlapping sounds
+
+      // Track active sounds
+      this.activeSounds++;
+
+      audio.addEventListener('ended', () => {
+        this.activeSounds = Math.max(0, this.activeSounds - 1);
+      });
+
+      audio.addEventListener('error', () => {
+        this.activeSounds = Math.max(0, this.activeSounds - 1);
+      });
+
+      await audio.play();
+    } catch (error) {
+      this.activeSounds = Math.max(0, this.activeSounds - 1);
+      this.logger.warn('Failed to play overlapping keystroke sound', 'AudioService', {
+        error,
+      });
+    }
+  }
+
+  /**
+   * Play multiple simultaneous keystroke sounds for maximum typing effect
+   */
+  async playMultipleKeystrokeSounds(count: number = 2): Promise<void> {
+    if (!this.isEnabled || !ExtensionUtils.isExtensionContext()) {
+      return;
+    }
+
+    // Apply threshold to prevent audio noise from too many overlapping sounds
+    if (this.activeSounds >= this.MAX_CONCURRENT_SOUNDS) {
+      return;
+    }
+
+    try {
+      const actualCount = Math.min(count, this.MAX_CONCURRENT_SOUNDS - this.activeSounds);
+      const promises: Promise<void>[] = [];
+
+      for (let i = 0; i < actualCount; i++) {
+        const promise = new Promise<void>((resolve) => {
+          setTimeout(() => {
+            this.playOverlappingKeystrokeSound().finally(() => resolve());
+          }, i * 20); // Increased delay to 20ms to reduce overlap noise
+        });
+        promises.push(promise);
+      }
+
+      await Promise.all(promises);
+    } catch (error) {
+      this.logger.warn('Failed to play multiple keystroke sounds', 'AudioService', {
+        error,
+      });
+    }
   }
 
   /**
