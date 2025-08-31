@@ -236,7 +236,7 @@ export class AudioService {
     }
 
     // Wait for audio to be ready with timeout to prevent hanging
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve) => {
       const timeout = setTimeout(() => {
         audio.removeEventListener('canplaythrough', handleReady);
         audio.removeEventListener('error', handleError);

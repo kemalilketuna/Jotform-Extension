@@ -167,7 +167,7 @@ export class JotformAgentDisabler {
       const elementsToProcess = [...this.pendingMutations];
       this.pendingMutations = [];
 
-      elementsToProcess.forEach(element => {
+      elementsToProcess.forEach((element) => {
         totalDisabled += this.findAndDisableAgentElements(element, true);
       });
 
@@ -214,7 +214,8 @@ export class JotformAgentDisabler {
     }
 
     // Use single compound selector for better performance
-    const allPatterns = ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS.join(', ');
+    const allPatterns =
+      ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS.join(', ');
     const elements = context.querySelectorAll(allPatterns);
 
     elements.forEach((element) => {
