@@ -12,8 +12,11 @@ export class AudioService {
   private audioCache: Map<string, HTMLAudioElement> = new Map();
   private isEnabled: boolean = true;
   private isInitialized: boolean = false;
-  private activeSounds: number = 0;
+  private activeSounds: WeakMap<HTMLAudioElement, boolean> = new WeakMap();
+  private activeSoundCount: number = 0;
   private readonly MAX_CONCURRENT_SOUNDS = 3;
+  private lastKeystrokeTime: number = 0;
+  private readonly DEBOUNCE_THRESHOLD = 10; // ms
 
   private constructor(logger: LoggingService = LoggingService.getInstance()) {
     this.logger = logger;
@@ -103,7 +106,10 @@ export class AudioService {
    */
   async playVariedKeystrokeSound(): Promise<void> {
     if (!this.isEnabled) {
-      this.logger.debug('Audio playback disabled, skipping varied keystroke sound', 'AudioService');
+      this.logger.debug(
+        'Audio playback disabled, skipping varied keystroke sound',
+        'AudioService'
+      );
       return;
     }
 
@@ -115,15 +121,26 @@ export class AudioService {
       return;
     }
 
+    // Apply debouncing to prevent excessive audio calls
+    const now = Date.now();
+    if (now - this.lastKeystrokeTime < this.DEBOUNCE_THRESHOLD) {
+      return;
+    }
+    this.lastKeystrokeTime = now;
+
     try {
       // Create new audio instance for overlapping playback instead of reusing cached one
       const audio = this.createAudioElement(AudioPaths.KEYSTROKE_SOUND);
       await this.ensureAudioReady(audio);
 
       // Add volume variation using config constants for more realistic typing
-      const volumeRange = AudioConfig.KEYSTROKE_VOLUME_MAX - AudioConfig.KEYSTROKE_VOLUME_MIN;
-      audio.volume = AudioConfig.KEYSTROKE_VOLUME_MIN + Math.random() * volumeRange;
+      const volumeRange =
+        AudioConfig.KEYSTROKE_VOLUME_MAX - AudioConfig.KEYSTROKE_VOLUME_MIN;
+      audio.volume =
+        AudioConfig.KEYSTROKE_VOLUME_MIN + Math.random() * volumeRange;
 
+      // Track and cleanup audio element
+      this.trackAudioElement(audio);
       await audio.play();
 
       // Add slight echo effect by playing a second overlapping sound
@@ -133,9 +150,13 @@ export class AudioService {
         });
       }, 50);
     } catch (error) {
-      this.logger.warn('Failed to play varied keystroke sound', 'AudioService', {
-        error,
-      });
+      this.logger.warn(
+        'Failed to play varied keystroke sound',
+        'AudioService',
+        {
+          error,
+        }
+      );
     }
   }
 
@@ -187,9 +208,11 @@ export class AudioService {
   /**
    * Play keystroke sound with delay for overlapping effects
    */
-  private async playOverlappingKeystrokeSound(delayMs: number = 0): Promise<void> {
+  private async playOverlappingKeystrokeSound(
+    delayMs: number = 0
+  ): Promise<void> {
     if (delayMs > 0) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
 
     if (!this.isEnabled || !ExtensionUtils.isExtensionContext()) {
@@ -202,27 +225,24 @@ export class AudioService {
       await this.ensureAudioReady(audio);
 
       // Apply reduced volume variation to minimize noise when overlapping
-      const volumeRange = AudioConfig.KEYSTROKE_VOLUME_MAX - AudioConfig.KEYSTROKE_VOLUME_MIN;
-      const baseVolume = AudioConfig.KEYSTROKE_VOLUME_MIN + Math.random() * volumeRange;
+      const volumeRange =
+        AudioConfig.KEYSTROKE_VOLUME_MAX - AudioConfig.KEYSTROKE_VOLUME_MIN;
+      const baseVolume =
+        AudioConfig.KEYSTROKE_VOLUME_MIN + Math.random() * volumeRange;
       audio.volume = baseVolume * 0.7; // Reduce volume by 30% for overlapping sounds
 
-      // Track active sounds
-      this.activeSounds++;
-
-      audio.addEventListener('ended', () => {
-        this.activeSounds = Math.max(0, this.activeSounds - 1);
-      });
-
-      audio.addEventListener('error', () => {
-        this.activeSounds = Math.max(0, this.activeSounds - 1);
-      });
-
+      // Track and cleanup audio element
+      this.trackAudioElement(audio);
       await audio.play();
     } catch (error) {
-      this.activeSounds = Math.max(0, this.activeSounds - 1);
-      this.logger.warn('Failed to play overlapping keystroke sound', 'AudioService', {
-        error,
-      });
+      this.activeSoundCount = Math.max(0, this.activeSoundCount - 1);
+      this.logger.warn(
+        'Failed to play overlapping keystroke sound',
+        'AudioService',
+        {
+          error,
+        }
+      );
     }
   }
 
@@ -235,12 +255,15 @@ export class AudioService {
     }
 
     // Apply threshold to prevent audio noise from too many overlapping sounds
-    if (this.activeSounds >= this.MAX_CONCURRENT_SOUNDS) {
+    if (this.activeSoundCount >= this.MAX_CONCURRENT_SOUNDS) {
       return;
     }
 
     try {
-      const actualCount = Math.min(count, this.MAX_CONCURRENT_SOUNDS - this.activeSounds);
+      const actualCount = Math.min(
+        count,
+        this.MAX_CONCURRENT_SOUNDS - this.activeSoundCount
+      );
       const promises: Promise<void>[] = [];
 
       for (let i = 0; i < actualCount; i++) {
@@ -254,9 +277,13 @@ export class AudioService {
 
       await Promise.all(promises);
     } catch (error) {
-      this.logger.warn('Failed to play multiple keystroke sounds', 'AudioService', {
-        error,
-      });
+      this.logger.warn(
+        'Failed to play multiple keystroke sounds',
+        'AudioService',
+        {
+          error,
+        }
+      );
     }
   }
 
@@ -321,6 +348,29 @@ export class AudioService {
   }
 
   /**
+   * Track audio element for proper cleanup and concurrent sound management
+   */
+  private trackAudioElement(audio: HTMLAudioElement): void {
+    this.activeSounds.set(audio, true);
+    this.activeSoundCount++;
+
+    const cleanup = () => {
+      if (this.activeSounds.has(audio)) {
+        this.activeSounds.delete(audio);
+        this.activeSoundCount = Math.max(0, this.activeSoundCount - 1);
+      }
+      // Remove event listeners to prevent memory leaks
+      audio.removeEventListener('ended', cleanup);
+      audio.removeEventListener('error', cleanup);
+      audio.removeEventListener('pause', cleanup);
+    };
+
+    audio.addEventListener('ended', cleanup);
+    audio.addEventListener('error', cleanup);
+    audio.addEventListener('pause', cleanup);
+  }
+
+  /**
    * Cleanup audio resources
    */
   destroy(): void {
@@ -334,6 +384,8 @@ export class AudioService {
       }
     });
     this.audioCache.clear();
+    this.activeSounds = new WeakMap();
+    this.activeSoundCount = 0;
     this.logger.debug('AudioService destroyed', 'AudioService');
   }
 
@@ -403,6 +455,7 @@ export class AudioService {
 
   /**
    * Ensure audio element is ready for playback to prevent corruption
+   * Optimized to reduce promise overhead
    */
   private async ensureAudioReady(audio: HTMLAudioElement): Promise<void> {
     // If audio is already ready, return immediately
@@ -410,30 +463,36 @@ export class AudioService {
       return;
     }
 
-    // Wait for audio to be ready with timeout to prevent hanging
+    // For cached audio elements, skip the ready check to improve performance
+    if (this.audioCache.has(audio.src)) {
+      return;
+    }
+
+    // Wait for audio to be ready with reduced timeout
     return new Promise<void>((resolve) => {
       const timeout = setTimeout(() => {
-        audio.removeEventListener('canplaythrough', handleReady);
-        audio.removeEventListener('error', handleError);
+        cleanup();
         resolve(); // Don't reject, just proceed to prevent blocking
-      }, 1000); // 1 second timeout
+      }, 500); // Reduced timeout from 1000ms to 500ms
 
-      const handleReady = () => {
+      const cleanup = () => {
         clearTimeout(timeout);
         audio.removeEventListener('canplaythrough', handleReady);
         audio.removeEventListener('error', handleError);
+      };
+
+      const handleReady = () => {
+        cleanup();
         resolve();
       };
 
       const handleError = () => {
-        clearTimeout(timeout);
-        audio.removeEventListener('canplaythrough', handleReady);
-        audio.removeEventListener('error', handleError);
+        cleanup();
         resolve(); // Don't reject, just proceed to prevent blocking
       };
 
-      audio.addEventListener('canplaythrough', handleReady);
-      audio.addEventListener('error', handleError);
+      audio.addEventListener('canplaythrough', handleReady, { once: true });
+      audio.addEventListener('error', handleError, { once: true });
     });
   }
 
