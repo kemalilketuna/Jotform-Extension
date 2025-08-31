@@ -11,6 +11,7 @@ export class AudioService {
   private readonly logger: LoggingService;
   private audioCache: Map<string, HTMLAudioElement> = new Map();
   private isEnabled: boolean = true;
+  private isInitialized: boolean = false;
 
   private constructor(logger: LoggingService = LoggingService.getInstance()) {
     this.logger = logger;
@@ -34,6 +35,15 @@ export class AudioService {
    * Initialize the audio service and preload sounds
    */
   async initialize(): Promise<void> {
+    // Skip if already initialized
+    if (this.isInitialized) {
+      this.logger.debug(
+        'AudioService already initialized, skipping',
+        'AudioService'
+      );
+      return;
+    }
+
     // Skip initialization if not in extension context
     if (!ExtensionUtils.isExtensionContext()) {
       this.logger.info(
@@ -48,6 +58,7 @@ export class AudioService {
         this.preloadClickSound(),
         this.preloadKeystrokeSound(),
       ]);
+      this.isInitialized = true;
       this.logger.debug(
         'AudioService initialized successfully',
         'AudioService'

@@ -60,20 +60,8 @@ export class ContentScriptCoordinator {
       'ContentScriptCoordinator'
     );
 
-    // Initialize audio service
-    try {
-      await this.audioService.initialize();
-      this.logger.debug(
-        'AudioService initialized successfully',
-        'ContentScriptCoordinator'
-      );
-    } catch (error) {
-      this.logger.warn(
-        'AudioService initialization failed, continuing without audio',
-        'ContentScriptCoordinator',
-        { error }
-      );
-    }
+    // AudioService is already initialized by ServiceInitializer
+    // No need to initialize it again here
 
     // Initialize navigation detection
     this.navigationDetector.initialize();

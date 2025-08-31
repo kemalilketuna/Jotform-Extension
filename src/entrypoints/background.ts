@@ -179,40 +179,17 @@ class AutomationCoordinator {
         `Failed to send message to content script: ${error}`,
         'AutomationCoordinator'
       );
-      // Content script might not be ready, try to inject it
-      await this.ensureContentScriptInjected(tabId);
-      // Retry sending message
-      try {
-        await browser.tabs.sendMessage(tabId, message);
-      } catch (retryError) {
-        this.logger.error(
-          `Retry failed: ${retryError}`,
-          'AutomationCoordinator'
-        );
-      }
+      // WXT handles content script injection automatically
+      // Manual injection removed to prevent multiple instances
+      this.logger.warn(
+        'Content script not ready, message will be retried when script loads',
+        'AutomationCoordinator'
+      );
     }
   }
 
-  /**
-   * Ensure content script is injected in the target tab
-   */
-  private async ensureContentScriptInjected(tabId: number): Promise<void> {
-    try {
-      await browser.scripting.executeScript({
-        target: { tabId },
-        files: ['content-scripts/content.js'],
-      });
-      this.logger.info(
-        `Content script injected into tab ${tabId}`,
-        'AutomationCoordinator'
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to inject content script: ${error}`,
-        'AutomationCoordinator'
-      );
-    }
-  }
+  // Manual content script injection removed - WXT handles this automatically
+  // This prevents multiple content script instances and initialization conflicts
 }
 
 /**

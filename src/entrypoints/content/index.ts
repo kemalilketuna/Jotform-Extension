@@ -131,9 +131,10 @@ declare const window: ExtendedWindow;
 const CONTENT_SCRIPT_ID = `content-script-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 /**
- * Global flag to prevent multiple message listeners
+ * Global flags to prevent multiple initializations
  */
 let isMessageListenerRegistered = false;
+let isContentScriptInitialized = false;
 
 /**
  * Initialize the content script main instance
@@ -161,13 +162,16 @@ async function initializeContentScript(): Promise<void> {
   }
 
   // Prevent multiple initializations
-  if (isMessageListenerRegistered) {
+  if (isContentScriptInitialized || isMessageListenerRegistered) {
     logger.warn(
       `Content script already initialized, skipping [${CONTENT_SCRIPT_ID}]`,
       'ContentScript'
     );
     return;
   }
+
+  // Mark as initializing to prevent race conditions
+  isContentScriptInitialized = true;
 
   try {
     const contentScript = new ContentScriptMain();
@@ -214,27 +218,14 @@ async function initializeContentScript(): Promise<void> {
   }
 }
 
-// Initialize content script when DOM is ready (only in browser environment)
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeContentScript);
-  } else {
-    initializeContentScript();
-  }
-} else {
-  // In build environment, skip initialization
-  const logger = LoggingService.getInstance();
-  logger.info(
-    'Content script loaded in build environment, skipping initialization',
-    'ContentScript'
-  );
-}
-
 // WXT content script definition
 export default defineContentScript({
   matches: ['*://*.jotform.com/*'],
+  runAt: 'document_end',
+  allFrames: false,
   main() {
-    // Content script initialization is handled above
+    // WXT handles proper timing - no need for DOMContentLoaded listener
+    initializeContentScript();
   },
 });
 
