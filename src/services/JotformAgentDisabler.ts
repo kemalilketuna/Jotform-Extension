@@ -11,6 +11,8 @@ export class JotformAgentDisabler {
   private mutationObserver: MutationObserver | null = null;
   private isObserving = false;
   private disabledElements = new Set<Element>();
+  private mutationDebounceTimer: number | null = null;
+  private pendingMutations: Element[] = [];
 
   private constructor() {
     this.logger = LoggingService.getInstance();
@@ -103,16 +105,21 @@ export class JotformAgentDisabler {
   private setupMutationObserver(): void {
     try {
       this.mutationObserver = new MutationObserver((mutations) => {
+        const elementsToCheck: Element[] = [];
+
         mutations.forEach((mutation) => {
           if (mutation.type === 'childList') {
             mutation.addedNodes.forEach((node) => {
               if (node.nodeType === Node.ELEMENT_NODE) {
-                const element = node as Element;
-                this.checkAndDisableAgentComponents(element);
+                elementsToCheck.push(node as Element);
               }
             });
           }
         });
+
+        if (elementsToCheck.length > 0) {
+          this.debounceMutationProcessing(elementsToCheck);
+        }
       });
 
       // Start observing the document for changes
@@ -135,21 +142,44 @@ export class JotformAgentDisabler {
   }
 
   /**
-   * Check if an element or its descendants contain Jotform agent components and disable them
+   * Debounce mutation processing to batch DOM operations
    */
-  private checkAndDisableAgentComponents(element: Element): void {
-    try {
-      const foundComponents = this.findAndDisableAgentElements(element, true);
+  private debounceMutationProcessing(elements: Element[]): void {
+    this.pendingMutations.push(...elements);
 
-      if (foundComponents > 0) {
+    if (this.mutationDebounceTimer) {
+      clearTimeout(this.mutationDebounceTimer);
+    }
+
+    this.mutationDebounceTimer = window.setTimeout(() => {
+      this.processPendingMutations();
+    }, 16); // ~60fps
+  }
+
+  /**
+   * Process all pending mutations in a single batch
+   */
+  private processPendingMutations(): void {
+    if (this.pendingMutations.length === 0) return;
+
+    try {
+      let totalDisabled = 0;
+      const elementsToProcess = [...this.pendingMutations];
+      this.pendingMutations = [];
+
+      elementsToProcess.forEach(element => {
+        totalDisabled += this.findAndDisableAgentElements(element, true);
+      });
+
+      if (totalDisabled > 0) {
         this.logger.info(
-          `Disabled ${foundComponents} agent components from mutation`,
+          `Disabled ${totalDisabled} agent components from batched mutations`,
           'JotformAgentDisabler'
         );
       }
     } catch (error) {
       this.logger.error(
-        'Error checking element for agent components',
+        'Error processing batched mutations',
         'JotformAgentDisabler',
         { error: String(error) }
       );
@@ -170,7 +200,7 @@ export class JotformAgentDisabler {
 
     // Check if the context element itself matches any agent pattern (for mutations)
     if (checkSelf && context instanceof Element) {
-      ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS.forEach((pattern) => {
+      for (const pattern of ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS) {
         if (context.matches && context.matches(pattern)) {
           this.disableAgentComponent(context as HTMLElement);
           foundElements++;
@@ -178,33 +208,17 @@ export class JotformAgentDisabler {
             `Detected new Jotform agent component: ${pattern}`,
             'JotformAgentDisabler'
           );
+          break; // Early exit on first match
         }
-      });
-
-      // Special handling for main container pattern
-      if (
-        context.matches(ElementSelectors.JOTFORM_AGENT.AGENT_CONTAINER_PATTERN)
-      ) {
-        this.disableAgentComponent(context as HTMLElement);
-        foundElements++;
       }
     }
 
-    // Check all possible agent patterns within the context
-    ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS.forEach((pattern) => {
-      const elements = context.querySelectorAll(pattern);
-      elements.forEach((element) => {
-        this.disableAgentComponent(element as HTMLElement);
-        foundElements++;
-      });
-    });
+    // Use single compound selector for better performance
+    const allPatterns = ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS.join(', ');
+    const elements = context.querySelectorAll(allPatterns);
 
-    // Also check for the main container pattern specifically
-    const mainContainers = context.querySelectorAll(
-      ElementSelectors.JOTFORM_AGENT.AGENT_CONTAINER_PATTERN
-    );
-    mainContainers.forEach((container) => {
-      this.disableAgentComponent(container as HTMLElement);
+    elements.forEach((element) => {
+      this.disableAgentComponent(element as HTMLElement);
       foundElements++;
     });
 
@@ -270,8 +284,14 @@ export class JotformAgentDisabler {
         this.mutationObserver = null;
       }
 
+      if (this.mutationDebounceTimer) {
+        clearTimeout(this.mutationDebounceTimer);
+        this.mutationDebounceTimer = null;
+      }
+
       this.isObserving = false;
       this.disabledElements.clear();
+      this.pendingMutations = [];
 
       this.logger.info(
         'JotformAgentDisabler destroyed',
