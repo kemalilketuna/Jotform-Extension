@@ -11,7 +11,10 @@ export { WebSocketConnection } from './WebSocketConnection';
 export { WebSocketMessageHandler } from './WebSocketMessageHandler';
 
 // Error classes
-export { WebSocketConnectionError, WebSocketTimeoutError } from './errors';
+export {
+  WebSocketConnectionError,
+  WebSocketTimeoutError,
+} from './WebSocketErrors';
 
 // Types
 export type {
@@ -28,4 +31,4 @@ export type {
   ConnectionStatus,
   DetailedConnectionState,
   PendingRequest,
-} from './types';
+} from './WebSocketTypes';

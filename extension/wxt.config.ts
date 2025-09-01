@@ -23,7 +23,7 @@ export default defineConfig({
     },
     web_accessible_resources: [
       {
-        resources: ['sounds/radio-select.mp3', 'sounds/keystroke-soft.mp3'],
+        resources: ['sounds/radioSelect.mp3', 'sounds/keystrokeSoft.mp3'],
         matches: ['<all_urls>'],
       },
     ],
@@ -32,7 +32,7 @@ export default defineConfig({
     disabled: true,
   },
   autoIcons: {
-    baseIconPath: '../public/jotform-logo.svg',
+    baseIconPath: '../public/jotformLogo.svg',
     developmentIndicator: false,
   },
   dev: {

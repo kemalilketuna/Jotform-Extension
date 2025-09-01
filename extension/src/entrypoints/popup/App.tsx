@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import jotformLogo from '@/assets/jotform-logo.svg';
 import { AutomationServerService } from '@/services/AutomationServerService';
 import { WebSocketService } from '@/services/WebSocketService';
 import { AutomationSequence } from '@/services/AutomationEngine';
@@ -8,6 +7,11 @@ import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/services/Messages';
 import { NavigationUtils } from '@/utils/NavigationUtils';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
+import { PopupHeader } from '@/components/PopupHeader';
+import { ConnectionStatus } from '@/components/ConnectionStatus';
+import { StatusMessage } from '@/components/StatusMessage';
+import { ActionButtons } from '@/components/ActionButtons';
+import { PopupFooter } from '@/components/PopupFooter';
 
 import './App.css';
 
@@ -246,81 +250,31 @@ function App() {
     <div
       className={`ai-form-popup ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS}`}
     >
-      <header className="popup-header">
-        <img src={jotformLogo} className="logo" alt="JotForm logo" />
-        <div className="header-text">
-          <h1>AI-Form</h1>
-          <p className="subtitle">Smart Form Assistant</p>
-        </div>
-      </header>
+      <PopupHeader />
 
       <div className="main-content">
         <div className="description">
           <p>{UserMessages.PROMPTS.EXTENSION_DESCRIPTION}</p>
         </div>
 
-        <div className="connection-status">
-          <div className={`status-indicator ${connectionStatus}`}>
-            <span className="status-dot"></span>
-            <span className="status-text">
-              {connectionStatus === 'connecting' && 'Connecting...'}
-              {connectionStatus === 'open' && 'Connected'}
-              {connectionStatus === 'closing' && 'Disconnecting...'}
-              {connectionStatus === 'closed' && 'Disconnected'}
-            </span>
-          </div>
-          {reconnectAttempts > 0 && (
-            <div className="reconnect-info">
-              <span className="reconnect-text">
-                Reconnection attempts: {reconnectAttempts}
-              </span>
-            </div>
-          )}
-          {connectionError && (
-            <div className="connection-error">
-              <span className="error-text">{connectionError}</span>
-              <button
-                className="reconnect-btn"
-                onClick={handleForceReconnect}
-                disabled={connectionStatus === 'connecting'}
-              >
-                {connectionStatus === 'connecting'
-                  ? 'Connecting...'
-                  : 'Retry Connection'}
-              </button>
-            </div>
-          )}
-        </div>
+        <ConnectionStatus
+          connectionStatus={connectionStatus}
+          reconnectAttempts={reconnectAttempts}
+          connectionError={connectionError}
+          onForceReconnect={handleForceReconnect}
+        />
 
-        {status && (
-          <div className="status-message">
-            <p>{status}</p>
-          </div>
-        )}
+        <StatusMessage status={status} />
 
-        <div className="controls">
-          <button
-            className={`create-form-btn ${isExecuting ? 'executing' : ''} ${!isConnected ? 'disabled' : ''}`}
-            onClick={createForm}
-            disabled={isExecuting || !isConnected}
-            title={!isConnected ? 'Connect to server first' : ''}
-          >
-            {isExecuting ? 'Creating...' : 'Create Form'}
-          </button>
-          <button
-            className={`build-form-btn ${isExecuting ? 'executing' : ''} ${!isConnected ? 'disabled' : ''}`}
-            onClick={buildForm}
-            disabled={isExecuting || !isConnected}
-            title={!isConnected ? 'Connect to server first' : ''}
-          >
-            {isExecuting ? 'Building...' : 'Build Form'}
-          </button>
-        </div>
+        <ActionButtons
+          isExecuting={isExecuting}
+          isConnected={isConnected}
+          onCreateForm={createForm}
+          onBuildForm={buildForm}
+        />
       </div>
 
-      <footer className="popup-footer">
-        <p>Powered by AI • Built for JotForm</p>
-      </footer>
+      <PopupFooter />
     </div>
   );
 }
