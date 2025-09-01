@@ -24,6 +24,7 @@ export class UserMessages {
       'Could not inject content script. Please refresh the page and try again.',
     UNKNOWN_ACTION_TYPE: 'Unknown automation action type',
     AUTOMATION_TIMEOUT: 'Automation sequence timed out',
+    SERVER_CONNECTION_FAILED: 'Failed to connect to automation server',
   } as const;
 
   // Status Messages

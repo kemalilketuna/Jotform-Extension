@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import jotformLogo from '@/assets/jotform-logo.svg';
 import { AutomationServerService } from '@/services/AutomationServerService';
+import { WebSocketService } from '@/services/WebSocketService';
 import { AutomationSequence } from '@/services/AutomationEngine';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
@@ -16,7 +17,58 @@ import './App.css';
 function App() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [status, setStatus] = useState<string>('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'open' | 'closing' | 'closed'>('closed');
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const logger = LoggingService.getInstance();
+  const webSocketService = WebSocketService.getInstance();
+
+  /**
+   * Initialize WebSocket connection on component mount
+   */
+  useEffect(() => {
+    // Add connection state listener
+    const handleConnectionStateChange = (state: string, error?: Error) => {
+      setIsConnected(state === 'connected');
+      setConnectionStatus(webSocketService.getConnectionStatus());
+      setConnectionError(error?.message || null);
+      
+      const detailedState = webSocketService.getDetailedConnectionState();
+      setReconnectAttempts(detailedState.reconnectAttempts);
+    };
+
+    webSocketService.addConnectionListener(handleConnectionStateChange);
+
+    const initializeConnection = async () => {
+      try {
+        setStatus('Connecting to automation server...');
+        setConnectionStatus('connecting');
+        
+        await AutomationServerService.connect();
+        
+        setIsConnected(true);
+        setConnectionStatus('open');
+        setStatus('Connected to automation server');
+        
+        // Clear status after 2 seconds
+        setTimeout(() => setStatus(''), 2000);
+      } catch (error) {
+        logger.logError(error as Error, 'PopupApp');
+        setIsConnected(false);
+        setConnectionStatus('closed');
+        setStatus('Failed to connect to automation server');
+      }
+    };
+
+    initializeConnection();
+
+    // Cleanup on unmount
+    return () => {
+      webSocketService.removeConnectionListener(handleConnectionStateChange);
+      AutomationServerService.disconnect();
+    };
+  }, []);
 
   /**
    * Get the current active tab
@@ -46,9 +98,14 @@ function App() {
   };
 
   /**
-   * Fetch automation sequence from server
+   * Fetch automation sequence from WebSocket server
    */
   const fetchAutomationSequence = async () => {
+    if (!isConnected) {
+      const health = webSocketService.getConnectionHealth();
+      throw new Error(`Not connected to automation server. Issues: ${health.issues.join(', ')}`);
+    }
+    
     setStatus(UserMessages.STATUS.FETCHING_FROM_SERVER);
     const response = await AutomationServerService.fetchFormCreationSteps();
 
@@ -118,14 +175,32 @@ function App() {
   };
 
   /**
-   * Fetch form building automation sequence from server
+   * Fetch form building automation sequence from WebSocket server
    */
   const fetchFormBuildingSequence = async () => {
+    if (!isConnected) {
+      const health = webSocketService.getConnectionHealth();
+      throw new Error(`Not connected to automation server. Issues: ${health.issues.join(', ')}`);
+    }
+    
     setStatus('Fetching form building steps from server...');
     const response = await AutomationServerService.fetchFormBuildingSteps();
 
     setStatus('Converting server response...');
     return AutomationServerService.convertToAutomationSequence(response);
+  };
+
+  /**
+   * Handle force reconnection
+   */
+  const handleForceReconnect = async () => {
+    try {
+      setConnectionError(null);
+      await webSocketService.forceReconnect();
+    } catch (error) {
+      console.error('Force reconnection failed:', error);
+      setConnectionError(error instanceof Error ? error.message : 'Reconnection failed');
+    }
   };
 
   /**
@@ -173,6 +248,35 @@ function App() {
           <p>{UserMessages.PROMPTS.EXTENSION_DESCRIPTION}</p>
         </div>
 
+        <div className="connection-status">
+          <div className={`status-indicator ${connectionStatus}`}>
+            <span className="status-dot"></span>
+            <span className="status-text">
+              {connectionStatus === 'connecting' && 'Connecting...'}
+              {connectionStatus === 'open' && 'Connected'}
+              {connectionStatus === 'closing' && 'Disconnecting...'}
+              {connectionStatus === 'closed' && 'Disconnected'}
+            </span>
+          </div>
+          {reconnectAttempts > 0 && (
+            <div className="reconnect-info">
+              <span className="reconnect-text">Reconnection attempts: {reconnectAttempts}</span>
+            </div>
+          )}
+          {connectionError && (
+            <div className="connection-error">
+              <span className="error-text">{connectionError}</span>
+              <button 
+                className="reconnect-btn"
+                onClick={handleForceReconnect}
+                disabled={connectionStatus === 'connecting'}
+              >
+                {connectionStatus === 'connecting' ? 'Connecting...' : 'Retry Connection'}
+              </button>
+            </div>
+          )}
+        </div>
+
         {status && (
           <div className="status-message">
             <p>{status}</p>
@@ -181,16 +285,18 @@ function App() {
 
         <div className="controls">
           <button
-            className={`create-form-btn ${isExecuting ? 'executing' : ''}`}
+            className={`create-form-btn ${isExecuting ? 'executing' : ''} ${!isConnected ? 'disabled' : ''}`}
             onClick={createForm}
-            disabled={isExecuting}
+            disabled={isExecuting || !isConnected}
+            title={!isConnected ? 'Connect to server first' : ''}
           >
             {isExecuting ? 'Creating...' : 'Create Form'}
           </button>
           <button
-            className={`build-form-btn ${isExecuting ? 'executing' : ''}`}
+            className={`build-form-btn ${isExecuting ? 'executing' : ''} ${!isConnected ? 'disabled' : ''}`}
             onClick={buildForm}
-            disabled={isExecuting}
+            disabled={isExecuting || !isConnected}
+            title={!isConnected ? 'Connect to server first' : ''}
           >
             {isExecuting ? 'Building...' : 'Build Form'}
           </button>
