@@ -5,7 +5,7 @@ import { WebSocketService } from '@/services/websocket';
 import { AutomationSequence } from '@/services/AutomationEngine';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
-import { UserMessages } from '@/constants/UserMessages';
+import { UserMessages } from '@/services/messages';
 import { NavigationUrls } from '@/constants/NavigationUrls';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 
