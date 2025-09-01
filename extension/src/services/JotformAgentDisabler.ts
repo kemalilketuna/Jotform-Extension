@@ -210,7 +210,8 @@ export class JotformAgentDisabler {
 
     // Check if the context element itself matches any agent pattern (for mutations)
     if (checkSelf && context instanceof Element) {
-      for (const pattern of JotformAgentDisabler.JOTFORM_AGENT.ALL_AGENT_PATTERNS) {
+      for (const pattern of JotformAgentDisabler.JOTFORM_AGENT
+        .ALL_AGENT_PATTERNS) {
         if (context.matches && context.matches(pattern)) {
           this.disableAgentComponent(context as HTMLElement);
           foundElements++;
