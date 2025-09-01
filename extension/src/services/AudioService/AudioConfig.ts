@@ -2,8 +2,8 @@
  * Audio file paths managed through OOP pattern
  */
 export class AudioPaths {
-  static readonly CLICK_SOUND = 'sounds/radio_select.mp3' as const;
-  static readonly KEYSTROKE_SOUND = 'sounds/keystroke_soft.mp3' as const;
+  static readonly CLICK_SOUND = 'sounds/radio-select.mp3' as const;
+  static readonly KEYSTROKE_SOUND = 'sounds/keystroke-soft.mp3' as const;
 }
 
 /**

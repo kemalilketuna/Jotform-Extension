@@ -1,4 +1,4 @@
-import { WebSocketConfig as IWebSocketConfig } from './types';
+import { WebSocketConfig as IWebSocketConfig } from './WebSocketTypes';
 
 export class WebSocketConfig {
   private static readonly DEFAULT_CONFIG: IWebSocketConfig = {

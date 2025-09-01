@@ -1,5 +1,5 @@
 import { LoggingService } from '@/services/LoggingService';
-import { UserMessages } from '@/services/messages';
+import { UserMessages } from '@/services/Messages';
 import { EXTENSION_COMPONENTS } from './extensionComponents';
 
 /**

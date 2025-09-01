@@ -1,16 +1,16 @@
 /**
  * Centralized management of all navigation URLs used throughout the application
  */
-export class NavigationUrls {
+export class NavigationUtils {
   private constructor() {} // Prevent instantiation
 
   // Base URLs
   static readonly JOTFORM_BASE = 'https://www.jotform.com' as const;
   static readonly WORKSPACE_BASE =
-    `${NavigationUrls.JOTFORM_BASE}/workspace/` as const;
+    `${NavigationUtils.JOTFORM_BASE}/workspace/` as const;
 
   // Specific Pages
-  static readonly WORKSPACE = NavigationUrls.WORKSPACE_BASE;
+  static readonly WORKSPACE = NavigationUtils.WORKSPACE_BASE;
 
   /**
    * Check if a URL is a JotForm domain

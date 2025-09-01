@@ -1,8 +1,11 @@
 import { LoggingService } from '@/services/LoggingService';
 import { WebSocketConfig } from './WebSocketConfig';
 import { WebSocketMessageHandler } from './WebSocketMessageHandler';
-import { WebSocketConnectionError, WebSocketTimeoutError } from './errors';
-import { ConnectionState, WebSocketMessage } from './types';
+import {
+  WebSocketConnectionError,
+  WebSocketTimeoutError,
+} from './WebSocketErrors';
+import { ConnectionState, WebSocketMessage } from './WebSocketTypes';
 
 export class WebSocketConnection {
   private websocket: WebSocket | null = null;

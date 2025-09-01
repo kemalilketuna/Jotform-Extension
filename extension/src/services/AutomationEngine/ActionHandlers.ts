@@ -8,7 +8,7 @@ import {
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
-import { NavigationUrls } from '@/utils/NavigationUtils';
+import { NavigationUtils } from '@/utils/NavigationUtils';
 import { SelectorUtils } from '@/utils/SelectorUtils';
 
 import {
@@ -84,7 +84,7 @@ export class ActionHandlers {
    * Handle navigation actions with URL validation
    */
   private async handleNavigation(action: NavigationAction): Promise<void> {
-    const validatedUrl = NavigationUrls.validateUrl(action.url);
+    const validatedUrl = NavigationUtils.validateUrl(action.url);
     const currentUrl = window.location.href;
 
     // Check if we're already on the target URL

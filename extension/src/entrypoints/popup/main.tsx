@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import '@/assets/main.css';
-import './style.css';
+import '@/assets/global.css';
+import './popup.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -1,5 +1,9 @@
 import { LoggingService } from '@/services/LoggingService';
-import { WebSocketMessage, ErrorMessage, PendingRequest } from './types';
+import {
+  WebSocketMessage,
+  ErrorMessage,
+  PendingRequest,
+} from './WebSocketTypes';
 
 export class WebSocketMessageHandler {
   private readonly logger = LoggingService.getInstance();

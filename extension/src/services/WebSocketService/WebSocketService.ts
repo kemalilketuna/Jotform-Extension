@@ -2,13 +2,16 @@ import { LoggingService } from '@/services/LoggingService';
 import { WebSocketConfig } from './WebSocketConfig';
 import { WebSocketConnection } from './WebSocketConnection';
 import { WebSocketMessageHandler } from './WebSocketMessageHandler';
-import { WebSocketConnectionError, WebSocketTimeoutError } from './errors';
+import {
+  WebSocketConnectionError,
+  WebSocketTimeoutError,
+} from './WebSocketErrors';
 import {
   WebSocketMessage,
   AutomationSequenceRequest,
   AutomationSequenceResponse,
   WebSocketConfig as IWebSocketConfig,
-} from './types';
+} from './WebSocketTypes';
 
 export class WebSocketService {
   private static instance: WebSocketService | null = null;

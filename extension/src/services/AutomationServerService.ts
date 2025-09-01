@@ -3,7 +3,7 @@ import {
   AutomationAction,
 } from '@/services/AutomationEngine';
 import { LoggingService } from '@/services/LoggingService';
-import { WebSocketService } from '@/services/websocket';
+import { WebSocketService } from '@/services/WebSocketService';
 import { AutomationError } from '@/services/AutomationEngine';
 
 export interface ServerAutomationStep {

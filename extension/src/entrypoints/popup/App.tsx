@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import jotformLogo from '@/assets/jotform-logo.svg';
 import { AutomationServerService } from '@/services/AutomationServerService';
-import { WebSocketService } from '@/services/websocket';
+import { WebSocketService } from '@/services/WebSocketService';
 import { AutomationSequence } from '@/services/AutomationEngine';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
-import { UserMessages } from '@/services/messages';
-import { NavigationUrls } from '@/utils/NavigationUtils';
+import { UserMessages } from '@/services/Messages';
+import { NavigationUtils } from '@/utils/NavigationUtils';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 
 import './App.css';
@@ -92,9 +92,9 @@ function App() {
    * Navigate to JotForm workspace if not already there
    */
   const ensureJotformPage = async (tab: chrome.tabs.Tab) => {
-    if (!tab.url || !NavigationUrls.isJotformUrl(tab.url)) {
+    if (!tab.url || !NavigationUtils.isJotformUrl(tab.url)) {
       setStatus(UserMessages.STATUS.NAVIGATING_TO_WORKSPACE);
-      await browser.tabs.update(tab.id!, { url: NavigationUrls.WORKSPACE });
+      await browser.tabs.update(tab.id!, { url: NavigationUtils.WORKSPACE });
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
   };
