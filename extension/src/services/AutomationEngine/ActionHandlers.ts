@@ -8,7 +8,7 @@ import {
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
-import { NavigationUrls } from '@/constants/NavigationUrls';
+import { NavigationUrls } from '@/utils/NavigationUtils';
 import { SelectorUtils } from '@/utils/SelectorUtils';
 
 import {

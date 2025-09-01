@@ -6,7 +6,7 @@ import { AutomationSequence } from '@/services/AutomationEngine';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/services/messages';
-import { NavigationUrls } from '@/constants/NavigationUrls';
+import { NavigationUrls } from '@/utils/NavigationUtils';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 
 import './App.css';
