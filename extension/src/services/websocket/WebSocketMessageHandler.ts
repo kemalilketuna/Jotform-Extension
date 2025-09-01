@@ -15,7 +15,10 @@ export class WebSocketMessageHandler {
    */
   private setupDefaultHandlers(): void {
     this.messageHandlers.set('connection_established', (_data) => {
-      this.logger.info('WebSocket connection established', 'WebSocketMessageHandler');
+      this.logger.info(
+        'WebSocket connection established',
+        'WebSocketMessageHandler'
+      );
     });
 
     this.messageHandlers.set('pong', (_data) => {
@@ -111,10 +114,7 @@ export class WebSocketMessageHandler {
   /**
    * Set up one-time message handler for request
    */
-  setupRequestHandler(
-    requestId: string,
-    responseType: string
-  ): void {
+  setupRequestHandler(requestId: string, responseType: string): void {
     const originalHandler = this.messageHandlers.get(responseType);
 
     this.messageHandlers.set(responseType, (data) => {

@@ -4,13 +4,6 @@
 export class ElementSelectors {
   private constructor() {} // Prevent instantiation
 
-  // Workspace Elements
-  static readonly WORKSPACE = {
-    SIDEBAR: '.lsApp-sidebar',
-    MAIN_CONTENT: '.lsApp-body',
-    SIDEBAR_CONTENT: '.lsApp-sidebar-content',
-  } as const;
-
   // Jotform Agent Elements
   static readonly JOTFORM_AGENT = {
     // Comprehensive patterns for different states

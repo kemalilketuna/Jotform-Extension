@@ -26,7 +26,9 @@ export class WebSocketService {
   /**
    * Get singleton instance
    */
-  static getInstance(customConfig?: Partial<IWebSocketConfig>): WebSocketService {
+  static getInstance(
+    customConfig?: Partial<IWebSocketConfig>
+  ): WebSocketService {
     if (!WebSocketService.instance) {
       WebSocketService.instance = new WebSocketService(customConfig);
     }
@@ -223,8 +225,13 @@ export class WebSocketService {
     }
 
     if (connectionState.reconnectAttempts > 0) {
-      issues.push(`${connectionState.reconnectAttempts} reconnection attempts made`);
-      if (connectionState.reconnectAttempts >= connectionState.maxReconnectAttempts) {
+      issues.push(
+        `${connectionState.reconnectAttempts} reconnection attempts made`
+      );
+      if (
+        connectionState.reconnectAttempts >=
+        connectionState.maxReconnectAttempts
+      ) {
         recommendations.push(
           'Maximum reconnection attempts reached - manual intervention required'
         );

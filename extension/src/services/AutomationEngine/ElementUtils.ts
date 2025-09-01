@@ -1,5 +1,4 @@
 import { LoggingService } from '@/services/LoggingService';
-import { ElementSelectors } from '@/constants/ElementSelectors';
 import { AutomationConfig } from './AutomationConfig';
 
 /**
@@ -82,49 +81,74 @@ export class ElementUtils {
   }
 
   /**
-   * Wait for navigation to complete with workspace-specific checks
+   * Wait for navigation to complete using universal page stability detection
+   * Works on any website without requiring specific CSS selectors
    */
   async waitForNavigationComplete(): Promise<void> {
     return new Promise((resolve) => {
       const startTime = Date.now();
+      let lastDomChangeTime = Date.now();
+      let stabilityCheckCount = 0;
+      const STABILITY_THRESHOLD = 3; // Number of consecutive stable checks needed
+      const STABILITY_CHECK_INTERVAL = 500; // ms between stability checks
+      const MIN_STABILITY_DURATION = 1000; // Minimum time DOM must be stable
 
-      // Wait for document ready state
+      // Wait for document ready state first
       const checkReadyState = () => {
         if (document.readyState === 'complete') {
-          // Additional wait for dynamic content to load
-          setTimeout(() => {
-            // Check if key elements are loaded (workspace specific)
-            const checkWorkspaceLoaded = () => {
-              const sidebar = document.querySelector(
-                ElementSelectors.WORKSPACE.SIDEBAR
-              );
-              const mainContent = document.querySelector(
-                ElementSelectors.WORKSPACE.MAIN_CONTENT
-              );
+          this.logger.debug('Document ready state complete', 'ElementUtils');
 
-              if (sidebar && mainContent) {
+          // Start monitoring DOM stability
+          const observer = new MutationObserver(() => {
+            lastDomChangeTime = Date.now();
+            stabilityCheckCount = 0; // Reset stability counter on any change
+          });
+
+          // Observe DOM changes
+          observer.observe(document.body || document.documentElement, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeOldValue: false,
+            characterData: true,
+          });
+
+          // Check for page stability
+          const checkStability = () => {
+            const timeSinceLastChange = Date.now() - lastDomChangeTime;
+
+            if (timeSinceLastChange >= MIN_STABILITY_DURATION) {
+              stabilityCheckCount++;
+
+              if (stabilityCheckCount >= STABILITY_THRESHOLD) {
+                observer.disconnect();
                 this.logger.info(
-                  'Workspace navigation complete - elements loaded',
+                  `Navigation complete - page stable for ${timeSinceLastChange}ms`,
                   'ElementUtils'
                 );
                 resolve();
-              } else if (Date.now() - startTime > this.NAVIGATION_TIMEOUT) {
-                this.logger.warn(
-                  'Navigation timeout reached, proceeding anyway',
-                  'ElementUtils'
-                );
-                resolve();
-              } else {
-                // Keep checking for workspace elements
-                setTimeout(
-                  checkWorkspaceLoaded,
-                  AutomationConfig.INTERVALS.WORKSPACE_ELEMENT_CHECK_INTERVAL
-                );
+                return;
               }
-            };
+            } else {
+              stabilityCheckCount = 0;
+            }
 
-            checkWorkspaceLoaded();
-          }, 1000);
+            // Timeout check
+            if (Date.now() - startTime > this.NAVIGATION_TIMEOUT) {
+              observer.disconnect();
+              this.logger.warn(
+                'Navigation timeout reached, proceeding anyway',
+                'ElementUtils'
+              );
+              resolve();
+              return;
+            }
+
+            setTimeout(checkStability, STABILITY_CHECK_INTERVAL);
+          };
+
+          // Start stability monitoring after initial delay
+          setTimeout(checkStability, 1000);
         } else if (Date.now() - startTime > this.NAVIGATION_TIMEOUT) {
           this.logger.warn(
             'Document ready timeout reached, proceeding anyway',

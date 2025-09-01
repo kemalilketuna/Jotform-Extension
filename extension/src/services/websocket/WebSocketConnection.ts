@@ -15,11 +15,16 @@ export class WebSocketConnection {
   private connectionPromise: Promise<void> | null = null;
   private connectionState: ConnectionState = 'disconnected';
   private lastError: Error | null = null;
-  private connectionListeners = new Set<(state: string, error?: Error) => void>();
+  private connectionListeners = new Set<
+    (state: string, error?: Error) => void
+  >();
   private reconnectTimer: number | null = null;
   private isManualDisconnect = false;
 
-  constructor(config: WebSocketConfig, messageHandler: WebSocketMessageHandler) {
+  constructor(
+    config: WebSocketConfig,
+    messageHandler: WebSocketMessageHandler
+  ) {
     this.config = config;
     this.messageHandler = messageHandler;
   }
