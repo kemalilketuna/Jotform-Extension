@@ -1,11 +1,17 @@
 import { LoggingService } from '@/services/LoggingService';
-import { ElementSelectors } from '@/constants/ElementSelectors';
 import { UserMessages } from '@/constants/UserMessages';
 
 /**
  * Service for blocking user interactions during automation while keeping extension components clickable
  */
 export class UserInteractionBlocker {
+  // Extension Component Identification
+  public static readonly EXTENSION_COMPONENTS = {
+    // CSS class to mark extension components as always clickable
+    EXTENSION_COMPONENT_CLASS: 'jotform-extension-component',
+    // CSS class for the interaction blocker overlay
+    INTERACTION_BLOCKER_CLASS: 'jotform-extension-interaction-blocker',
+  } as const;
   private static instance: UserInteractionBlocker;
   private readonly logger: LoggingService;
   private isBlocking = false;
@@ -85,7 +91,7 @@ export class UserInteractionBlocker {
     // Create blocker element
     this.blockerElement = document.createElement('div');
     this.blockerElement.className =
-      ElementSelectors.EXTENSION_COMPONENTS.INTERACTION_BLOCKER_CLASS;
+      UserInteractionBlocker.EXTENSION_COMPONENTS.INTERACTION_BLOCKER_CLASS;
 
     // Apply styles for full-screen blocking
     Object.assign(this.blockerElement.style, {
@@ -232,7 +238,7 @@ export class UserInteractionBlocker {
     while (currentElement) {
       if (
         currentElement.classList?.contains(
-          ElementSelectors.EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS
+          UserInteractionBlocker.EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS
         )
       ) {
         return true;
@@ -301,7 +307,7 @@ export class UserInteractionBlocker {
   public forceCleanup(): void {
     try {
       const existingOverlays = document.querySelectorAll(
-        `.${ElementSelectors.EXTENSION_COMPONENTS.INTERACTION_BLOCKER_CLASS}`
+        `.${UserInteractionBlocker.EXTENSION_COMPONENTS.INTERACTION_BLOCKER_CLASS}`
       );
 
       existingOverlays.forEach((overlay) => {

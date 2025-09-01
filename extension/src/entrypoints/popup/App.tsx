@@ -7,7 +7,7 @@ import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes
 import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/constants/UserMessages';
 import { NavigationUrls } from '@/constants/NavigationUrls';
-import { ElementSelectors } from '@/constants/ElementSelectors';
+import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 
 import './App.css';
 
@@ -244,7 +244,7 @@ function App() {
 
   return (
     <div
-      className={`ai-form-popup ${ElementSelectors.EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS}`}
+      className={`ai-form-popup ${UserInteractionBlocker.EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS}`}
     >
       <header className="popup-header">
         <img src={jotformLogo} className="logo" alt="JotForm logo" />

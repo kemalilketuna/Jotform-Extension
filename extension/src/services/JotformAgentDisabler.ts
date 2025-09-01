@@ -1,11 +1,21 @@
 import { LoggingService } from './LoggingService';
-import { ElementSelectors } from '@/constants/ElementSelectors';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
 
 /**
  * Service to disable Jotform agent components using mutation observer
  */
 export class JotformAgentDisabler {
+  // Jotform Agent Element Selectors
+  private static readonly JOTFORM_AGENT = {
+    // Comprehensive patterns for different states
+    ALL_AGENT_PATTERNS: [
+      '[id^="JotformAgent-"]',
+      '.embedded-agent-container',
+      '.ai-agent-chat-avatar-container',
+      '.ai-agent-chat-animation-container',
+      '#form-agent-helper',
+    ],
+  } as const;
   private static instance: JotformAgentDisabler;
   private readonly logger: LoggingService;
   private mutationObserver: MutationObserver | null = null;
@@ -200,7 +210,7 @@ export class JotformAgentDisabler {
 
     // Check if the context element itself matches any agent pattern (for mutations)
     if (checkSelf && context instanceof Element) {
-      for (const pattern of ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS) {
+      for (const pattern of JotformAgentDisabler.JOTFORM_AGENT.ALL_AGENT_PATTERNS) {
         if (context.matches && context.matches(pattern)) {
           this.disableAgentComponent(context as HTMLElement);
           foundElements++;
@@ -215,7 +225,7 @@ export class JotformAgentDisabler {
 
     // Use single compound selector for better performance
     const allPatterns =
-      ElementSelectors.JOTFORM_AGENT.ALL_AGENT_PATTERNS.join(', ');
+      JotformAgentDisabler.JOTFORM_AGENT.ALL_AGENT_PATTERNS.join(', ');
     const elements = context.querySelectorAll(allPatterns);
 
     elements.forEach((element) => {

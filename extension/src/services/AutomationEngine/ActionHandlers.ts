@@ -9,7 +9,7 @@ import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
 import { NavigationUrls } from '@/constants/NavigationUrls';
-import { ElementSelectors } from '@/constants/ElementSelectors';
+import { SelectorUtils } from '@/utils/SelectorUtils';
 
 import {
   NavigationError,
@@ -116,7 +116,7 @@ export class ActionHandlers {
    * Handle click actions with element validation and visual feedback
    */
   private async handleClick(action: ClickAction): Promise<void> {
-    const validatedSelector = ElementSelectors.validateSelector(action.target);
+    const validatedSelector = SelectorUtils.validateSelector(action.target);
 
     this.logger.info(
       `Starting click action for selector: ${validatedSelector}`,
@@ -169,7 +169,7 @@ export class ActionHandlers {
    * Handle typing actions with input validation and visual feedback
    */
   private async handleType(action: TypeAction): Promise<void> {
-    const validatedSelector = ElementSelectors.validateSelector(action.target);
+    const validatedSelector = SelectorUtils.validateSelector(action.target);
 
     this.logger.debug(
       `Typing into element: ${validatedSelector}`,

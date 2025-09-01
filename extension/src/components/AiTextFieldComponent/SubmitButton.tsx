@@ -1,5 +1,5 @@
 import React from 'react';
-import { ElementSelectors } from '@/constants/ElementSelectors';
+import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 import { SendIcon } from './SendIcon';
 
 export interface SubmitButtonProps {
@@ -20,7 +20,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       type="submit"
       disabled={disabled}
       onClick={onClick}
-      className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:!bg-gray-400 disabled:!cursor-not-allowed disabled:!opacity-50 transition-colors duration-200 ${ElementSelectors.EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
+      className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:!bg-gray-400 disabled:!cursor-not-allowed disabled:!opacity-50 transition-colors duration-200 ${UserInteractionBlocker.EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
       title={title}
     >
       <SendIcon />
