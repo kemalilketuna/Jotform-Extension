@@ -5,7 +5,7 @@ import {
   CursorInitializationError,
   CursorStyleError,
 } from './VisualCursorErrors';
-import cursorStyles from '@/assets/cursor.css?inline';
+import cursorStyles from '@/styles/cursor.css?inline';
 import cursorTemplate from '@/assets/cursor.html?raw';
 
 /**

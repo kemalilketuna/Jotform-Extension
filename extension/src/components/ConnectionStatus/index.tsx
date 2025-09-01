@@ -31,26 +31,43 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     }
   };
 
+  const getStatusColor = () => {
+    switch (connectionStatus) {
+      case 'connecting':
+        return 'bg-yellow-500';
+      case 'open':
+        return 'bg-green-500';
+      case 'closing':
+        return 'bg-orange-500';
+      case 'closed':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
   return (
-    <div className="connection-status">
-      <div className={`status-indicator ${connectionStatus}`}>
-        <span className="status-dot"></span>
-        <span className="status-text">{getStatusText()}</span>
+    <div className="mb-4">
+      <div className="status-indicator">
+        <span className={`status-dot ${getStatusColor()}`}></span>
+        <span className="text-sm text-white/90">{getStatusText()}</span>
       </div>
 
       {reconnectAttempts > 0 && (
-        <div className="reconnect-info">
-          <span className="reconnect-text">
+        <div className="mt-2">
+          <span className="text-xs text-white/70">
             Reconnection attempts: {reconnectAttempts}
           </span>
         </div>
       )}
 
       {connectionError && (
-        <div className="connection-error">
-          <span className="error-text">{connectionError}</span>
+        <div className="mt-2 p-2 bg-red-500/20 rounded border border-red-500/30">
+          <span className="text-xs text-red-200 block mb-2">
+            {connectionError}
+          </span>
           <button
-            className="reconnect-btn"
+            className="btn-secondary text-xs py-1 px-2"
             onClick={onForceReconnect}
             disabled={connectionStatus === 'connecting'}
           >

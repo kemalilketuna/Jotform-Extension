@@ -1,4 +1,5 @@
-import '@/assets/global.css';
+import '@/styles/globals.css';
+import '@/styles/cursor.css';
 import { LoggingService } from '@/services/LoggingService';
 import { ContentScriptCoordinator } from './ContentScriptCoordinator';
 import { ServiceInitializer } from './ServiceInitializer';

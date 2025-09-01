@@ -13,8 +13,6 @@ import { StatusMessage } from '@/components/StatusMessage';
 import { ActionButtons } from '@/components/ActionButtons';
 import { PopupFooter } from '@/components/PopupFooter';
 
-import './App.css';
-
 /**
  * Main popup component for the JotForm extension
  */
@@ -248,13 +246,15 @@ function App() {
 
   return (
     <div
-      className={`ai-form-popup ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS}`}
+      className={`w-[360px] h-fit max-h-[600px] gradient-jotform text-white font-sans flex flex-col ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS}`}
     >
       <PopupHeader />
 
-      <div className="main-content">
-        <div className="description">
-          <p>{UserMessages.PROMPTS.EXTENSION_DESCRIPTION}</p>
+      <div className="flex-1 p-5">
+        <div className="mb-5">
+          <p className="m-0 text-sm leading-relaxed opacity-90">
+            {UserMessages.PROMPTS.EXTENSION_DESCRIPTION}
+          </p>
         </div>
 
         <ConnectionStatus

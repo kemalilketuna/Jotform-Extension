@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
+/* Tailwind CSS v4 Theme Configuration */
 @theme {
+  /* Jotform Brand Colors */
   --color-jotform-primary: #ff6100;
   --color-jotform-secondary: #4a90e2;
   --color-jotform-success: #28a745;
@@ -8,10 +10,18 @@
   --color-jotform-danger: #dc3545;
   --color-jotform-dark: #343a40;
   --color-jotform-light: #f8f9fa;
-  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Typography */
+  --font-sans:
+    'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+
+  /* Custom Animations */
   --animate-fade-in: fadeIn 0.2s ease-in-out;
   --animate-slide-up: slideUp 0.3s ease-out;
   --animate-pulse-soft: pulseSoft 2s infinite;
+
+  /* Animation Keyframes */
   --keyframes-fadeIn: {
     0% {
       opacity: 0;
@@ -20,6 +30,7 @@
       opacity: 1;
     }
   };
+
   --keyframes-slideUp: {
     0% {
       transform: translateY(10px);
@@ -30,6 +41,7 @@
       opacity: 1;
     }
   };
+
   --keyframes-pulseSoft: {
     0%,
     100% {
@@ -39,47 +51,20 @@
       opacity: 0.7;
     }
   };
+
+  /* Extension Specific Spacing */
+  --spacing-popup-width: 360px;
+  --spacing-popup-max-height: 600px;
 }
 
-/* Keyframe definitions */
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  0% {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes pulseSoft {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* Base styles for the extension */
+/* Base Styles */
 @layer base {
   * {
     box-sizing: border-box;
   }
 
   html {
-    font-family: Inter, system-ui, sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -91,7 +76,7 @@
   }
 }
 
-/* Component styles */
+/* Component Layer - Reusable Component Classes */
 @layer components {
   .btn-primary {
     @apply bg-jotform-primary hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-jotform-primary/50;
@@ -99,6 +84,10 @@
 
   .btn-secondary {
     @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400/50;
+  }
+
+  .btn-danger {
+    @apply bg-jotform-danger hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-jotform-danger/50;
   }
 
   .input-field {
@@ -110,11 +99,19 @@
   }
 
   .extension-popup {
-    @apply w-80 max-h-96 overflow-y-auto;
+    @apply w-[360px] max-h-[600px] overflow-y-auto;
+  }
+
+  .status-indicator {
+    @apply flex items-center gap-2;
+  }
+
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
   }
 }
 
-/* Utility styles */
+/* Utility Layer - Custom Utilities */
 @layer utilities {
   .text-shadow {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -140,5 +137,14 @@
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: #a0aec0;
+  }
+
+  .gradient-jotform {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .backdrop-blur-glass {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
   }
 }

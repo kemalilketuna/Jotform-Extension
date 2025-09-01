@@ -6,11 +6,17 @@ import jotformLogo from '@/assets/jotformLogo.svg';
  */
 export const PopupHeader: React.FC = () => {
   return (
-    <header className="popup-header">
-      <img src={jotformLogo} className="logo" alt="JotForm logo" />
-      <div className="header-text">
-        <h1>AI-Form</h1>
-        <p className="subtitle">Smart Form Assistant</p>
+    <header className="flex items-center p-5 backdrop-blur-glass border-b border-white/20">
+      <img
+        src={jotformLogo}
+        className="h-10 w-10 mr-4 rounded-lg"
+        alt="JotForm logo"
+      />
+      <div className="flex flex-col">
+        <h1 className="m-0 text-2xl font-bold text-white">AI-Form</h1>
+        <p className="m-0 text-sm opacity-90 font-normal">
+          Smart Form Assistant
+        </p>
       </div>
     </header>
   );
