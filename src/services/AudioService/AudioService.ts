@@ -138,6 +138,7 @@ export class AudioService {
    */
   destroy(): void {
     this.cacheManager.clearCache();
+    this.elementManager.clearAudioPools();
     this.stateManager.reset();
     this.logger.debug('AudioService destroyed', 'AudioService');
   }

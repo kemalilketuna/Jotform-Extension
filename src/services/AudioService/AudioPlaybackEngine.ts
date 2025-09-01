@@ -74,9 +74,17 @@ export class AudioPlaybackEngine {
     }
 
     try {
-      // Create new audio instance for overlapping playback instead of reusing cached one
-      const audio = this.elementManager.createAudioElement(AudioPaths.KEYSTROKE_SOUND);
-      await this.elementManager.ensureAudioReady(audio, this.cacheManager.getCache());
+      // Get pooled audio instance for overlapping playback to reduce GC pressure
+      const audio = this.elementManager.getPooledAudioElement(
+        AudioPaths.KEYSTROKE_SOUND
+      );
+      const readyPromise = this.elementManager.ensureAudioReady(
+        audio,
+        this.cacheManager.getCache()
+      );
+      if (readyPromise) {
+        await readyPromise;
+      }
 
       // Add volume variation using config constants for more realistic typing
       this.elementManager.applyVolumeVariation(audio);
@@ -151,7 +159,10 @@ export class AudioPlaybackEngine {
    * Play multiple simultaneous keystroke sounds for maximum typing effect
    */
   async playMultipleKeystrokeSounds(count: number = 2): Promise<void> {
-    if (!this.stateManager.isAudioEnabled() || !ExtensionUtils.isExtensionContext()) {
+    if (
+      !this.stateManager.isAudioEnabled() ||
+      !ExtensionUtils.isExtensionContext()
+    ) {
       return;
     }
 
@@ -163,7 +174,8 @@ export class AudioPlaybackEngine {
     try {
       const actualCount = Math.min(
         count,
-        this.stateManager.getMaxConcurrentSounds() - this.stateManager.getActiveSoundCount()
+        this.stateManager.getMaxConcurrentSounds() -
+          this.stateManager.getActiveSoundCount()
       );
       const promises: Promise<void>[] = [];
 
@@ -191,19 +203,32 @@ export class AudioPlaybackEngine {
   /**
    * Play keystroke sound with delay for overlapping effects
    */
-  private async playOverlappingKeystrokeSound(delayMs: number = 0): Promise<void> {
+  private async playOverlappingKeystrokeSound(
+    delayMs: number = 0
+  ): Promise<void> {
     if (delayMs > 0) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
 
-    if (!this.stateManager.isAudioEnabled() || !ExtensionUtils.isExtensionContext()) {
+    if (
+      !this.stateManager.isAudioEnabled() ||
+      !ExtensionUtils.isExtensionContext()
+    ) {
       return;
     }
 
     try {
-      // Create a new audio instance for overlapping playback
-      const audio = this.elementManager.createAudioElement(AudioPaths.KEYSTROKE_SOUND);
-      await this.elementManager.ensureAudioReady(audio, this.cacheManager.getCache());
+      // Get pooled audio instance for overlapping playback
+      const audio = this.elementManager.getPooledAudioElement(
+        AudioPaths.KEYSTROKE_SOUND
+      );
+      const readyPromise = this.elementManager.ensureAudioReady(
+        audio,
+        this.cacheManager.getCache()
+      );
+      if (readyPromise) {
+        await readyPromise;
+      }
 
       // Apply reduced volume variation to minimize noise when overlapping
       this.elementManager.applyVolumeVariation(audio, true);
@@ -249,7 +274,13 @@ export class AudioPlaybackEngine {
       const audio = this.cacheManager.getOrCreateAudio(audioPath);
 
       // Wait for audio to be ready before playing to prevent corruption
-      await this.elementManager.ensureAudioReady(audio, this.cacheManager.getCache());
+      const readyPromise = this.elementManager.ensureAudioReady(
+        audio,
+        this.cacheManager.getCache()
+      );
+      if (readyPromise) {
+        await readyPromise;
+      }
 
       // Only reset if audio is not at the beginning to prevent corruption
       this.elementManager.resetAudioIfNeeded(audio);

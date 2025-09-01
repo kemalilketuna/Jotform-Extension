@@ -6,6 +6,3 @@ export { AudioElementManager } from './AudioElementManager';
 export { AudioCacheManager } from './AudioCacheManager';
 export { AudioStateManager } from './AudioStateManager';
 export { AudioPlaybackEngine } from './AudioPlaybackEngine';
-
-// Re-export for backward compatibility
-export { AudioService as default } from './AudioService';

@@ -1,15 +1,46 @@
 import { LoggingService } from '@/services/LoggingService';
 import { AudioPaths, AudioConfig } from './AudioConfig';
-import { AudioError } from './AudioErrors';
 
 /**
  * Manages audio element creation, configuration, and lifecycle
  */
 export class AudioElementManager {
   private readonly logger: LoggingService;
+  private readonly audioPool: Map<string, HTMLAudioElement[]> = new Map();
+  private readonly maxPoolSize = 5;
 
   constructor(logger: LoggingService) {
     this.logger = logger;
+  }
+
+  /**
+   * Get or create audio element from pool for better performance
+   */
+  getPooledAudioElement(audioPath: string): HTMLAudioElement {
+    const pool = this.audioPool.get(audioPath) || [];
+
+    // Try to get an available audio element from pool
+    const availableAudio = pool.find(
+      (audio) =>
+        audio.paused && audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA
+    );
+
+    if (availableAudio) {
+      // Safely reset the audio element for reuse
+      this.safeResetAudio(availableAudio);
+      return availableAudio;
+    }
+
+    // Create new audio element if pool is empty or all are busy
+    const audio = this.createAudioElement(audioPath);
+
+    // Add to pool if under max size
+    if (pool.length < this.maxPoolSize) {
+      pool.push(audio);
+      this.audioPool.set(audioPath, pool);
+    }
+
+    return audio;
   }
 
   /**
@@ -50,8 +81,11 @@ export class AudioElementManager {
    * Ensure audio element is ready for playback to prevent corruption
    * Optimized to reduce promise overhead
    */
-  async ensureAudioReady(audio: HTMLAudioElement, audioCache: ReadonlyMap<string, HTMLAudioElement>): Promise<void> {
-    // If audio is already ready, return immediately
+  ensureAudioReady(
+    audio: HTMLAudioElement,
+    audioCache: ReadonlyMap<string, HTMLAudioElement>
+  ): Promise<void> | void {
+    // If audio is already ready, return immediately (no Promise overhead)
     if (audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
       return;
     }
@@ -61,12 +95,22 @@ export class AudioElementManager {
       return;
     }
 
-    // Wait for audio to be ready with reduced timeout
+    // Check if this is a pooled audio element that's already been used
+    const pool = this.audioPool.get(this.getAudioPath(audio.src));
+    if (
+      pool &&
+      pool.includes(audio) &&
+      audio.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+    ) {
+      return;
+    }
+
+    // Only create Promise when absolutely necessary
     return new Promise<void>((resolve) => {
       const timeout = setTimeout(() => {
         cleanup();
         resolve(); // Don't reject, just proceed to prevent blocking
-      }, 500); // Reduced timeout from 1000ms to 500ms
+      }, 300); // Further reduced timeout to 300ms
 
       const cleanup = () => {
         clearTimeout(timeout);
@@ -90,12 +134,26 @@ export class AudioElementManager {
   }
 
   /**
+   * Extract audio path from full URL for pool lookup
+   */
+  private getAudioPath(src: string): string {
+    // Extract the path part from chrome-extension:// URLs
+    const match = src.match(/[^/]*\/([^?]+)/);
+    return match ? match[1] : src;
+  }
+
+  /**
    * Apply volume variation for realistic keystroke sounds
    */
-  applyVolumeVariation(audio: HTMLAudioElement, overlapping: boolean = false): void {
-    const volumeRange = AudioConfig.KEYSTROKE_VOLUME_MAX - AudioConfig.KEYSTROKE_VOLUME_MIN;
-    const baseVolume = AudioConfig.KEYSTROKE_VOLUME_MIN + Math.random() * volumeRange;
-    
+  applyVolumeVariation(
+    audio: HTMLAudioElement,
+    overlapping: boolean = false
+  ): void {
+    const volumeRange =
+      AudioConfig.KEYSTROKE_VOLUME_MAX - AudioConfig.KEYSTROKE_VOLUME_MIN;
+    const baseVolume =
+      AudioConfig.KEYSTROKE_VOLUME_MIN + Math.random() * volumeRange;
+
     // Reduce volume by 30% for overlapping sounds to minimize noise
     audio.volume = overlapping ? baseVolume * 0.7 : baseVolume;
   }
@@ -104,9 +162,37 @@ export class AudioElementManager {
    * Reset audio element to beginning if needed
    */
   resetAudioIfNeeded(audio: HTMLAudioElement): void {
-    // Only reset if audio is not at the beginning to prevent corruption
-    if (audio.currentTime > 0.1) {
-      audio.currentTime = 0;
+    this.safeResetAudio(audio);
+  }
+
+  /**
+   * Safely reset audio currentTime to prevent corruption
+   */
+  private safeResetAudio(audio: HTMLAudioElement): void {
+    try {
+      // Check if audio is in a valid state for manipulation
+      if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
+        return;
+      }
+
+      // Only reset if audio is not at the beginning and not currently seeking
+      if (audio.currentTime > 0.1 && !audio.seeking) {
+        // Use a flag to prevent concurrent resets
+        if (!audio.dataset.resetting) {
+          audio.dataset.resetting = 'true';
+          audio.currentTime = 0;
+
+          // Clear the flag after a short delay
+          setTimeout(() => {
+            delete audio.dataset.resetting;
+          }, 50);
+        }
+      }
+    } catch (error) {
+      // Ignore reset errors to prevent audio corruption
+      this.logger.debug('Audio reset failed, ignoring', 'AudioElementManager', {
+        error,
+      });
     }
   }
 
@@ -121,5 +207,18 @@ export class AudioElementManager {
     } catch {
       // Ignore cleanup errors to prevent console spam
     }
+  }
+
+  /**
+   * Clear all audio pools and cleanup resources
+   */
+  clearAudioPools(): void {
+    this.audioPool.forEach((pool) => {
+      pool.forEach((audio) => {
+        this.cleanupAudioElement(audio);
+      });
+    });
+    this.audioPool.clear();
+    this.logger.debug('Audio pools cleared', 'AudioElementManager');
   }
 }

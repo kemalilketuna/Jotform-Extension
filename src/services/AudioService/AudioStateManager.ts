@@ -7,10 +7,12 @@ export class AudioStateManager {
   private readonly logger: LoggingService;
   private isEnabled: boolean = true;
   private isInitialized: boolean = false;
-  private activeSounds: WeakMap<HTMLAudioElement, boolean> = new WeakMap();
+  private activeSounds: Set<HTMLAudioElement> = new Set();
   private activeSoundCount: number = 0;
   private lastKeystrokeTime: number = 0;
-  
+  private cleanupTimeouts: Map<HTMLAudioElement, number> = new Map();
+  private performanceStartTime: number = performance.now();
+
   private readonly MAX_CONCURRENT_SOUNDS = 3;
   private readonly DEBOUNCE_THRESHOLD = 10; // ms
 
@@ -49,7 +51,10 @@ export class AudioStateManager {
   setInitialized(initialized: boolean): void {
     this.isInitialized = initialized;
     if (initialized) {
-      this.logger.debug('AudioService initialized successfully', 'AudioStateManager');
+      this.logger.debug(
+        'AudioService initialized successfully',
+        'AudioStateManager'
+      );
     }
   }
 
@@ -75,13 +80,16 @@ export class AudioStateManager {
   }
 
   /**
-   * Check if keystroke should be debounced
+   * Check if keystroke should be debounced using high-resolution timer
    */
   shouldDebounceKeystroke(): boolean {
-    const now = Date.now();
-    if (now - this.lastKeystrokeTime < this.DEBOUNCE_THRESHOLD) {
+    const now = performance.now();
+    const timeSinceLastKeystroke = now - this.lastKeystrokeTime;
+
+    if (timeSinceLastKeystroke < this.DEBOUNCE_THRESHOLD) {
       return true;
     }
+
     this.lastKeystrokeTime = now;
     return false;
   }
@@ -90,23 +98,29 @@ export class AudioStateManager {
    * Track audio element for proper cleanup and concurrent sound management
    */
   trackAudioElement(audio: HTMLAudioElement): void {
-    this.activeSounds.set(audio, true);
+    // Prevent double-tracking
+    if (this.activeSounds.has(audio)) {
+      return;
+    }
+
+    this.activeSounds.add(audio);
     this.activeSoundCount++;
 
     const cleanup = () => {
-      if (this.activeSounds.has(audio)) {
-        this.activeSounds.delete(audio);
-        this.activeSoundCount = Math.max(0, this.activeSoundCount - 1);
-      }
-      // Remove event listeners to prevent memory leaks
-      audio.removeEventListener('ended', cleanup);
-      audio.removeEventListener('error', cleanup);
-      audio.removeEventListener('pause', cleanup);
+      this.cleanupAudioElement(audio);
     };
 
-    audio.addEventListener('ended', cleanup);
-    audio.addEventListener('error', cleanup);
-    audio.addEventListener('pause', cleanup);
+    // Add event listeners with once: true to prevent memory leaks
+    audio.addEventListener('ended', cleanup, { once: true });
+    audio.addEventListener('error', cleanup, { once: true });
+    audio.addEventListener('pause', cleanup, { once: true });
+
+    // Add safety timeout to prevent stuck audio elements
+    const timeoutId = window.setTimeout(() => {
+      this.cleanupAudioElement(audio);
+    }, 10000); // 10 second safety timeout
+
+    this.cleanupTimeouts.set(audio, timeoutId);
   }
 
   /**
@@ -117,14 +131,38 @@ export class AudioStateManager {
   }
 
   /**
+   * Clean up a specific audio element and its tracking
+   */
+  private cleanupAudioElement(audio: HTMLAudioElement): void {
+    if (this.activeSounds.has(audio)) {
+      this.activeSounds.delete(audio);
+      this.activeSoundCount = Math.max(0, this.activeSoundCount - 1);
+    }
+
+    // Clear safety timeout
+    const timeoutId = this.cleanupTimeouts.get(audio);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      this.cleanupTimeouts.delete(audio);
+    }
+  }
+
+  /**
    * Reset all state for cleanup
    */
   reset(): void {
+    // Clean up all active sounds and timeouts
+    this.cleanupTimeouts.forEach((timeoutId) => {
+      clearTimeout(timeoutId);
+    });
+    this.cleanupTimeouts.clear();
+
     this.isEnabled = true;
     this.isInitialized = false;
-    this.activeSounds = new WeakMap();
+    this.activeSounds.clear();
     this.activeSoundCount = 0;
     this.lastKeystrokeTime = 0;
+    this.performanceStartTime = performance.now();
     this.logger.debug('AudioStateManager reset', 'AudioStateManager');
   }
 
