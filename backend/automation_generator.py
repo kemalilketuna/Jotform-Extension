@@ -1,8 +1,9 @@
 from typing import Dict, Any
 
+
 class AutomationSequenceGenerator:
     """Generates automation sequences for JotForm"""
-    
+
     @staticmethod
     def get_form_creation_sequence() -> Dict[str, Any]:
         """Generate form creation automation sequence"""
@@ -14,41 +15,41 @@ class AutomationSequenceGenerator:
                     "action": "navigate",
                     "url": "https://www.jotform.com/myforms",
                     "description": "Navigate to Jotform workspace",
-                    "delay": 2000
+                    "delay": 2000,
                 },
                 {
                     "action": "click",
-                    "selector": "[data-testid='create-button'], .create-button, button[aria-label*='Create']",
+                    "selector": "#root > div.lsApp > div.lsApp-body.newWorkspaceUI.newTeamCoversActive > div.lsApp-sidebar.relative > div.lsApp-sidebar-content.lsApp-sidebar-ls > div.lsApp-sidebar-button > button",
                     "description": "Click Create button",
-                    "delay": 1000
+                    "delay": 1000,
                 },
                 {
                     "action": "click",
-                    "selector": "[data-testid='form-button'], .form-button, button[aria-label*='Form']",
+                    "selector": "#create-asset-modal-container > div > div.sc-khQegj.fNgvag.forSideBySideCreation.jfWizard-item.jfWizard-gutter.withMaxWidth > div > div > div.jfWizard-body.sc-hUpaCq.gxAShf > div > ul > li:nth-child(1) > button",
                     "description": "Click Form button",
-                    "delay": 1000
+                    "delay": 1000,
                 },
                 {
                     "action": "click",
-                    "selector": "[data-testid='start-from-scratch'], .start-from-scratch, button[aria-label*='Start from scratch']",
+                    "selector": "#modal-container > div > div.isMain.largeWizardItem.moreThanFourItem.jfWizard-item > div.jfWizard-gutter.withMaxWidth > div > ul > li.jfWizard-list-item-wrapper.forStartFromScratch > button",
                     "description": "Click Start from scratch",
-                    "delay": 1000
+                    "delay": 1000,
                 },
                 {
                     "action": "click",
-                    "selector": "[data-testid='classic-form'], .classic-form, button[aria-label*='Classic form']",
+                    "selector": "#modal-container > div > div.largeWizardItem.isStartFromScratch.forNewOptions.jfWizard-item > div.jfWizard-gutter.withMaxWidth > div > ul > li.jfWizard-list-item-wrapper.forClassicForm > button",
                     "description": "Click Classic form",
-                    "delay": 500
+                    "delay": 500,
                 },
                 {
                     "action": "click",
-                    "selector": "[data-testid='close-modal'], .close-modal, button[aria-label*='Close']",
+                    "selector": "#portal-root > div > div > div > div > div > div.jfModal-header > div.jfModal-title > div.jfModal-close",
                     "description": "Close modal dialog",
-                    "delay": 1000
-                }
-            ]
+                    "delay": 1000,
+                },
+            ],
         }
-    
+
     @staticmethod
     def get_form_building_sequence() -> Dict[str, Any]:
         """Generate form building automation sequence"""
@@ -59,38 +60,40 @@ class AutomationSequenceGenerator:
                 {
                     "action": "wait",
                     "description": "Wait for page to initialize",
-                    "delay": 1000
+                    "delay": 1000,
                 },
                 {
                     "action": "click",
-                    "selector": "[data-testid='heading-form'], .heading-form, .form-element[data-type='control_head']",
+                    "selector": "#id_1 > div.question-wrapper.questionWrapper > div > div",
                     "description": "Click on heading form element",
-                    "delay": 1000
+                    "delay": 1000,
                 },
                 {
                     "action": "click",
-                    "selector": "[data-testid='settings-button'], .settings-button, button[aria-label*='Settings']",
+                    "selector": "#app_wizards > div > button.btn.sc-Properties.radius-full.magnet-button.inline-flex.shrink-0.justify-center.items-center.font-medium.duration-300.outline-2.outline-transparent.outline-offset-0.focus\\:outline-opacity-50.h-10.px-2\\.5.border-0.group.cursor-pointer.color-white.bg-gray-600.hover\\:bg-gray-700.focus\\:outline-gray-300",
                     "description": "Click settings button",
-                    "delay": 1000
+                    "delay": 1000,
                 },
                 {
                     "action": "type",
-                    "selector": "[data-testid='text-field'], .text-field, input[type='text'], textarea",
+                    "selector": "#text",
                     "text": "Course Registration",
                     "description": "Enter form title text",
-                    "delay": 500
+                    "delay": 500,
                 },
                 {
                     "action": "click",
-                    "selector": "[data-testid='settings-close'], .settings-close, button[aria-label*='Close']",
+                    "selector": "#question-settings-close-btn",
                     "description": "Close settings menu",
-                    "delay": 500
-                }
-            ]
+                    "delay": 500,
+                },
+            ],
         }
-    
+
     @staticmethod
-    def get_custom_sequence(sequence_type: str, parameters: Dict[str, Any] = None) -> Dict[str, Any]:
+    def get_custom_sequence(
+        sequence_type: str, parameters: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Generate custom automation sequence based on type and parameters"""
         if sequence_type == "form_creation":
             return AutomationSequenceGenerator.get_form_creation_sequence()
@@ -100,5 +103,5 @@ class AutomationSequenceGenerator:
             return {
                 "sequenceId": f"custom-{sequence_type}-v1",
                 "name": f"Custom {sequence_type.replace('_', ' ').title()}",
-                "steps": []
+                "steps": [],
             }
