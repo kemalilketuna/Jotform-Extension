@@ -1,0 +1,47 @@
+/* High Contrast Accessibility Theme */
+@media (prefers-contrast: high) {
+  :root {
+    /* High contrast color overrides */
+    --color-jotform-primary: #000000;
+    --color-jotform-secondary: #000000;
+    --color-jotform-success: #008000;
+    --color-jotform-warning: #ff8c00;
+    --color-jotform-danger: #ff0000;
+    --color-jotform-dark: #000000;
+    --color-jotform-light: #ffffff;
+    
+    /* High contrast specific colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f0f0f0;
+    --text-primary: #000000;
+    --text-secondary: #000000;
+    --border-color: #000000;
+  }
+}
+
+/* High contrast utility classes */
+@layer utilities {
+  .high-contrast\:bg-white {
+    background-color: #ffffff;
+  }
+  
+  .high-contrast\:bg-black {
+    background-color: #000000;
+  }
+  
+  .high-contrast\:text-black {
+    color: #000000;
+  }
+  
+  .high-contrast\:text-white {
+    color: #ffffff;
+  }
+  
+  .high-contrast\:border-black {
+    border-color: #000000;
+  }
+  
+  .high-contrast\:border-2 {
+    border-width: 2px;
+  }
+}

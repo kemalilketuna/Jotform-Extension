@@ -1,0 +1,25 @@
+/* Jotform Brand Theme */
+@theme {
+  /* Jotform Brand Colors */
+  --color-jotform-primary: #ff6100;
+  --color-jotform-secondary: #4a90e2;
+  --color-jotform-success: #28a745;
+  --color-jotform-warning: #ffc107;
+  --color-jotform-danger: #dc3545;
+  --color-jotform-dark: #343a40;
+  --color-jotform-light: #f8f9fa;
+
+  /* Typography */
+  --font-sans:
+    'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    sans-serif;
+
+  /* Custom Animations */
+  --animate-fade-in: fadeIn 0.2s ease-in-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-pulse-soft: pulseSoft 2s infinite;
+
+  /* Extension Specific Spacing */
+  --spacing-popup-width: 360px;
+  --spacing-popup-max-height: 600px;
+}
