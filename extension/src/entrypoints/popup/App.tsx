@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import jotformLogo from '@/assets/jotform-logo.svg';
 import { AutomationServerService } from '@/services/AutomationServerService';
-import { WebSocketService } from '@/services/WebSocketService';
+import { WebSocketService } from '@/services/websocket';
 import { AutomationSequence } from '@/services/AutomationEngine';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
@@ -70,7 +70,7 @@ function App() {
       webSocketService.removeConnectionListener(handleConnectionStateChange);
       AutomationServerService.disconnect();
     };
-  }, []);
+  }, [logger, webSocketService]);
 
   /**
    * Get the current active tab
@@ -204,7 +204,10 @@ function App() {
       setConnectionError(null);
       await webSocketService.forceReconnect();
     } catch (error) {
-      console.error('Force reconnection failed:', error);
+      logger.logError(
+        error instanceof Error ? error : new Error('Force reconnection failed'),
+        'App'
+      );
       setConnectionError(
         error instanceof Error ? error.message : 'Reconnection failed'
       );

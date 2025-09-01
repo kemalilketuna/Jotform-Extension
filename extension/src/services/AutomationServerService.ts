@@ -1,6 +1,6 @@
-import { AutomationSequence } from '@/services/AutomationEngine';
+import { AutomationSequence, AutomationAction } from '@/services/AutomationEngine';
 import { LoggingService } from '@/services/LoggingService';
-import { WebSocketService } from '@/services/WebSocketService';
+import { WebSocketService } from '@/services/websocket';
 import { AutomationError } from '@/services/AutomationEngine';
 
 export interface ServerAutomationStep {
@@ -36,8 +36,9 @@ export class AutomationServerService {
         'AutomationServerService'
       );
 
-      const response =
-        await AutomationServerService.webSocketService.fetchFormCreationSteps();
+      const response = await AutomationServerService.webSocketService.requestAutomationSequence(
+        'form_creation'
+      );
 
       const serverResponse: ServerAutomationResponse = {
         sequenceId: response.sequence.sequenceId,
@@ -72,8 +73,9 @@ export class AutomationServerService {
         'AutomationServerService'
       );
 
-      const response =
-        await AutomationServerService.webSocketService.fetchFormBuildingSteps();
+      const response = await AutomationServerService.webSocketService.requestAutomationSequence(
+        'form_building'
+      );
 
       const serverResponse: ServerAutomationResponse = {
         sequenceId: response.sequence.sequenceId,
@@ -149,10 +151,45 @@ export class AutomationServerService {
         timestamp: new Date().toISOString(),
       };
 
-      const sequence =
-        AutomationServerService.webSocketService.convertToAutomationSequence(
-          webSocketResponse
-        );
+      // Convert to AutomationSequence format
+      const sequence: AutomationSequence = {
+        id: webSocketResponse.sequence.sequenceId,
+        name: webSocketResponse.sequence.name,
+        actions: webSocketResponse.sequence.steps.map((step): AutomationAction => {
+          switch (step.action) {
+            case 'navigate':
+              return {
+                type: 'NAVIGATE',
+                url: step.url || '',
+                description: step.description,
+                delay: step.delay
+              };
+            case 'click':
+              return {
+                type: 'CLICK',
+                target: step.selector || '',
+                description: step.description,
+                delay: step.delay
+              };
+            case 'type':
+              return {
+                type: 'TYPE',
+                target: step.selector || '',
+                value: step.text || '',
+                description: step.description,
+                delay: step.delay
+              };
+            case 'wait':
+              return {
+                type: 'WAIT',
+                delay: step.delay || 1000,
+                description: step.description
+              };
+            default:
+              throw new Error(`Unknown action type: ${step.action}`);
+          }
+        }),
+      };
 
       AutomationServerService.logger.debug(
         'Server response converted successfully',
@@ -179,10 +216,11 @@ export class AutomationServerService {
     status: 'started' | 'completed' | 'failed' | 'in_progress'
   ): Promise<void> {
     try {
-      await AutomationServerService.webSocketService.sendAutomationStatus(
-        sequenceId,
-        status
-      );
+      await AutomationServerService.webSocketService.sendMessage({
+        type: 'automation_status',
+        sequence_id: sequenceId,
+        status,
+      });
 
       AutomationServerService.logger.info(
         `Automation status sent: ${status} for sequence ${sequenceId}`,

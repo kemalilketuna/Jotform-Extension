@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LoggingService } from '../../services/LoggingService';
+import { LoggingService } from '@/services/LoggingService';
 import { ElementSelectors } from '@/constants/ElementSelectors';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
