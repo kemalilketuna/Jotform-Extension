@@ -36,26 +36,29 @@ export class AutomationServerService {
         'AutomationServerService'
       );
 
-      const response = await AutomationServerService.webSocketService.fetchFormCreationSteps();
-      
+      const response =
+        await AutomationServerService.webSocketService.fetchFormCreationSteps();
+
       const serverResponse: ServerAutomationResponse = {
         sequenceId: response.sequence.sequenceId,
         name: response.sequence.name,
-        steps: response.sequence.steps
+        steps: response.sequence.steps,
       };
 
       AutomationServerService.logger.debug(
         'Form creation steps fetched successfully via WebSocket',
         'AutomationServerService'
       );
-      
+
       return serverResponse;
     } catch (error) {
       AutomationServerService.logger.logError(
         error as Error,
         'AutomationServerService'
       );
-      throw new AutomationError('Failed to fetch form creation steps from server');
+      throw new AutomationError(
+        'Failed to fetch form creation steps from server'
+      );
     }
   }
 
@@ -69,26 +72,29 @@ export class AutomationServerService {
         'AutomationServerService'
       );
 
-      const response = await AutomationServerService.webSocketService.fetchFormBuildingSteps();
-      
+      const response =
+        await AutomationServerService.webSocketService.fetchFormBuildingSteps();
+
       const serverResponse: ServerAutomationResponse = {
         sequenceId: response.sequence.sequenceId,
         name: response.sequence.name,
-        steps: response.sequence.steps
+        steps: response.sequence.steps,
       };
 
       AutomationServerService.logger.debug(
         'Form building steps fetched successfully via WebSocket',
         'AutomationServerService'
       );
-      
+
       return serverResponse;
     } catch (error) {
       AutomationServerService.logger.logError(
         error as Error,
         'AutomationServerService'
       );
-      throw new AutomationError('Failed to fetch form building steps from server');
+      throw new AutomationError(
+        'Failed to fetch form building steps from server'
+      );
     }
   }
 
@@ -138,18 +144,21 @@ export class AutomationServerService {
         sequence: {
           sequenceId: serverResponse.sequenceId,
           name: serverResponse.name,
-          steps: serverResponse.steps
+          steps: serverResponse.steps,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
-      const sequence = AutomationServerService.webSocketService.convertToAutomationSequence(webSocketResponse);
+      const sequence =
+        AutomationServerService.webSocketService.convertToAutomationSequence(
+          webSocketResponse
+        );
 
       AutomationServerService.logger.debug(
         'Server response converted successfully',
         'AutomationServerService'
       );
-      
+
       return sequence;
     } catch (error) {
       AutomationServerService.logger.logError(
@@ -166,12 +175,15 @@ export class AutomationServerService {
    * Send automation status update to server
    */
   static async sendAutomationStatus(
-    sequenceId: string, 
+    sequenceId: string,
     status: 'started' | 'completed' | 'failed' | 'in_progress'
   ): Promise<void> {
     try {
-      await AutomationServerService.webSocketService.sendAutomationStatus(sequenceId, status);
-      
+      await AutomationServerService.webSocketService.sendAutomationStatus(
+        sequenceId,
+        status
+      );
+
       AutomationServerService.logger.info(
         `Automation status sent: ${status} for sequence ${sequenceId}`,
         'AutomationServerService'

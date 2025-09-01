@@ -18,7 +18,9 @@ function App() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [status, setStatus] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'open' | 'closing' | 'closed'>('closed');
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connecting' | 'open' | 'closing' | 'closed'
+  >('closed');
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const logger = LoggingService.getInstance();
@@ -33,7 +35,7 @@ function App() {
       setIsConnected(state === 'connected');
       setConnectionStatus(webSocketService.getConnectionStatus());
       setConnectionError(error?.message || null);
-      
+
       const detailedState = webSocketService.getDetailedConnectionState();
       setReconnectAttempts(detailedState.reconnectAttempts);
     };
@@ -44,13 +46,13 @@ function App() {
       try {
         setStatus('Connecting to automation server...');
         setConnectionStatus('connecting');
-        
+
         await AutomationServerService.connect();
-        
+
         setIsConnected(true);
         setConnectionStatus('open');
         setStatus('Connected to automation server');
-        
+
         // Clear status after 2 seconds
         setTimeout(() => setStatus(''), 2000);
       } catch (error) {
@@ -103,9 +105,11 @@ function App() {
   const fetchAutomationSequence = async () => {
     if (!isConnected) {
       const health = webSocketService.getConnectionHealth();
-      throw new Error(`Not connected to automation server. Issues: ${health.issues.join(', ')}`);
+      throw new Error(
+        `Not connected to automation server. Issues: ${health.issues.join(', ')}`
+      );
     }
-    
+
     setStatus(UserMessages.STATUS.FETCHING_FROM_SERVER);
     const response = await AutomationServerService.fetchFormCreationSteps();
 
@@ -180,9 +184,11 @@ function App() {
   const fetchFormBuildingSequence = async () => {
     if (!isConnected) {
       const health = webSocketService.getConnectionHealth();
-      throw new Error(`Not connected to automation server. Issues: ${health.issues.join(', ')}`);
+      throw new Error(
+        `Not connected to automation server. Issues: ${health.issues.join(', ')}`
+      );
     }
-    
+
     setStatus('Fetching form building steps from server...');
     const response = await AutomationServerService.fetchFormBuildingSteps();
 
@@ -199,7 +205,9 @@ function App() {
       await webSocketService.forceReconnect();
     } catch (error) {
       console.error('Force reconnection failed:', error);
-      setConnectionError(error instanceof Error ? error.message : 'Reconnection failed');
+      setConnectionError(
+        error instanceof Error ? error.message : 'Reconnection failed'
+      );
     }
   };
 
@@ -260,18 +268,22 @@ function App() {
           </div>
           {reconnectAttempts > 0 && (
             <div className="reconnect-info">
-              <span className="reconnect-text">Reconnection attempts: {reconnectAttempts}</span>
+              <span className="reconnect-text">
+                Reconnection attempts: {reconnectAttempts}
+              </span>
             </div>
           )}
           {connectionError && (
             <div className="connection-error">
               <span className="error-text">{connectionError}</span>
-              <button 
+              <button
                 className="reconnect-btn"
                 onClick={handleForceReconnect}
                 disabled={connectionStatus === 'connecting'}
               >
-                {connectionStatus === 'connecting' ? 'Connecting...' : 'Retry Connection'}
+                {connectionStatus === 'connecting'
+                  ? 'Connecting...'
+                  : 'Retry Connection'}
               </button>
             </div>
           )}
