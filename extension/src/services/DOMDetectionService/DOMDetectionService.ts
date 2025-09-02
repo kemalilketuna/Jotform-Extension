@@ -7,9 +7,11 @@ import { JSPathGenerator } from './JSPathGenerator.ts';
 export class DOMDetectionService {
   private static instance: DOMDetectionService | null = null;
   private config: DOMDetectionConfig;
+  private scrollableDetector: ScrollableAreaDetector;
   
   private constructor(config?: Partial<DOMDetectionConfig>) {
     this.config = this.mergeDefaultConfig(config);
+    this.scrollableDetector = new ScrollableAreaDetector();
   }
   
   /**
@@ -44,15 +46,14 @@ export class DOMDetectionService {
   }
   
   /**
-   * Finds all scrollable areas in the current document
+   * Find all scrollable areas in the current page
    */
-  findScrollableAreas(): ScrollableArea[] {
+  public findScrollableAreas(): ScrollableArea[] {
     try {
-      return ScrollableAreaDetector.findScrollableAreas(this.config);
+      return this.scrollableDetector.findScrollableAreas();
     } catch (error) {
-      throw new DOMDetectionError(
-        `Failed to find scrollable areas: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      console.error('Failed to find scrollable areas:', error);
+      return [];
     }
   }
   
@@ -152,7 +153,7 @@ export class DOMDetectionService {
    */
   isElementScrollable(element: HTMLElement): boolean {
     try {
-      return ScrollableAreaDetector.isElementScrollable(element);
+      return this.scrollableDetector.isElementScrollable(element);
     } catch (error) {
       console.warn('Failed to check if element is scrollable:', error);
       return false;
