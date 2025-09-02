@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { LoggingService } from './LoggingService';
-import { ExtensionUtils } from '@/utils/ExtensionUtils';
+import { ExtensionUtils } from '@/utils';
 import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
 
 /**

@@ -8,15 +8,12 @@ import {
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
-import { NavigationUtils } from '@/utils/NavigationUtils';
-import { SelectorUtils } from '@/utils/SelectorUtils';
-
 import {
   NavigationError,
   ElementNotFoundError,
   ActionExecutionError,
 } from '@/services/AutomationEngine/AutomationErrors';
-import { ElementUtils } from '@/utils/ElementUtils';
+import { ElementUtils, NavigationUtils, SelectorUtils } from '@/utils';
 
 /**
  * Handles execution of different automation action types

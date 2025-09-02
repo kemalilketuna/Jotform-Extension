@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { AutomationServerService } from '@/services/AutomationServerService';
 import { WebSocketService } from '@/services/WebSocketService';
-import { AutomationSequence } from '@/services/AutomationEngine';
+import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/services/MessagesService';
-import { NavigationUtils } from '@/utils/NavigationUtils';
+import { NavigationUtils } from '@/utils';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { PopupHeader } from '@/components/PopupHeader';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
