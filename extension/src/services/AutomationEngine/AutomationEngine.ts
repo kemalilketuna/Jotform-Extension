@@ -1,4 +1,4 @@
-import { AutomationSequence } from './ActionTypes';
+import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
 import { AutomationMessage, ExecuteSequenceMessage } from './MessageTypes';
 import { VisualAnimationConfig } from '@/services/VisualCursorService';
 import { LoggingService } from '@/services/LoggingService';
@@ -7,8 +7,7 @@ import { AutomationError, SequenceExecutionError } from './AutomationErrors';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
 import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
-import { ActionHandlers } from './ActionHandlers';
-import { ElementUtils } from './ElementUtils';
+import { ActionsService } from '@/services/ActionsService';
 import { MessageHandler } from './MessageHandler';
 
 /**
@@ -21,8 +20,7 @@ export class AutomationEngine {
   private readonly visualCursor: VisualCursorService;
   private readonly typingService: TypingService;
   private readonly userInteractionBlocker: UserInteractionBlocker;
-  private readonly actionHandlers: ActionHandlers;
-  private readonly elementUtils: ElementUtils;
+  private readonly actionsService: ActionsService;
   private readonly messageHandler: MessageHandler;
 
   private constructor(
@@ -34,14 +32,12 @@ export class AutomationEngine {
     this.visualCursor = visualCursor;
     this.typingService = typingService;
     this.userInteractionBlocker = UserInteractionBlocker.getInstance();
-    this.elementUtils = new ElementUtils(logger);
-    this.messageHandler = new MessageHandler(logger);
-    this.actionHandlers = new ActionHandlers(
+    this.actionsService = ActionsService.getInstance(
       logger,
       visualCursor,
-      typingService,
-      this.elementUtils
+      typingService
     );
+    this.messageHandler = new MessageHandler(logger);
   }
 
   static getInstance(
@@ -154,7 +150,7 @@ export class AutomationEngine {
           'AutomationEngine'
         );
 
-        await this.actionHandlers.executeAction(action, i);
+        await this.actionsService.executeAction(action, i);
 
         // Send progress update to background script
         await this.messageHandler.sendProgressUpdate(i, sequence.id);

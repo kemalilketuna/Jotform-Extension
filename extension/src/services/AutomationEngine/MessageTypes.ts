@@ -1,4 +1,7 @@
-import type { AutomationSequence, AutomationAction } from './ActionTypes';
+import type {
+  AutomationSequence,
+  AutomationAction,
+} from '@/services/ActionsService/ActionTypes';
 
 export type AutomationMessageType =
   | 'EXECUTE_SEQUENCE'

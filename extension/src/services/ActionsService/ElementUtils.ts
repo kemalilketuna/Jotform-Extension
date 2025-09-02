@@ -1,5 +1,5 @@
 import { LoggingService } from '@/services/LoggingService';
-import { AutomationConfig } from './AutomationConfig';
+import { AutomationConfig } from '@/services/AutomationEngine/AutomationConfig';
 
 /**
  * Utilities for element waiting, DOM manipulation, and page state management
