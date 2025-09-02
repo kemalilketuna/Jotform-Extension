@@ -4,7 +4,7 @@ import { WebSocketService } from '@/services/WebSocketService';
 import { AutomationSequence } from '@/services/AutomationEngine';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
-import { UserMessages } from '@/services/Messages';
+import { UserMessages } from '@/services/MessagesService';
 import { NavigationUtils } from '@/utils/NavigationUtils';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { PopupHeader } from '@/components/PopupHeader';

@@ -2,7 +2,7 @@ import { AutomationSequence } from './ActionTypes';
 import { AutomationMessage, ExecuteSequenceMessage } from './MessageTypes';
 import { VisualAnimationConfig } from '@/services/VisualCursorService';
 import { LoggingService } from '@/services/LoggingService';
-import { UserMessages } from '@/services/Messages';
+import { UserMessages } from '@/services/MessagesService';
 import { AutomationError, SequenceExecutionError } from './AutomationErrors';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
