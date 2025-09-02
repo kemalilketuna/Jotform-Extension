@@ -5,7 +5,6 @@ import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/services/MessagesService';
-import { NavigationUtils } from '@/utils';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { PopupHeader } from '@/components/PopupHeader';
 import { ConnectionStatus } from '@/components/ConnectionStatus';

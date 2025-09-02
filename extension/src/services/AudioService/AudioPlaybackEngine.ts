@@ -1,5 +1,4 @@
 import { LoggingService } from '@/services/LoggingService';
-import { ExtensionUtils } from '@/utils';
 import { AudioPaths } from './AudioConfig';
 import { AudioElementManager } from './AudioElementManager';
 import { AudioCacheManager } from './AudioCacheManager';

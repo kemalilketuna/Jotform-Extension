@@ -5,7 +5,6 @@
 
 export { ActionsService } from './ActionsService';
 export { ActionHandlers } from './ActionHandlers';
-export { ElementUtils } from '@/utils/ElementUtils';
 
 // Re-export types that might be needed by consumers
 export type {

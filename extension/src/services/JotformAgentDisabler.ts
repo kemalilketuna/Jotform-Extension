@@ -1,5 +1,4 @@
 import { LoggingService } from './LoggingService';
-import { ExtensionUtils } from '@/utils';
 
 /**
  * Service to disable Jotform agent components using mutation observer
