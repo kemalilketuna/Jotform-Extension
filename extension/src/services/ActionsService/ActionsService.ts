@@ -3,7 +3,7 @@ import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
 import { ActionHandlers } from './ActionHandlers';
-import { ElementUtils } from './ElementUtils';
+import { ElementUtils } from '@/utils/ElementUtils';
 
 /**
  * Service responsible for executing individual automation actions

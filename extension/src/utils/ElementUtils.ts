@@ -52,8 +52,8 @@ export class ElementUtils {
           // Log every 2 seconds to track progress
           if (
             attemptCount %
-              (AutomationConfig.INTERVALS.ELEMENT_LOG_INTERVAL /
-                AutomationConfig.INTERVALS.ELEMENT_CHECK_INTERVAL) ===
+            (AutomationConfig.INTERVALS.ELEMENT_LOG_INTERVAL /
+              AutomationConfig.INTERVALS.ELEMENT_CHECK_INTERVAL) ===
             0
           ) {
             this.logger.debug(

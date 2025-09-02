@@ -16,7 +16,7 @@ import {
   ElementNotFoundError,
   ActionExecutionError,
 } from '@/services/AutomationEngine/AutomationErrors';
-import { ElementUtils } from './ElementUtils';
+import { ElementUtils } from '@/utils/ElementUtils';
 
 /**
  * Handles execution of different automation action types
