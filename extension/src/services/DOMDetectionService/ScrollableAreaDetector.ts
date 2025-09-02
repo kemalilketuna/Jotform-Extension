@@ -14,14 +14,22 @@ export class ScrollableAreaDetector {
    */
   public findScrollableAreas(): ScrollableArea[] {
     try {
-      const scrollableElements = [...document.querySelectorAll("*")].filter(el => {
-        const style = getComputedStyle(el);
-        const canScrollY = el.scrollHeight > el.clientHeight && (/(auto|scroll)/).test(style.overflowY);
-        const canScrollX = el.scrollWidth > el.clientWidth && (/(auto|scroll)/).test(style.overflowX);
-        return canScrollX || canScrollY;
-      }) as HTMLElement[];
-      
-      return scrollableElements.map(element => this.createScrollableArea(element));
+      const scrollableElements = [...document.querySelectorAll('*')].filter(
+        (el) => {
+          const style = getComputedStyle(el);
+          const canScrollY =
+            el.scrollHeight > el.clientHeight &&
+            /(auto|scroll)/.test(style.overflowY);
+          const canScrollX =
+            el.scrollWidth > el.clientWidth &&
+            /(auto|scroll)/.test(style.overflowX);
+          return canScrollX || canScrollY;
+        }
+      ) as HTMLElement[];
+
+      return scrollableElements.map((element) =>
+        this.createScrollableArea(element)
+      );
     } catch (error) {
       throw new ScrollDetectionError(
         document.body,
@@ -36,8 +44,12 @@ export class ScrollableAreaDetector {
   public isElementScrollable(element: HTMLElement): boolean {
     try {
       const style = getComputedStyle(element);
-      const canScrollY = element.scrollHeight > element.clientHeight && (/(auto|scroll)/).test(style.overflowY);
-      const canScrollX = element.scrollWidth > element.clientWidth && (/(auto|scroll)/).test(style.overflowX);
+      const canScrollY =
+        element.scrollHeight > element.clientHeight &&
+        /(auto|scroll)/.test(style.overflowY);
+      const canScrollX =
+        element.scrollWidth > element.clientWidth &&
+        /(auto|scroll)/.test(style.overflowX);
       return canScrollX || canScrollY;
     } catch (error) {
       return false;
@@ -51,7 +63,7 @@ export class ScrollableAreaDetector {
     if (!this.isElementScrollable(element)) {
       return null;
     }
-    
+
     try {
       return this.createScrollableArea(element);
     } catch (error) {
@@ -61,16 +73,20 @@ export class ScrollableAreaDetector {
       );
     }
   }
-  
+
   /**
    * Create ScrollableArea object from element
    */
   private createScrollableArea(element: HTMLElement): ScrollableArea {
     const style = getComputedStyle(element);
-    
-    const isVerticallyScrollable = element.scrollHeight > element.clientHeight && (/(auto|scroll)/).test(style.overflowY);
-    const isHorizontallyScrollable = element.scrollWidth > element.clientWidth && (/(auto|scroll)/).test(style.overflowX);
-    
+
+    const isVerticallyScrollable =
+      element.scrollHeight > element.clientHeight &&
+      /(auto|scroll)/.test(style.overflowY);
+    const isHorizontallyScrollable =
+      element.scrollWidth > element.clientWidth &&
+      /(auto|scroll)/.test(style.overflowX);
+
     return {
       element,
       jsPath: JSPathGenerator.generatePath(element),
@@ -79,7 +95,7 @@ export class ScrollableAreaDetector {
       scrollWidth: element.scrollWidth,
       clientWidth: element.clientWidth,
       isVerticallyScrollable,
-      isHorizontallyScrollable
+      isHorizontallyScrollable,
     };
   }
 }

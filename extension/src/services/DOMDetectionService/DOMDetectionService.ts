@@ -1,4 +1,9 @@
-import { ScrollableArea, InteractiveElement, DOMDetectionConfig, InteractiveElementType } from './DOMDetectionTypes.ts';
+import {
+  ScrollableArea,
+  InteractiveElement,
+  DOMDetectionConfig,
+  InteractiveElementType,
+} from './DOMDetectionTypes.ts';
 import { DOMDetectionError } from './DOMDetectionErrors.ts';
 import { ScrollableAreaDetector } from './ScrollableAreaDetector.ts';
 import { InteractiveElementDetector } from './InteractiveElementDetector.ts';
@@ -8,43 +13,38 @@ export class DOMDetectionService {
   private static instance: DOMDetectionService | null = null;
   private config: DOMDetectionConfig;
   private scrollableDetector: ScrollableAreaDetector;
-  
+
   private constructor(config?: Partial<DOMDetectionConfig>) {
     this.config = this.mergeDefaultConfig(config);
     this.scrollableDetector = new ScrollableAreaDetector();
   }
-  
+
   /**
    * Gets the singleton instance of DOMDetectionService
    */
-  static getInstance(config?: Partial<DOMDetectionConfig>): DOMDetectionService {
+  static getInstance(
+    config?: Partial<DOMDetectionConfig>
+  ): DOMDetectionService {
     if (!DOMDetectionService.instance) {
       DOMDetectionService.instance = new DOMDetectionService(config);
     }
     return DOMDetectionService.instance;
   }
-  
-  /**
-   * Resets the singleton instance (useful for testing)
-   */
-  static resetInstance(): void {
-    DOMDetectionService.instance = null;
-  }
-  
+
   /**
    * Updates the service configuration
    */
   updateConfig(config: Partial<DOMDetectionConfig>): void {
     this.config = { ...this.config, ...config };
   }
-  
+
   /**
    * Gets the current configuration
    */
   getConfig(): DOMDetectionConfig {
     return { ...this.config };
   }
-  
+
   /**
    * Find all scrollable areas in the current page
    */
@@ -56,7 +56,7 @@ export class DOMDetectionService {
       return [];
     }
   }
-  
+
   /**
    * Find all visible interactive elements in the document
    */
@@ -82,11 +82,13 @@ export class DOMDetectionService {
       );
     }
   }
-  
+
   /**
    * Find interactive elements by type
    */
-  public findElementsByType(type: InteractiveElementType): InteractiveElement[] {
+  public findElementsByType(
+    type: InteractiveElementType
+  ): InteractiveElement[] {
     try {
       return InteractiveElementDetector.findElementsByType(type);
     } catch (error) {
@@ -95,7 +97,7 @@ export class DOMDetectionService {
       );
     }
   }
-  
+
   /**
    * Find visible buttons
    */
@@ -134,7 +136,7 @@ export class DOMDetectionService {
       );
     }
   }
-  
+
   /**
    * Generates JavaScript path for a specific element
    */
@@ -147,7 +149,7 @@ export class DOMDetectionService {
       );
     }
   }
-  
+
   /**
    * Generates multiple JavaScript paths for redundancy
    */
@@ -160,7 +162,7 @@ export class DOMDetectionService {
       );
     }
   }
-  
+
   /**
    * Checks if an element is currently scrollable
    */
@@ -172,7 +174,7 @@ export class DOMDetectionService {
       return false;
     }
   }
-  
+
   /**
    * Check if an element is visible
    */
@@ -183,7 +185,7 @@ export class DOMDetectionService {
       return false;
     }
   }
-  
+
   /**
    * Gets comprehensive information about the current page's DOM structure
    */
@@ -210,7 +212,7 @@ export class DOMDetectionService {
       const buttons = this.findVisibleButtons();
       const inputs = this.findVisibleInputs();
       const links = this.findVisibleLinks();
-      
+
       return {
         scrollableAreas,
         interactiveElements,
@@ -224,8 +226,8 @@ export class DOMDetectionService {
           visibleInteractiveElements: visibleElements.length,
           totalButtons: buttons.length,
           totalInputs: inputs.length,
-          totalLinks: links.length
-        }
+          totalLinks: links.length,
+        },
       };
     } catch (error) {
       throw new DOMDetectionError(
@@ -233,7 +235,7 @@ export class DOMDetectionService {
       );
     }
   }
-  
+
   /**
    * Waits for DOM to be ready and then performs analysis
    */
@@ -248,38 +250,50 @@ export class DOMDetectionService {
           const scrollableAreas = this.findScrollableAreas();
           const interactiveElements = this.findInteractiveElements();
           const visibleElements = this.findVisibleInteractiveElements();
-          
+
           resolve({
             scrollableAreas,
             interactiveElements,
-            visibleElements
+            visibleElements,
           });
         } catch (error) {
-          reject(new DOMDetectionError(
-            `Failed to analyze DOM: ${error instanceof Error ? error.message : 'Unknown error'}`
-          ));
+          reject(
+            new DOMDetectionError(
+              `Failed to analyze DOM: ${error instanceof Error ? error.message : 'Unknown error'}`
+            )
+          );
         }
       };
-      
+
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', performAnalysis, { once: true });
+        document.addEventListener('DOMContentLoaded', performAnalysis, {
+          once: true,
+        });
       } else {
         // DOM is already ready, perform analysis after a short delay to ensure all elements are rendered
         setTimeout(performAnalysis, 100);
       }
     });
   }
-  
-  private mergeDefaultConfig(config?: Partial<DOMDetectionConfig>): DOMDetectionConfig {
+
+  private mergeDefaultConfig(
+    config?: Partial<DOMDetectionConfig>
+  ): DOMDetectionConfig {
     return {
       includeHiddenElements: false,
       minScrollableSize: 50,
       maxDepth: 50,
       excludeSelectors: [
-        'script', 'style', 'noscript', 'meta', 'link[rel]', 'title',
-        '[data-extension]', '[class*="extension"]'
+        'script',
+        'style',
+        'noscript',
+        'meta',
+        'link[rel]',
+        'title',
+        '[data-extension]',
+        '[class*="extension"]',
       ],
-      ...config
+      ...config,
     };
   }
 }

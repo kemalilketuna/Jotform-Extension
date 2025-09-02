@@ -19,7 +19,7 @@ export interface InteractiveElement {
   attributes: Record<string, string>;
 }
 
-export type InteractiveElementType = 
+export type InteractiveElementType =
   | 'button'
   | 'link'
   | 'input'
@@ -35,12 +35,4 @@ export interface DOMDetectionConfig {
   minScrollableSize: number;
   maxDepth: number;
   excludeSelectors: string[];
-}
-
-export interface ElementVisibilityInfo {
-  isVisible: boolean;
-  isInViewport: boolean;
-  opacity: number;
-  display: string;
-  visibility: string;
 }
