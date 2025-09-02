@@ -1,291 +1,200 @@
-import { InteractiveElement, InteractiveElementType, DOMDetectionConfig, ElementVisibilityInfo } from './DOMDetectionTypes.ts';
-import { ElementSelectors } from './ElementSelectors.ts';
-import { VisibilityDetectionError } from './DOMDetectionErrors.ts';
+import { InteractiveElement, InteractiveElementType } from './DOMDetectionTypes.ts';
 import { JSPathGenerator } from './JSPathGenerator.ts';
+import { VisibilityDetectionError } from './DOMDetectionErrors.ts';
 
 export class InteractiveElementDetector {
-  private static readonly VIEWPORT_MARGIN = 10;
-  private static readonly MIN_ELEMENT_SIZE = 5;
   
   /**
-   * Finds all interactive elements in the document
+   * Find all visible interactive elements using efficient detection
    */
-  static findInteractiveElements(config?: Partial<DOMDetectionConfig>): InteractiveElement[] {
-    const finalConfig = this.mergeConfig(config);
-    const interactiveElements: InteractiveElement[] = [];
-    
+  static findVisibleInteractiveElements(): InteractiveElement[] {
     try {
-      const elements = document.querySelectorAll(ElementSelectors.ALL_INTERACTIVE);
+      const buttons = this.findVisibleButtons();
+      const links = this.findVisibleLinks();
+      const inputs = this.findVisibleInputs();
       
-      for (const element of elements) {
-        if (this.shouldExcludeElement(element as HTMLElement, finalConfig)) {
-          continue;
-        }
-        
-        try {
-          const interactiveElement = this.analyzeInteractiveElement(element as HTMLElement, finalConfig);
-          if (interactiveElement) {
-            interactiveElements.push(interactiveElement);
-          }
-        } catch (error) {
-          console.warn('Failed to analyze interactive element:', error);
-        }
-      }
-      
-      return this.sortByVisibilityAndPosition(interactiveElements);
-      
+      return [...buttons, ...links, ...inputs].sort(this.sortByPosition);
     } catch (error) {
-      throw new VisibilityDetectionError(document.body, error instanceof Error ? error.message : 'Unknown error');
+      throw new VisibilityDetectionError(
+        document.body,
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
-  
+
   /**
-   * Finds only visible interactive elements
+   * Find visible buttons using efficient approach
    */
-  static findVisibleInteractiveElements(config?: Partial<DOMDetectionConfig>): InteractiveElement[] {
-    const allElements = this.findInteractiveElements(config);
-    return allElements.filter(element => element.isVisible);
+  static findVisibleButtons(): InteractiveElement[] {
+    const allButtons = document.querySelectorAll('button, input[type="button"], input[type="submit"]');
+    const visibleButtons: InteractiveElement[] = [];
+
+    allButtons.forEach(button => {
+       const element = button as HTMLElement;
+       const rect = element.getBoundingClientRect();
+       const isVisible = (
+         rect.top < window.innerHeight &&
+         rect.bottom >= 0 &&
+         rect.left < window.innerWidth &&
+         rect.right >= 0 &&
+         element.offsetWidth > 0 &&
+         element.offsetHeight > 0
+       );
+
+       if (isVisible) {
+         const type = this.determineButtonType(element);
+         visibleButtons.push(this.createInteractiveElement(element, type));
+       }
+     });
+
+    return visibleButtons;
+  }
+
+  /**
+   * Find visible links using the same efficient approach
+   */
+  static findVisibleLinks(): InteractiveElement[] {
+    const allLinks = document.querySelectorAll('a[href]');
+    const visibleLinks: InteractiveElement[] = [];
+
+    allLinks.forEach(link => {
+       const element = link as HTMLElement;
+       const rect = element.getBoundingClientRect();
+       const isVisible = (
+         rect.top < window.innerHeight &&
+         rect.bottom >= 0 &&
+         rect.left < window.innerWidth &&
+         rect.right >= 0 &&
+         element.offsetWidth > 0 &&
+         element.offsetHeight > 0
+       );
+
+       if (isVisible) {
+         visibleLinks.push(this.createInteractiveElement(element, 'link'));
+       }
+     });
+
+    return visibleLinks;
+  }
+
+  /**
+   * Find visible input elements using the same efficient approach
+   */
+  static findVisibleInputs(): InteractiveElement[] {
+    const allInputs = document.querySelectorAll('input:not([type="button"]):not([type="submit"]), textarea, select');
+    const visibleInputs: InteractiveElement[] = [];
+
+    allInputs.forEach(input => {
+       const element = input as HTMLElement;
+       const rect = element.getBoundingClientRect();
+       const isVisible = (
+         rect.top < window.innerHeight &&
+         rect.bottom >= 0 &&
+         rect.left < window.innerWidth &&
+         rect.right >= 0 &&
+         element.offsetWidth > 0 &&
+         element.offsetHeight > 0
+       );
+
+       if (isVisible) {
+         const type = this.determineInputType(element);
+         visibleInputs.push(this.createInteractiveElement(element, type));
+       }
+     });
+
+    return visibleInputs;
   }
   
   /**
-   * Finds interactive elements by type
+   * Find interactive elements by type
    */
-  static findElementsByType(type: InteractiveElementType, config?: Partial<DOMDetectionConfig>): InteractiveElement[] {
-    const allElements = this.findInteractiveElements(config);
+  static findElementsByType(type: InteractiveElementType): InteractiveElement[] {
+    const allElements = this.findVisibleInteractiveElements();
     return allElements.filter(element => element.type === type);
   }
   
   /**
-   * Checks if an element is interactive
+   * Check if an element is visible using the same logic
    */
-  static isElementInteractive(element: HTMLElement): boolean {
-    return element.matches(ElementSelectors.ALL_INTERACTIVE);
-  }
-  
-  /**
-   * Gets detailed visibility information for an element
-   */
-  static getElementVisibility(element: HTMLElement): ElementVisibilityInfo {
-    try {
-      const computedStyle = window.getComputedStyle(element);
-      const rect = element.getBoundingClientRect();
-      
-      const isVisible = this.isElementVisible(element, computedStyle, rect);
-      const isInViewport = this.isElementInViewport(rect);
-      
-      return {
-        isVisible,
-        isInViewport,
-        opacity: parseFloat(computedStyle.opacity),
-        display: computedStyle.display,
-        visibility: computedStyle.visibility
-      };
-    } catch (error) {
-      throw new VisibilityDetectionError(element, error instanceof Error ? error.message : 'Visibility check failed');
-    }
-  }
-  
-  private static analyzeInteractiveElement(
-    element: HTMLElement,
-    config: DOMDetectionConfig
-  ): InteractiveElement | null {
-    try {
-      const computedStyle = window.getComputedStyle(element);
-      const boundingRect = element.getBoundingClientRect();
-      
-      const isVisible = config.includeHiddenElements || this.isElementVisible(element, computedStyle, boundingRect);
-      
-      if (!isVisible && !config.includeHiddenElements) {
-        return null;
-      }
-      
-      const type = this.determineElementType(element);
-      const jsPath = JSPathGenerator.generatePath(element);
-      const attributes = this.extractRelevantAttributes(element);
-      
-      return {
-        element,
-        jsPath,
-        type,
-        isVisible,
-        boundingRect,
-        tagName: element.tagName.toLowerCase(),
-        attributes
-      };
-      
-    } catch (error) {
-      throw new VisibilityDetectionError(element, error instanceof Error ? error.message : 'Analysis failed');
-    }
-  }
-  
-  private static determineElementType(element: HTMLElement): InteractiveElementType {
-    const tagName = element.tagName.toLowerCase();
-    const type = element.getAttribute('type')?.toLowerCase();
-    const role = element.getAttribute('role')?.toLowerCase();
-    
-    // Button elements
-    if (tagName === 'button' || type === 'button' || type === 'submit' || type === 'reset') {
-      return type === 'submit' ? 'submit' : 'button';
-    }
-    
-    // Link elements
-    if (tagName === 'a' && element.hasAttribute('href')) {
-      return 'link';
-    }
-    
-    // Input elements
-    if (tagName === 'input') {
-      switch (type) {
-        case 'text':
-        case 'email':
-        case 'password':
-        case 'search':
-        case 'tel':
-        case 'url':
-        case 'number':
-        case 'date':
-        case 'time':
-        case 'datetime-local':
-        case 'month':
-        case 'week':
-        case 'color':
-        case 'range':
-          return 'input';
-        case 'checkbox':
-          return 'checkbox';
-        case 'radio':
-          return 'radio';
-        default:
-          return 'input';
-      }
-    }
-    
-    // Other form elements
-    if (tagName === 'textarea') {
-      return 'textarea';
-    }
-    
-    if (tagName === 'select') {
-      return 'select';
-    }
-    
-    // Role-based detection
-    if (role === 'button') {
-      return 'button';
-    }
-    
-    // Clickable elements
-    if (element.hasAttribute('onclick') || element.getAttribute('tabindex') === '0') {
-      return 'clickable';
-    }
-    
-    return 'clickable';
-  }
-  
-  private static isElementVisible(
-    element: HTMLElement,
-    computedStyle: CSSStyleDeclaration,
-    rect: DOMRect
-  ): boolean {
-    // Check CSS visibility
-    if (computedStyle.display === 'none' ||
-        computedStyle.visibility === 'hidden' ||
-        parseFloat(computedStyle.opacity) === 0) {
-      return false;
-    }
-    
-    // Check if element has meaningful size
-    if (rect.width < this.MIN_ELEMENT_SIZE || rect.height < this.MIN_ELEMENT_SIZE) {
-      return false;
-    }
-    
-    // Check if element is clipped
-    if (computedStyle.clip && computedStyle.clip !== 'auto') {
-      return false;
-    }
-    
-    // Check if element is positioned off-screen
-    if (rect.right < 0 || rect.bottom < 0 ||
-        rect.left > window.innerWidth || rect.top > window.innerHeight) {
-      return false;
-    }
-    
-    return true;
-  }
-  
-  private static isElementInViewport(rect: DOMRect): boolean {
+  static isElementVisible(element: HTMLElement): boolean {
+    const rect = element.getBoundingClientRect();
     return (
-      rect.top >= -this.VIEWPORT_MARGIN &&
-      rect.left >= -this.VIEWPORT_MARGIN &&
-      rect.bottom <= window.innerHeight + this.VIEWPORT_MARGIN &&
-      rect.right <= window.innerWidth + this.VIEWPORT_MARGIN
+      rect.top < window.innerHeight &&
+      rect.bottom >= 0 &&
+      rect.left < window.innerWidth &&
+      rect.right >= 0 &&
+      element.offsetWidth > 0 &&
+      element.offsetHeight > 0
     );
   }
   
-  private static extractRelevantAttributes(element: HTMLElement): Record<string, string> {
-    const relevantAttributes = [
-      'id', 'class', 'name', 'type', 'role', 'aria-label', 'aria-labelledby',
-      'title', 'placeholder', 'value', 'href', 'target', 'disabled', 'readonly'
-    ];
-    
+  /**
+   * Create InteractiveElement object from HTMLElement
+   */
+  private static createInteractiveElement(element: HTMLElement, type: InteractiveElementType): InteractiveElement {
+    const rect = element.getBoundingClientRect();
     const attributes: Record<string, string> = {};
     
-    for (const attr of relevantAttributes) {
+    // Extract relevant attributes
+    const relevantAttrs = ['id', 'class', 'name', 'type', 'role', 'aria-label', 'title', 'href', 'value'];
+    relevantAttrs.forEach(attr => {
       const value = element.getAttribute(attr);
       if (value !== null) {
         attributes[attr] = value;
       }
-    }
-    
-    return attributes;
-  }
-  
-  private static shouldExcludeElement(element: HTMLElement, config: DOMDetectionConfig): boolean {
-    // Check against exclusion selectors
-    for (const selector of config.excludeSelectors) {
-      if (element.matches(selector)) {
-        return true;
-      }
-    }
-    
-    // Exclude disabled elements
-    if (element.hasAttribute('disabled')) {
-      return true;
-    }
-    
-    // Exclude hidden form elements
-    if (element.getAttribute('type') === 'hidden') {
-      return true;
-    }
-    
-    return false;
-  }
-  
-  private static sortByVisibilityAndPosition(elements: InteractiveElement[]): InteractiveElement[] {
-    return elements.sort((a, b) => {
-      // Visible elements first
-      if (a.isVisible !== b.isVisible) {
-        return a.isVisible ? -1 : 1;
-      }
-      
-      // Then by vertical position (top to bottom)
-      const topDiff = a.boundingRect.top - b.boundingRect.top;
-      if (Math.abs(topDiff) > 10) {
-        return topDiff;
-      }
-      
-      // Then by horizontal position (left to right)
-      return a.boundingRect.left - b.boundingRect.left;
     });
-  }
-  
-  private static mergeConfig(config?: Partial<DOMDetectionConfig>): DOMDetectionConfig {
+
     return {
-      includeHiddenElements: false,
-      minScrollableSize: 50,
-      maxDepth: 50,
-      excludeSelectors: [ElementSelectors.ALL_EXCLUDED],
-      ...config
+      element,
+      jsPath: JSPathGenerator.generatePath(element),
+      type,
+      isVisible: true, // All elements found by this detector are visible
+      boundingRect: rect,
+      tagName: element.tagName.toLowerCase(),
+      attributes
     };
   }
+  
+  /**
+   * Determine button type
+   */
+  private static determineButtonType(element: HTMLElement): InteractiveElementType {
+    const type = element.getAttribute('type')?.toLowerCase();
+    if (type === 'submit') return 'submit';
+    return 'button';
+  }
+
+  /**
+   * Determine input type
+   */
+  private static determineInputType(element: HTMLElement): InteractiveElementType {
+    const tagName = element.tagName.toLowerCase();
+    const type = element.getAttribute('type')?.toLowerCase();
+    
+    if (tagName === 'textarea') return 'textarea';
+    if (tagName === 'select') return 'select';
+    if (tagName === 'input') {
+      if (type === 'checkbox') return 'checkbox';
+      if (type === 'radio') return 'radio';
+      return 'input';
+    }
+    
+    return 'input';
+  }
+  
+  /**
+   * Sort elements by position (top to bottom, left to right)
+   */
+  private static sortByPosition = (a: InteractiveElement, b: InteractiveElement): number => {
+    const aRect = a.boundingRect;
+    const bRect = b.boundingRect;
+    
+    // Sort by top position first
+    if (Math.abs(aRect.top - bRect.top) > 10) {
+      return aRect.top - bRect.top;
+    }
+    
+    // If roughly same top position, sort by left position
+    return aRect.left - bRect.left;
+  };
 }

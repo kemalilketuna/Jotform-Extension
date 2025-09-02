@@ -58,68 +58,81 @@ export class DOMDetectionService {
   }
   
   /**
-   * Finds all interactive elements in the current document
+   * Find all visible interactive elements in the document
    */
-  findInteractiveElements(): InteractiveElement[] {
+  public findInteractiveElements(): InteractiveElement[] {
     try {
-      return InteractiveElementDetector.findInteractiveElements(this.config);
+      return InteractiveElementDetector.findVisibleInteractiveElements();
     } catch (error) {
       throw new DOMDetectionError(
-        `Failed to find interactive elements: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+  }
+
+  /**
+   * Find only visible interactive elements
+   */
+  public findVisibleInteractiveElements(): InteractiveElement[] {
+    try {
+      return InteractiveElementDetector.findVisibleInteractiveElements();
+    } catch (error) {
+      throw new DOMDetectionError(
+        error instanceof Error ? error.message : String(error)
       );
     }
   }
   
   /**
-   * Finds only visible interactive elements
+   * Find interactive elements by type
    */
-  findVisibleInteractiveElements(): InteractiveElement[] {
+  public findElementsByType(type: InteractiveElementType): InteractiveElement[] {
     try {
-      return InteractiveElementDetector.findVisibleInteractiveElements(this.config);
+      return InteractiveElementDetector.findElementsByType(type);
     } catch (error) {
       throw new DOMDetectionError(
-        `Failed to find visible interactive elements: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error instanceof Error ? error.message : String(error)
       );
     }
   }
   
   /**
-   * Finds interactive elements by specific type
+   * Find visible buttons
    */
-  findElementsByType(type: InteractiveElementType): InteractiveElement[] {
+  public findVisibleButtons(): InteractiveElement[] {
     try {
-      return InteractiveElementDetector.findElementsByType(type, this.config);
+      return InteractiveElementDetector.findVisibleButtons();
     } catch (error) {
       throw new DOMDetectionError(
-        `Failed to find elements of type ${type}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error instanceof Error ? error.message : String(error)
       );
     }
   }
-  
+
   /**
-   * Finds all buttons (including submit buttons)
+   * Find visible links
    */
-  findButtons(): InteractiveElement[] {
-    const buttons = this.findElementsByType('button');
-    const submitButtons = this.findElementsByType('submit');
-    return [...buttons, ...submitButtons];
+  public findVisibleLinks(): InteractiveElement[] {
+    try {
+      return InteractiveElementDetector.findVisibleLinks();
+    } catch (error) {
+      throw new DOMDetectionError(
+        error instanceof Error ? error.message : String(error)
+      );
+    }
   }
-  
+
   /**
-   * Finds all form inputs (text, email, password, etc.)
+   * Find visible inputs
    */
-  findFormInputs(): InteractiveElement[] {
-    const inputs = this.findElementsByType('input');
-    const textareas = this.findElementsByType('textarea');
-    const selects = this.findElementsByType('select');
-    return [...inputs, ...textareas, ...selects];
-  }
-  
-  /**
-   * Finds all links
-   */
-  findLinks(): InteractiveElement[] {
-    return this.findElementsByType('link');
+  public findVisibleInputs(): InteractiveElement[] {
+    try {
+      return InteractiveElementDetector.findVisibleInputs();
+    } catch (error) {
+      throw new DOMDetectionError(
+        error instanceof Error ? error.message : String(error)
+      );
+    }
   }
   
   /**
@@ -161,13 +174,12 @@ export class DOMDetectionService {
   }
   
   /**
-   * Checks if an element is interactive
+   * Check if an element is visible
    */
-  isElementInteractive(element: HTMLElement): boolean {
+  public isElementVisible(element: HTMLElement): boolean {
     try {
-      return InteractiveElementDetector.isElementInteractive(element);
+      return InteractiveElementDetector.isElementVisible(element);
     } catch (error) {
-      console.warn('Failed to check if element is interactive:', error);
       return false;
     }
   }
@@ -195,9 +207,9 @@ export class DOMDetectionService {
       const scrollableAreas = this.findScrollableAreas();
       const interactiveElements = this.findInteractiveElements();
       const visibleElements = this.findVisibleInteractiveElements();
-      const buttons = this.findButtons();
-      const inputs = this.findFormInputs();
-      const links = this.findLinks();
+      const buttons = this.findVisibleButtons();
+      const inputs = this.findVisibleInputs();
+      const links = this.findVisibleLinks();
       
       return {
         scrollableAreas,
