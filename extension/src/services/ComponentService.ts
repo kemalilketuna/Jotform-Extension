@@ -1,6 +1,8 @@
 import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { LoggingService } from './LoggingService';
+import { APIService } from './APIService';
+import { ExtensionUtils } from '@/utils/ExtensionUtils';
 
 import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
 
@@ -115,12 +117,17 @@ export class ComponentService {
       // Create React root
       this.reactRoot = createRoot(this.containerElement);
 
+      // Get API service instance
+      const apiService = APIService.getInstance();
+
       // Render the AI text field component
       this.reactRoot.render(
         React.createElement(AiTextFieldComponent, {
           onSubmit: (text: string) => {
             this.logger.info('AI text submitted', 'ComponentService', { text });
+            // Note: The actual API call is now handled within the AiTextFieldComponent
           },
+          apiService: apiService,
         })
       );
 

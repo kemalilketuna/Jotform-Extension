@@ -25,6 +25,17 @@ export class APIError extends Error {
     request?: unknown;
     message?: string;
   }): APIError {
+    // This method is kept for backward compatibility
+    return APIError.fromError(error);
+  }
+
+  static fromError(error: {
+    response?: { data?: { message?: string }; status: number };
+    request?: unknown;
+    message?: string;
+    name?: string;
+    cause?: Error;
+  }): APIError {
     if (error.response) {
       return new APIError(
         error.response.data?.message || error.message || 'Unknown HTTP error',
@@ -76,5 +87,15 @@ export class APISessionError extends APIError {
   constructor(sessionId: string, reason: string) {
     super(`Session error for '${sessionId}': ${reason}`, 'SESSION_ERROR');
     this.name = 'APISessionError';
+  }
+}
+
+export class PromptSubmissionError extends APIError {
+  constructor(
+    message: string,
+    public readonly cause?: Error
+  ) {
+    super(message, 'PROMPT_SUBMISSION_ERROR');
+    this.name = 'PromptSubmissionError';
   }
 }

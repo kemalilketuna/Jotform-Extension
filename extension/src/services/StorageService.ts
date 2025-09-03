@@ -1,4 +1,5 @@
 import { LoggingService } from './LoggingService';
+import { APIStrings } from './APIService/APIStrings';
 
 /**
  * Centralized storage service for managing extension data
@@ -91,5 +92,52 @@ export class StorageService {
    */
   clearCache(): void {
     this.memoryCache.clear();
+  }
+
+  /**
+   * Store session ID
+   */
+  async setSessionId(sessionId: string): Promise<void> {
+    try {
+      const preferences = await this.getUserPreferences();
+      preferences[APIStrings.STORAGE_KEYS.SESSION_ID] = sessionId;
+      await this.setUserPreferences(preferences);
+      this.memoryCache.set(APIStrings.STORAGE_KEYS.SESSION_ID, sessionId);
+    } catch (error) {
+      this.logger.error('Failed to store session ID', 'StorageService', {
+        error: (error as Error).message,
+      });
+      throw new Error('Failed to store session ID');
+    }
+  }
+
+  /**
+   * Retrieve session ID
+   */
+  async getSessionId(): Promise<string | null> {
+    try {
+      const cached = this.memoryCache.get(
+        APIStrings.STORAGE_KEYS.SESSION_ID
+      ) as string;
+      if (cached) {
+        return cached;
+      }
+
+      const preferences = await this.getUserPreferences();
+      const sessionId = preferences[
+        APIStrings.STORAGE_KEYS.SESSION_ID
+      ] as string;
+
+      if (sessionId) {
+        this.memoryCache.set(APIStrings.STORAGE_KEYS.SESSION_ID, sessionId);
+      }
+
+      return sessionId || null;
+    } catch (error) {
+      this.logger.error('Failed to retrieve session ID', 'StorageService', {
+        error: (error as Error).message,
+      });
+      return null;
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { APIClient } from './APIClient';
 import { APIConfig } from './APIConfig';
 import { APIError, APISessionError, APIValidationError } from './APIErrors';
+import { APIStrings } from './APIStrings';
 import {
   InitSessionRequest,
   // InitSessionResponse, // Unused import
@@ -68,9 +69,7 @@ export class APIService {
       };
 
       await this.storeSessionData(sessionData);
-      const preferences = await this.storageService.getUserPreferences();
-      preferences.api_session_id = sessionId;
-      await this.storageService.setUserPreferences(preferences);
+      await this.storageService.setSessionId(sessionId);
 
       this.logger.debug(
         `Session initialized successfully: ${sessionId}`,
@@ -160,8 +159,7 @@ export class APIService {
     }
 
     try {
-      const preferences = await this.storageService.getUserPreferences();
-      const storedSessionId = preferences.api_session_id as string;
+      const storedSessionId = await this.storageService.getSessionId();
 
       if (storedSessionId) {
         this.currentSessionId = storedSessionId;
@@ -197,11 +195,15 @@ export class APIService {
     try {
       this.currentSessionId = null;
 
+      // Clear session ID from storage
       const preferences = await this.storageService.getUserPreferences();
-      delete preferences.api_session_id;
+      delete preferences[APIStrings.STORAGE_KEYS.SESSION_ID];
       delete preferences.api_session;
       delete preferences.api_action_results;
       await this.storageService.setUserPreferences(preferences);
+
+      // Clear from memory cache
+      this.storageService.clearCache();
 
       this.logger.debug('Session cleared successfully', 'APIService');
     } catch (error) {
