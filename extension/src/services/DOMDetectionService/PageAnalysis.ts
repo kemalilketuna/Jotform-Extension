@@ -2,31 +2,30 @@ import { ScrollableArea, DOMDetectionConfig } from './DOMDetectionTypes.ts';
 import { DOMDetectionError } from './DOMDetectionErrors.ts';
 import { ScrollableAreaDetector } from './ScrollableAreaDetector.ts';
 import { CursorBasedElementDetector } from './CursorBasedElementDetector.ts';
-import { JSPathGenerator } from './JSPathGenerator.ts';
 import { LoggingService } from '@/services/LoggingService';
 
-export class DOMDetectionService {
-  private static instance: DOMDetectionService | null = null;
+export class PageAnalysis {
+  private static instance: PageAnalysis | null = null;
   private config: DOMDetectionConfig;
   private scrollableDetector: ScrollableAreaDetector;
+  private cursorDetector: CursorBasedElementDetector;
   private readonly logger: LoggingService;
 
   private constructor(config?: Partial<DOMDetectionConfig>) {
     this.config = this.mergeDefaultConfig(config);
     this.scrollableDetector = new ScrollableAreaDetector();
+    this.cursorDetector = CursorBasedElementDetector.getInstance();
     this.logger = LoggingService.getInstance();
   }
 
   /**
-   * Gets the singleton instance of DOMDetectionService
+   * Gets the singleton instance of PageAnalysisService
    */
-  static getInstance(
-    config?: Partial<DOMDetectionConfig>
-  ): DOMDetectionService {
-    if (!DOMDetectionService.instance) {
-      DOMDetectionService.instance = new DOMDetectionService(config);
+  static getInstance(config?: Partial<DOMDetectionConfig>): PageAnalysis {
+    if (!PageAnalysis.instance) {
+      PageAnalysis.instance = new PageAnalysis(config);
     }
-    return DOMDetectionService.instance;
+    return PageAnalysis.instance;
   }
 
   /**
@@ -59,54 +58,34 @@ export class DOMDetectionService {
   }
 
   /**
-   * Generates JavaScript path for a specific element
+   * Get scroll information for a specific element
    */
-  generateElementPath(element: HTMLElement): string {
+  public getScrollInfo(element: HTMLElement): ScrollableArea | null {
     try {
-      return JSPathGenerator.generatePath(element);
-    } catch (error) {
-      throw new DOMDetectionError(
-        `Failed to generate path for element: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-    }
-  }
-
-  /**
-   * Generates multiple JavaScript paths for redundancy
-   */
-  generateMultiplePaths(element: HTMLElement): string[] {
-    try {
-      return JSPathGenerator.generateMultiplePaths(element);
-    } catch (error) {
-      throw new DOMDetectionError(
-        `Failed to generate multiple paths for element: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-    }
-  }
-
-  /**
-   * Checks if an element is currently scrollable
-   */
-  isElementScrollable(element: HTMLElement): boolean {
-    try {
-      return this.scrollableDetector.isElementScrollable(element);
+      return this.scrollableDetector.getScrollInfo(element);
     } catch (error) {
       this.logger.warn(
-        'Failed to check if element is scrollable:',
+        'Failed to get scroll info:',
         error instanceof Error ? error.message : String(error)
       );
-      return false;
+      return null;
     }
   }
 
   /**
-   * Check if an element is visible
+   * Gets all interactive elements on the page
    */
-  public isElementVisible(element: HTMLElement): boolean {
+  public getInteractiveElements(): { interactiveElements: HTMLElement[] } {
     try {
-      return CursorBasedElementDetector.getInstance().isElementVisible(element);
-    } catch {
-      return false;
+      const interactiveElements =
+        this.cursorDetector.listVisibleInteractiveElements();
+      return { interactiveElements };
+    } catch (error) {
+      this.logger.error(
+        'Failed to find interactive elements:',
+        error instanceof Error ? error.message : String(error)
+      );
+      return { interactiveElements: [] };
     }
   }
 
@@ -146,7 +125,7 @@ export class DOMDetectionService {
       const performAnalysis = () => {
         try {
           const scrollableAreas = this.findScrollableAreas();
-          const interactiveElements = this.listVisibleInteractiveElements();
+          const { interactiveElements } = this.getInteractiveElements();
 
           resolve({
             scrollableAreas,
@@ -170,24 +149,6 @@ export class DOMDetectionService {
         setTimeout(performAnalysis, 100);
       }
     });
-  }
-
-  /**
-   * Lists all visible interactive elements on the page based on cursor styles
-   * Uses cursor style detection to identify interactive elements
-   */
-  public listVisibleInteractiveElements(): HTMLElement[] {
-    try {
-      return CursorBasedElementDetector.getInstance().listVisibleInteractiveElements();
-    } catch (error) {
-      this.logger.error(
-        `Failed to list visible interactive elements: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'DOMDetectionService'
-      );
-      throw new DOMDetectionError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
   }
 
   private mergeDefaultConfig(
