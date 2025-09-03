@@ -13,7 +13,7 @@ import {
   APIRequestConfig,
 } from './APITypes';
 import { DOMDetectionService } from '@/services/DOMDetectionService';
-import { StorageService } from '@/services/StorageService';
+import { StorageService } from '@/services/StorageService/StorageService';
 import { LoggingService } from '@/services/LoggingService';
 
 export class APIService {

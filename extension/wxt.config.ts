@@ -16,7 +16,14 @@ export default defineConfig({
     action: {
       default_title: 'AI-Form - Smart Form Assistant',
     },
-    permissions: ['tabs', 'activeTab', 'scripting', 'storage', 'http://*/*', 'https://*/*'],
+    permissions: [
+      'tabs',
+      'activeTab',
+      'scripting',
+      'storage',
+      'http://*/*',
+      'https://*/*',
+    ],
     content_security_policy: {
       extension_pages:
         "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
