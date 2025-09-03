@@ -55,7 +55,10 @@ export class DOMDetectionService {
     try {
       return this.scrollableDetector.findScrollableAreas();
     } catch (error) {
-      console.error('Failed to find scrollable areas:', error);
+      this.logger.error(
+        'Failed to find scrollable areas:',
+        error instanceof Error ? error.message : String(error)
+      );
       return [];
     }
   }
@@ -173,7 +176,10 @@ export class DOMDetectionService {
     try {
       return this.scrollableDetector.isElementScrollable(element);
     } catch (error) {
-      console.warn('Failed to check if element is scrollable:', error);
+      this.logger.warn(
+        'Failed to check if element is scrollable:',
+        error instanceof Error ? error.message : String(error)
+      );
       return false;
     }
   }
@@ -184,7 +190,7 @@ export class DOMDetectionService {
   public isElementVisible(element: HTMLElement): boolean {
     try {
       return InteractiveElementDetector.isElementVisible(element);
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -320,7 +326,7 @@ export class DOMDetectionService {
         const tagName = htmlElement.tagName.toUpperCase();
 
         // Exclusion Logic
-        if (excludedTags.includes(tagName as any)) {
+        if (excludedTags.includes(tagName as (typeof excludedTags)[number])) {
           return;
         }
 
@@ -331,7 +337,11 @@ export class DOMDetectionService {
         // Interactivity and Visibility Logic
         const cursorStyle = window.getComputedStyle(htmlElement).cursor;
 
-        if (interactiveCursorStyles.includes(cursorStyle as any)) {
+        if (
+          interactiveCursorStyles.includes(
+            cursorStyle as (typeof interactiveCursorStyles)[number]
+          )
+        ) {
           const rect = htmlElement.getBoundingClientRect();
 
           if (rect.width > 0 && rect.height > 0) {
@@ -384,9 +394,7 @@ export class DOMDetectionService {
       return visibleElements;
     } catch (error) {
       this.logger.error(
-        `Failed to list visible interactive elements: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
+        `Failed to list visible interactive elements: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'DOMDetectionService'
       );
       throw new DOMDetectionError(

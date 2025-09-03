@@ -227,20 +227,27 @@ export class ContentScriptCoordinator {
           : '';
         const text = element.textContent?.trim().substring(0, 50) || '';
 
-        console.log(`${index + 1}. ${tagName}${id}${className}`, {
-          element,
-          text: text ? `"${text}"` : 'No text',
-          position: {
-            x: element.getBoundingClientRect().left,
-            y: element.getBoundingClientRect().top,
-            width: element.getBoundingClientRect().width,
-            height: element.getBoundingClientRect().height,
-          },
-        });
+        this.logger.debug(
+          `${index + 1}. ${tagName}${id}${className}`,
+          'ContentScriptCoordinator',
+          {
+            element,
+            text: text ? `"${text}"` : 'No text',
+            position: {
+              x: element.getBoundingClientRect().left,
+              y: element.getBoundingClientRect().top,
+              width: element.getBoundingClientRect().width,
+              height: element.getBoundingClientRect().height,
+            },
+          }
+        );
       });
     } catch (error) {
       this.logger.logError(error as Error, 'ContentScriptCoordinator');
-      console.error('Failed to list interactive elements:', error);
+      this.logger.error(
+        `Failed to list interactive elements: ${error instanceof Error ? error.message : String(error)}`,
+        'ContentScriptCoordinator'
+      );
     }
   }
 

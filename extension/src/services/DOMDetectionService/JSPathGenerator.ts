@@ -59,7 +59,7 @@ export class JSPathGenerator {
 
       const xpathPath = this.generateXPathLikePath(element);
       if (xpathPath) paths.push(xpathPath);
-    } catch (error) {
+    } catch {
       // Return at least one path even if others fail
       if (paths.length === 0) {
         paths.push(this.generateFallbackPath(element));

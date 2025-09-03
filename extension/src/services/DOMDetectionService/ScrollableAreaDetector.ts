@@ -1,4 +1,4 @@
-import { ScrollableArea, DOMDetectionConfig } from './DOMDetectionTypes.ts';
+import { ScrollableArea } from './DOMDetectionTypes.ts';
 import { JSPathGenerator } from './JSPathGenerator.ts';
 import { ScrollDetectionError } from './DOMDetectionErrors.ts';
 
@@ -51,7 +51,7 @@ export class ScrollableAreaDetector {
         element.scrollWidth > element.clientWidth &&
         /(auto|scroll)/.test(style.overflowX);
       return canScrollX || canScrollY;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

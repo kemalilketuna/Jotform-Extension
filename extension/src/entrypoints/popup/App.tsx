@@ -7,7 +7,8 @@ import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/services/MessagesService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { NavigationUtils } from '@/utils/NavigationUtils';
-import { DOMDetectionService } from '@/services/DOMDetectionService';
+// DOMDetectionService is not used in this file
+// import { DOMDetectionService } from '@/services/DOMDetectionService';
 import { PopupHeader } from '@/components/PopupHeader';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
 import { StatusMessage } from '@/components/StatusMessage';
