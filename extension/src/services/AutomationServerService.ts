@@ -1,7 +1,7 @@
 import {
   AutomationSequence,
   AutomationAction,
-} from '@/services/AutomationEngine';
+} from '@/services/ActionsService';
 import { LoggingService } from '@/services/LoggingService';
 import { WebSocketService } from '@/services/WebSocketService';
 import { AutomationError } from '@/services/AutomationEngine';

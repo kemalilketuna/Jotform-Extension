@@ -18,7 +18,6 @@ export class AutomationEngine {
   private isExecuting = false;
   private readonly logger: LoggingService;
   private readonly visualCursor: VisualCursorService;
-  private readonly typingService: TypingService;
   private readonly userInteractionBlocker: UserInteractionBlocker;
   private readonly actionsService: ActionsService;
   private readonly messageHandler: MessageHandler;
@@ -30,7 +29,6 @@ export class AutomationEngine {
   ) {
     this.logger = logger;
     this.visualCursor = visualCursor;
-    this.typingService = typingService;
     this.userInteractionBlocker = UserInteractionBlocker.getInstance();
     this.actionsService = ActionsService.getInstance(
       logger,
