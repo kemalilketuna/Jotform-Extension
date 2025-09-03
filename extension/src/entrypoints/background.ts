@@ -2,7 +2,7 @@ import { LoggingService } from '@/services/LoggingService';
 import {
   AutomationSequence,
   AutomationAction,
-} from '@/services/AutomationEngine';
+} from '@/services/ActionsService/ActionTypes';
 import {
   AutomationMessage,
   ExecuteSequenceMessage,
@@ -337,6 +337,28 @@ export default defineBackground(() => {
               `Step ${progressMessage.payload.completedStepIndex} completed for sequence ${progressMessage.payload.sequenceId}`,
               'BackgroundScript'
             );
+            break;
+          }
+
+          case 'LIST_INTERACTIVE_ELEMENTS': {
+            // Forward this message to the content script
+            if (!sender.tab?.id) {
+              // Message from popup, get active tab
+              try {
+                const tabs = await browser.tabs.query({
+                  active: true,
+                  currentWindow: true,
+                });
+                if (tabs[0]?.id) {
+                  await browser.tabs.sendMessage(tabs[0].id, message);
+                }
+              } catch (error) {
+                logger.error(
+                  `Failed to forward LIST_INTERACTIVE_ELEMENTS to content script: ${error}`,
+                  'BackgroundScript'
+                );
+              }
+            }
             break;
           }
         }

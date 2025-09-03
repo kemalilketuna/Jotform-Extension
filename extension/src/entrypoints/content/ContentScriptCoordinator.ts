@@ -1,6 +1,7 @@
 import { AutomationEngine } from '@/services/AutomationEngine';
 import { LoggingService } from '@/services/LoggingService';
 import { AudioService } from '@/services/AudioService';
+import { DOMDetectionService } from '@/services/DOMDetectionService';
 import {
   AutomationMessage,
   ExecuteSequenceMessage,
@@ -21,6 +22,7 @@ export class ContentScriptCoordinator {
   private readonly automationEngine: AutomationEngine;
   private readonly navigationDetector: NavigationDetector;
   private readonly audioService: AudioService;
+  private readonly domDetectionService: DOMDetectionService;
   private isReady = false;
   private isProcessingMessage = false;
   private readonly contentScriptId: string;
@@ -31,6 +33,7 @@ export class ContentScriptCoordinator {
     this.automationEngine = AutomationEngine.getInstance();
     this.navigationDetector = NavigationDetector.getInstance();
     this.audioService = AudioService.getInstance();
+    this.domDetectionService = DOMDetectionService.getInstance();
   }
 
   static getInstance(contentScriptId?: string): ContentScriptCoordinator {
@@ -153,6 +156,11 @@ export class ContentScriptCoordinator {
       );
 
       // Handle different message types
+      if (message.type === 'LIST_INTERACTIVE_ELEMENTS') {
+        await this.handleListInteractiveElements();
+        return;
+      }
+
       // Set processing flag for EXECUTE_SEQUENCE messages
       if (message.type === 'EXECUTE_SEQUENCE') {
         this.isProcessingMessage = true;
@@ -189,6 +197,50 @@ export class ContentScriptCoordinator {
       if (message.type === 'EXECUTE_SEQUENCE') {
         this.isProcessingMessage = false;
       }
+    }
+  }
+
+  /**
+   * Handle listing visible interactive elements
+   */
+  private async handleListInteractiveElements(): Promise<void> {
+    try {
+      this.logger.info(
+        'Listing visible interactive elements',
+        'ContentScriptCoordinator'
+      );
+
+      const elements =
+        await this.domDetectionService.listVisibleInteractiveElements();
+
+      this.logger.info(
+        `Found ${elements.length} visible interactive elements:`,
+        'ContentScriptCoordinator'
+      );
+
+      // Log each element with details
+      elements.forEach((element, index) => {
+        const tagName = element.tagName.toLowerCase();
+        const id = element.id ? `#${element.id}` : '';
+        const className = element.className
+          ? `.${element.className.split(' ').join('.')}`
+          : '';
+        const text = element.textContent?.trim().substring(0, 50) || '';
+
+        console.log(`${index + 1}. ${tagName}${id}${className}`, {
+          element,
+          text: text ? `"${text}"` : 'No text',
+          position: {
+            x: element.getBoundingClientRect().left,
+            y: element.getBoundingClientRect().top,
+            width: element.getBoundingClientRect().width,
+            height: element.getBoundingClientRect().height,
+          },
+        });
+      });
+    } catch (error) {
+      this.logger.logError(error as Error, 'ContentScriptCoordinator');
+      console.error('Failed to list interactive elements:', error);
     }
   }
 
