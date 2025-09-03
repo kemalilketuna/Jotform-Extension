@@ -1,5 +1,4 @@
 // Main service export
-export { WebSocketService } from './WebSocketService';
 
 // Configuration
 export { WebSocketConfig } from './WebSocketConfig';

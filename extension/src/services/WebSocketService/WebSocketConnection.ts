@@ -16,7 +16,7 @@ export class WebSocketConnection {
   private reconnectAttempts = 0;
   private heartbeatTimer: number | null = null;
   private connectionPromise: Promise<void> | null = null;
-  private connectionState: ConnectionState = 'disconnected';
+  private connectionState: ConnectionState = ConnectionState.DISCONNECTED;
   private lastError: Error | null = null;
   private connectionListeners = new Set<
     (state: string, error?: Error) => void
@@ -53,8 +53,11 @@ export class WebSocketConnection {
   /**
    * Notify connection state change
    */
-  private notifyConnectionStateChange(state: string, error?: Error): void {
-    this.connectionState = state as ConnectionState;
+  private notifyConnectionStateChange(
+    state: ConnectionState,
+    error?: Error
+  ): void {
+    this.connectionState = state;
     this.connectionListeners.forEach((listener) => {
       try {
         listener(state, error);
@@ -72,13 +75,16 @@ export class WebSocketConnection {
       return Promise.resolve();
     }
 
-    if (this.connectionPromise && this.connectionState === 'connecting') {
+    if (
+      this.connectionPromise &&
+      this.connectionState === ConnectionState.CONNECTING
+    ) {
       return this.connectionPromise;
     }
 
     this.isManualDisconnect = false;
-    this.connectionState = 'connecting';
-    this.notifyConnectionStateChange('connecting');
+    this.connectionState = ConnectionState.CONNECTING;
+    this.notifyConnectionStateChange(ConnectionState.CONNECTING);
 
     this.connectionPromise = new Promise((resolve, reject) => {
       try {
@@ -94,8 +100,8 @@ export class WebSocketConnection {
             this.websocket?.close();
             const error = new WebSocketTimeoutError('Connection timeout');
             this.lastError = error;
-            this.connectionState = 'failed';
-            this.notifyConnectionStateChange('failed', error);
+            this.connectionState = ConnectionState.FAILED;
+            this.notifyConnectionStateChange(ConnectionState.FAILED, error);
             reject(error);
           }
         }, this.config.connectionTimeout);
@@ -104,8 +110,8 @@ export class WebSocketConnection {
           clearTimeout(connectionTimeout);
           this.reconnectAttempts = 0;
           this.lastError = null;
-          this.connectionState = 'connected';
-          this.notifyConnectionStateChange('connected');
+          this.connectionState = ConnectionState.CONNECTED;
+          this.notifyConnectionStateChange(ConnectionState.CONNECTED);
           this.startHeartbeat();
           this.logger.info(
             'WebSocket connected successfully',
@@ -131,12 +137,12 @@ export class WebSocketConnection {
             !event.wasClean &&
             this.reconnectAttempts < this.config.reconnectAttempts
           ) {
-            this.connectionState = 'reconnecting';
-            this.notifyConnectionStateChange('reconnecting');
+            this.connectionState = ConnectionState.RECONNECTING;
+            this.notifyConnectionStateChange(ConnectionState.RECONNECTING);
             this.scheduleReconnect();
           } else {
-            this.connectionState = 'disconnected';
-            this.notifyConnectionStateChange('disconnected');
+            this.connectionState = ConnectionState.DISCONNECTED;
+            this.notifyConnectionStateChange(ConnectionState.DISCONNECTED);
           }
         };
 
@@ -150,8 +156,8 @@ export class WebSocketConnection {
             new WebSocketConnectionError('WebSocket connection error'),
             'WebSocketConnection'
           );
-          this.connectionState = 'failed';
-          this.notifyConnectionStateChange('failed', wsError);
+          this.connectionState = ConnectionState.FAILED;
+          this.notifyConnectionStateChange(ConnectionState.FAILED, wsError);
           reject(wsError);
         };
       } catch (error) {
@@ -160,8 +166,8 @@ export class WebSocketConnection {
         );
         this.lastError = wsError;
         this.logger.logError(error as Error, 'WebSocketConnection');
-        this.connectionState = 'failed';
-        this.notifyConnectionStateChange('failed', wsError);
+        this.connectionState = ConnectionState.FAILED;
+        this.notifyConnectionStateChange(ConnectionState.FAILED, wsError);
         reject(wsError);
       }
     });
@@ -187,8 +193,8 @@ export class WebSocketConnection {
 
     this.stopHeartbeat();
     this.connectionPromise = null;
-    this.connectionState = 'disconnected';
-    this.notifyConnectionStateChange('disconnected');
+    this.connectionState = ConnectionState.DISCONNECTED;
+    this.notifyConnectionStateChange(ConnectionState.DISCONNECTED);
 
     // Clear pending requests
     this.messageHandler.clearPendingRequests();
@@ -238,9 +244,9 @@ export class WebSocketConnection {
           'Max reconnection attempts reached',
           'WebSocketConnection'
         );
-        this.connectionState = 'failed';
+        this.connectionState = ConnectionState.FAILED;
         this.notifyConnectionStateChange(
-          'failed',
+          ConnectionState.FAILED,
           new WebSocketConnectionError('Max reconnection attempts reached')
         );
       }
@@ -300,7 +306,7 @@ export class WebSocketConnection {
   isConnected(): boolean {
     return (
       this.websocket?.readyState === WebSocket.OPEN &&
-      this.connectionState === 'connected'
+      this.connectionState === ConnectionState.CONNECTED
     );
   }
 

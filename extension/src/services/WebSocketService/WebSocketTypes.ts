@@ -61,21 +61,27 @@ export interface WebSocketConfig {
   connectionTimeout: number;
 }
 
-export type ConnectionState =
-  | 'disconnected'
-  | 'connecting'
-  | 'connected'
-  | 'reconnecting'
-  | 'failed';
+export enum ConnectionState {
+  DISCONNECTED = 'disconnected',
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  RECONNECTING = 'reconnecting',
+  FAILED = 'failed',
+  DISABLED = 'disabled',
+}
 
 export type ConnectionStatus = 'connecting' | 'open' | 'closing' | 'closed';
 
 export interface DetailedConnectionState {
-  state: ConnectionState;
+  status: ConnectionStatus;
   reconnectAttempts: number;
-  maxReconnectAttempts: number;
-  lastError: Error | null;
-  isManualDisconnect: boolean;
+  lastError?: Error | null;
+  connectionState: ConnectionState;
+}
+
+export interface ConnectionHealth {
+  isHealthy: boolean;
+  issues: string[];
 }
 
 export interface PendingRequest {

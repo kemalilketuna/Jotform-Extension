@@ -3,7 +3,6 @@ import {
   AutomationAction,
 } from '@/services/ActionsService';
 import { LoggingService } from '@/services/LoggingService';
-import { WebSocketService } from '@/services/WebSocketService';
 import { AutomationError } from '@/services/AutomationEngine';
 
 export interface ServerAutomationStep {
@@ -22,78 +21,122 @@ export interface ServerAutomationResponse {
 }
 
 /**
- * Service for handling automation server communication via WebSocket
- * This service acts as a bridge between the extension and the WebSocket backend
+ * Service for handling automation server communication
+ * This service previously used WebSockets but now provides mock data as WebSockets are disabled
  */
 export class AutomationServerService {
   private static readonly logger = LoggingService.getInstance();
-  private static readonly webSocketService = WebSocketService.getInstance();
 
   /**
-   * Fetch form creation steps from WebSocket server
+   * Fetch form creation steps (mock data as WebSockets are disabled)
    */
   static async fetchFormCreationSteps(): Promise<ServerAutomationResponse> {
     try {
       AutomationServerService.logger.debug(
-        'Fetching form creation steps via WebSocket',
+        'Returning mock form creation steps (WebSockets disabled)',
         'AutomationServerService'
       );
 
-      const response =
-        await AutomationServerService.webSocketService.requestAutomationSequence(
-          'form_creation'
-        );
-
-      const serverResponse: ServerAutomationResponse = {
-        sequenceId: response.sequence.sequenceId,
-        name: response.sequence.name,
-        steps: response.sequence.steps,
+      // Return mock data instead of making a WebSocket request
+      const mockResponse: ServerAutomationResponse = {
+        sequenceId: 'mock-form-creation-' + Date.now(),
+        name: 'Form Creation Sequence',
+        steps: [
+          {
+            action: 'navigate',
+            url: 'https://www.jotform.com/form-templates/',
+            description: 'Navigate to JotForm templates page',
+          },
+          {
+            action: 'wait',
+            delay: 2000,
+            description: 'Wait for page to load',
+          },
+          {
+            action: 'click',
+            selector: '.create-form-btn',
+            description: 'Click on Create Form button',
+          },
+        ],
       };
 
       AutomationServerService.logger.debug(
-        'Form creation steps fetched successfully via WebSocket',
+        'Mock form creation steps returned (WebSockets disabled)',
         'AutomationServerService'
       );
 
-      return serverResponse;
+      return mockResponse;
     } catch (error) {
       AutomationServerService.logger.logError(
         error as Error,
         'AutomationServerService'
       );
-      throw new AutomationError(
-        'Failed to fetch form creation steps from server'
-      );
+      throw new AutomationError('Failed to generate mock form creation steps');
     }
   }
 
   /**
-   * Fetch form building steps from WebSocket server
+   * Connect to automation server (mock implementation as WebSockets are disabled)
+   */
+  static async connect(): Promise<void> {
+    AutomationServerService.logger.debug(
+      'Mock connection to automation server (WebSockets disabled)',
+      'AutomationServerService'
+    );
+    // Return success without actually connecting
+    return Promise.resolve();
+  }
+
+  /**
+   * Disconnect from automation server (mock implementation as WebSockets are disabled)
+   */
+  static disconnect(): void {
+    AutomationServerService.logger.debug(
+      'Mock disconnection from automation server (WebSockets disabled)',
+      'AutomationServerService'
+    );
+    // No-op since we're not actually connected
+  }
+
+  /**
+   * Fetch form building steps (mock data as WebSockets are disabled)
    */
   static async fetchFormBuildingSteps(): Promise<ServerAutomationResponse> {
     try {
       AutomationServerService.logger.debug(
-        'Fetching form building steps via WebSocket',
+        'Returning mock form building steps (WebSockets disabled)',
         'AutomationServerService'
       );
 
-      const response =
-        await AutomationServerService.webSocketService.requestAutomationSequence(
-          'form_building'
-        );
-
-      const serverResponse: ServerAutomationResponse = {
-        sequenceId: response.sequence.sequenceId,
-        name: response.sequence.name,
-        steps: response.sequence.steps,
+      // Return mock data instead of making a WebSocket request
+      const mockResponse: ServerAutomationResponse = {
+        sequenceId: 'mock-form-building-' + Date.now(),
+        name: 'Form Building Sequence',
+        steps: [
+          {
+            action: 'click',
+            selector: '.form-field-input',
+            description: 'Click on form field input',
+          },
+          {
+            action: 'type',
+            text: 'Sample question text',
+            description: 'Type question text',
+          },
+          {
+            action: 'click',
+            selector: '.save-form-btn',
+            description: 'Save the form',
+          },
+        ],
       };
 
       AutomationServerService.logger.debug(
-        'Form building steps fetched successfully via WebSocket',
+        'Mock form building steps returned (WebSockets disabled)',
         'AutomationServerService'
       );
 
-      return serverResponse;
+      return mockResponse;
     } catch (error) {
       AutomationServerService.logger.logError(
         error as Error,
@@ -223,14 +266,10 @@ export class AutomationServerService {
     status: 'started' | 'completed' | 'failed' | 'in_progress'
   ): Promise<void> {
     try {
-      await AutomationServerService.webSocketService.sendMessage({
-        type: 'automation_status',
-        sequence_id: sequenceId,
-        status,
-      });
-
+      // Mock implementation - WebSocket functionality has been removed
+      // Just log the attempt for debugging purposes
       AutomationServerService.logger.info(
-        `Automation status sent: ${status} for sequence ${sequenceId}`,
+        `Mock automation status would be sent: ${status} for sequence ${sequenceId}`,
         'AutomationServerService'
       );
     } catch (error) {
@@ -243,46 +282,36 @@ export class AutomationServerService {
   }
 
   /**
-   * Check WebSocket connection status
+   * Check connection status (mock implementation)
    */
   static isConnected(): boolean {
-    return AutomationServerService.webSocketService.isConnected();
+    // Always return true as WebSockets are disabled
+    return true;
   }
 
   /**
-   * Get WebSocket connection status
+   * Get connection status (mock implementation)
    */
   static getConnectionStatus(): 'connecting' | 'open' | 'closing' | 'closed' {
-    return AutomationServerService.webSocketService.getConnectionStatus();
+    // Always return 'open' as WebSockets are disabled
+    return 'open';
   }
 
   /**
-   * Manually connect to WebSocket server
+   * Get WebSocket connection status (kept for compatibility)
+   * This is a duplicate of the mock implementation at the top of the file
+   * @deprecated Use the implementation at the top of the file instead
    */
-  static async connect(): Promise<void> {
-    try {
-      await AutomationServerService.webSocketService.connect();
-      AutomationServerService.logger.info(
-        'Connected to WebSocket server',
-        'AutomationServerService'
-      );
-    } catch (error) {
-      AutomationServerService.logger.logError(
-        error as Error,
-        'AutomationServerService'
-      );
-      throw new AutomationError('Failed to connect to automation server');
-    }
-  }
+  // static async connect(): Promise<void> {
+  //   // Implementation removed to fix duplicate function error
+  // }
 
   /**
-   * Disconnect from WebSocket server
+   * Disconnect from WebSocket server (kept for compatibility)
+   * This is a duplicate of the mock implementation at the top of the file
+   * @deprecated Use the implementation at the top of the file instead
    */
-  static disconnect(): void {
-    AutomationServerService.webSocketService.disconnect();
-    AutomationServerService.logger.info(
-      'Disconnected from WebSocket server',
-      'AutomationServerService'
-    );
-  }
+  // static disconnect(): void {
+  //   // Implementation removed to fix duplicate function error
+  // }
 }

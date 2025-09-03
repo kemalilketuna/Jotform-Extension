@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { AutomationServerService } from '@/services/AutomationServerService';
-import { WebSocketService } from '@/services/WebSocketService';
 import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
@@ -10,7 +9,6 @@ import { NavigationUtils } from '@/utils/NavigationUtils';
 // DOMDetectionService is not used in this file
 // import { DOMDetectionService } from '@/services/DOMDetectionService';
 import { PopupHeader } from '@/components/PopupHeader';
-import { ConnectionStatus } from '@/components/ConnectionStatus';
 import { StatusMessage } from '@/components/StatusMessage';
 import { ActionButtons } from '@/components/ActionButtons';
 import { PopupFooter } from '@/components/PopupFooter';
@@ -21,49 +19,34 @@ import { PopupFooter } from '@/components/PopupFooter';
 function App() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [status, setStatus] = useState<string>('');
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<
-    'connecting' | 'open' | 'closing' | 'closed'
-  >('closed');
-  const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [isConnected, setIsConnected] = useState(true); // Always connected since WebSockets are removed
   const logger = LoggingService.getInstance();
-  const webSocketService = WebSocketService.getInstance();
 
   /**
-   * Initialize WebSocket connection on component mount
+   * Initialize component state on mount
+   * WebSockets have been removed, so we set connected state directly
    */
   useEffect(() => {
-    // Add connection state listener
-    const handleConnectionStateChange = (state: string, error?: Error) => {
-      setIsConnected(state === 'connected');
-      setConnectionStatus(webSocketService.getConnectionStatus());
-      setConnectionError(error?.message || null);
-
-      const detailedState = webSocketService.getDetailedConnectionState();
-      setReconnectAttempts(detailedState.reconnectAttempts);
-    };
-
-    webSocketService.addConnectionListener(handleConnectionStateChange);
+    // Set connected state directly since WebSockets are removed
+    setIsConnected(true);
 
     const initializeConnection = async () => {
       try {
-        setStatus('Connecting to automation server...');
-        setConnectionStatus('connecting');
+        setStatus('Initializing automation...');
 
+        // This now uses the mock implementation
         await AutomationServerService.connect();
 
         setIsConnected(true);
-        setConnectionStatus('open');
-        setStatus('Connected to automation server');
+        setStatus('Automation ready');
 
         // Clear status after 2 seconds
         setTimeout(() => setStatus(''), 2000);
       } catch (error) {
         logger.logError(error as Error, 'PopupApp');
-        setIsConnected(false);
-        setConnectionStatus('closed');
-        setStatus('Failed to connect to automation server');
+        // Even if there's an error, we show as connected since WebSockets are disabled
+        setIsConnected(true);
+        setStatus('');
       }
     };
 
@@ -71,10 +54,10 @@ function App() {
 
     // Cleanup on unmount
     return () => {
-      webSocketService.removeConnectionListener(handleConnectionStateChange);
+      // No WebSocket listeners to remove since WebSockets are removed
       AutomationServerService.disconnect();
     };
-  }, [logger, webSocketService]);
+  }, [logger]);
 
   /**
    * Get the current active tab
@@ -104,15 +87,11 @@ function App() {
   };
 
   /**
-   * Fetch automation sequence from WebSocket server
+   * Fetch automation sequence (now using mock data)
    */
   const fetchAutomationSequence = async () => {
-    if (!isConnected) {
-      const health = webSocketService.getConnectionHealth();
-      throw new Error(
-        `Not connected to automation server. Issues: ${health.issues.join(', ')}`
-      );
-    }
+    // WebSocket connection check is no longer needed as we're always "connected"
+    // with the mock implementation
 
     setStatus(UserMessages.STATUS.FETCHING_FROM_SERVER);
     const response = await AutomationServerService.fetchFormCreationSteps();
@@ -183,39 +162,17 @@ function App() {
   };
 
   /**
-   * Fetch form building automation sequence from WebSocket server
+   * Fetch form building automation sequence (now using mock data)
    */
   const fetchFormBuildingSequence = async () => {
-    if (!isConnected) {
-      const health = webSocketService.getConnectionHealth();
-      throw new Error(
-        `Not connected to automation server. Issues: ${health.issues.join(', ')}`
-      );
-    }
+    // WebSocket connection check is no longer needed as we're always "connected"
+    // with the mock implementation
 
-    setStatus('Fetching form building steps from server...');
+    setStatus('Fetching form building steps...');
     const response = await AutomationServerService.fetchFormBuildingSteps();
 
     setStatus('Converting server response...');
     return AutomationServerService.convertToAutomationSequence(response);
-  };
-
-  /**
-   * Handle force reconnection
-   */
-  const handleForceReconnect = async () => {
-    try {
-      setConnectionError(null);
-      await webSocketService.forceReconnect();
-    } catch (error) {
-      logger.logError(
-        error instanceof Error ? error : new Error('Force reconnection failed'),
-        'App'
-      );
-      setConnectionError(
-        error instanceof Error ? error.message : 'Reconnection failed'
-      );
-    }
   };
 
   /**
@@ -288,13 +245,6 @@ function App() {
             {UserMessages.PROMPTS.EXTENSION_DESCRIPTION}
           </p>
         </div>
-
-        <ConnectionStatus
-          connectionStatus={connectionStatus}
-          reconnectAttempts={reconnectAttempts}
-          connectionError={connectionError}
-          onForceReconnect={handleForceReconnect}
-        />
 
         <StatusMessage status={status} />
 

@@ -225,9 +225,9 @@ export class APIService {
   private async getVisibleElements(): Promise<string[]> {
     try {
       const elements =
-        await this.domDetectionService.findVisibleInteractiveElements();
+        this.domDetectionService.listVisibleInteractiveElements();
       return elements.map(
-        (element) => element.element.outerHTML || element.element.toString()
+        (element: HTMLElement) => element.outerHTML || element.toString()
       );
     } catch (error) {
       this.logger.logError(error as Error, 'APIService');
