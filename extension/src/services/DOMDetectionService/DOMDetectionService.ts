@@ -1,12 +1,7 @@
-import {
-  ScrollableArea,
-  InteractiveElement,
-  DOMDetectionConfig,
-  InteractiveElementType,
-} from './DOMDetectionTypes.ts';
+import { ScrollableArea, DOMDetectionConfig } from './DOMDetectionTypes.ts';
 import { DOMDetectionError } from './DOMDetectionErrors.ts';
 import { ScrollableAreaDetector } from './ScrollableAreaDetector.ts';
-import { InteractiveElementDetector } from './InteractiveElementDetector.ts';
+import { CursorBasedElementDetector } from './CursorBasedElementDetector.ts';
 import { JSPathGenerator } from './JSPathGenerator.ts';
 import { LoggingService } from '@/services/LoggingService';
 
@@ -64,86 +59,6 @@ export class DOMDetectionService {
   }
 
   /**
-   * Find all visible interactive elements in the document
-   */
-  public findInteractiveElements(): InteractiveElement[] {
-    try {
-      return InteractiveElementDetector.findVisibleInteractiveElements();
-    } catch (error) {
-      throw new DOMDetectionError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  /**
-   * Find only visible interactive elements
-   */
-  public findVisibleInteractiveElements(): InteractiveElement[] {
-    try {
-      return InteractiveElementDetector.findVisibleInteractiveElements();
-    } catch (error) {
-      throw new DOMDetectionError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  /**
-   * Find interactive elements by type
-   */
-  public findElementsByType(
-    type: InteractiveElementType
-  ): InteractiveElement[] {
-    try {
-      return InteractiveElementDetector.findElementsByType(type);
-    } catch (error) {
-      throw new DOMDetectionError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  /**
-   * Find visible buttons
-   */
-  public findVisibleButtons(): InteractiveElement[] {
-    try {
-      return InteractiveElementDetector.findVisibleButtons();
-    } catch (error) {
-      throw new DOMDetectionError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  /**
-   * Find visible links
-   */
-  public findVisibleLinks(): InteractiveElement[] {
-    try {
-      return InteractiveElementDetector.findVisibleLinks();
-    } catch (error) {
-      throw new DOMDetectionError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  /**
-   * Find visible inputs
-   */
-  public findVisibleInputs(): InteractiveElement[] {
-    try {
-      return InteractiveElementDetector.findVisibleInputs();
-    } catch (error) {
-      throw new DOMDetectionError(
-        error instanceof Error ? error.message : String(error)
-      );
-    }
-  }
-
-  /**
    * Generates JavaScript path for a specific element
    */
   generateElementPath(element: HTMLElement): string {
@@ -189,7 +104,7 @@ export class DOMDetectionService {
    */
   public isElementVisible(element: HTMLElement): boolean {
     try {
-      return InteractiveElementDetector.isElementVisible(element);
+      return CursorBasedElementDetector.getInstance().isElementVisible(element);
     } catch {
       return false;
     }
@@ -200,42 +115,17 @@ export class DOMDetectionService {
    */
   getPageAnalysis(): {
     scrollableAreas: ScrollableArea[];
-    interactiveElements: InteractiveElement[];
-    visibleElements: InteractiveElement[];
-    buttons: InteractiveElement[];
-    inputs: InteractiveElement[];
-    links: InteractiveElement[];
     summary: {
       totalScrollableAreas: number;
-      totalInteractiveElements: number;
-      visibleInteractiveElements: number;
-      totalButtons: number;
-      totalInputs: number;
-      totalLinks: number;
     };
   } {
     try {
       const scrollableAreas = this.findScrollableAreas();
-      const interactiveElements = this.findInteractiveElements();
-      const visibleElements = this.findVisibleInteractiveElements();
-      const buttons = this.findVisibleButtons();
-      const inputs = this.findVisibleInputs();
-      const links = this.findVisibleLinks();
 
       return {
         scrollableAreas,
-        interactiveElements,
-        visibleElements,
-        buttons,
-        inputs,
-        links,
         summary: {
           totalScrollableAreas: scrollableAreas.length,
-          totalInteractiveElements: interactiveElements.length,
-          visibleInteractiveElements: visibleElements.length,
-          totalButtons: buttons.length,
-          totalInputs: inputs.length,
-          totalLinks: links.length,
         },
       };
     } catch (error) {
@@ -250,20 +140,17 @@ export class DOMDetectionService {
    */
   async waitForDOMAndAnalyze(): Promise<{
     scrollableAreas: ScrollableArea[];
-    interactiveElements: InteractiveElement[];
-    visibleElements: InteractiveElement[];
+    interactiveElements: HTMLElement[];
   }> {
     return new Promise((resolve, reject) => {
       const performAnalysis = () => {
         try {
           const scrollableAreas = this.findScrollableAreas();
-          const interactiveElements = this.findInteractiveElements();
-          const visibleElements = this.findVisibleInteractiveElements();
+          const interactiveElements = this.listVisibleInteractiveElements();
 
           resolve({
             scrollableAreas,
             interactiveElements,
-            visibleElements,
           });
         } catch (error) {
           reject(
@@ -291,107 +178,7 @@ export class DOMDetectionService {
    */
   public listVisibleInteractiveElements(): HTMLElement[] {
     try {
-      this.logger.debug(
-        'Starting to list visible interactive elements',
-        'DOMDetectionService'
-      );
-
-      const loggedElements = new Set<HTMLElement>();
-      const interactiveCursorStyles = [
-        'pointer',
-        'move',
-        'text',
-        'grab',
-        'grabbing',
-        'crosshair',
-        'help',
-      ] as const;
-      const excludedTags = [
-        'H1',
-        'H2',
-        'H3',
-        'H4',
-        'H5',
-        'H6',
-        'SVG',
-        'PATH',
-        'IMG',
-      ] as const;
-
-      const allElements = document.querySelectorAll('*');
-      const visibleElements: HTMLElement[] = [];
-
-      allElements.forEach((element) => {
-        const htmlElement = element as HTMLElement;
-        const tagName = htmlElement.tagName.toUpperCase();
-
-        // Exclusion Logic
-        if (excludedTags.includes(tagName as (typeof excludedTags)[number])) {
-          return;
-        }
-
-        if (tagName === 'A' && !htmlElement.hasAttribute('href')) {
-          return;
-        }
-
-        // Interactivity and Visibility Logic
-        const cursorStyle = window.getComputedStyle(htmlElement).cursor;
-
-        if (
-          interactiveCursorStyles.includes(
-            cursorStyle as (typeof interactiveCursorStyles)[number]
-          )
-        ) {
-          const rect = htmlElement.getBoundingClientRect();
-
-          if (rect.width > 0 && rect.height > 0) {
-            const isInViewport =
-              rect.top >= 0 &&
-              rect.left >= 0 &&
-              rect.bottom <=
-                (window.innerHeight || document.documentElement.clientHeight) &&
-              rect.right <=
-                (window.innerWidth || document.documentElement.clientWidth);
-
-            if (isInViewport) {
-              const x = rect.left + rect.width / 2;
-              const y = rect.top + rect.height / 2;
-              const topElement = document.elementFromPoint(x, y);
-
-              if (
-                topElement &&
-                (topElement === htmlElement || htmlElement.contains(topElement))
-              ) {
-                if (!loggedElements.has(htmlElement)) {
-                  this.logger.debug(
-                    `Found visible interactive element: ${tagName}`,
-                    'DOMDetectionService',
-                    {
-                      tagName,
-                      cursorStyle,
-                      rect: {
-                        width: rect.width,
-                        height: rect.height,
-                        x: rect.left,
-                        y: rect.top,
-                      },
-                    }
-                  );
-                  loggedElements.add(htmlElement);
-                  visibleElements.push(htmlElement);
-                }
-              }
-            }
-          }
-        }
-      });
-
-      this.logger.info(
-        `Found ${visibleElements.length} visible interactive elements`,
-        'DOMDetectionService'
-      );
-
-      return visibleElements;
+      return CursorBasedElementDetector.getInstance().listVisibleInteractiveElements();
     } catch (error) {
       this.logger.error(
         `Failed to list visible interactive elements: ${error instanceof Error ? error.message : 'Unknown error'}`,
