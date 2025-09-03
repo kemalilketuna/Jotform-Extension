@@ -339,10 +339,9 @@ export class DOMDetectionService {
               rect.top >= 0 &&
               rect.left >= 0 &&
               rect.bottom <=
-                (window.innerHeight ||
-                  document.documentElement.clientHeight) &&
+              (window.innerHeight || document.documentElement.clientHeight) &&
               rect.right <=
-                (window.innerWidth || document.documentElement.clientWidth);
+              (window.innerWidth || document.documentElement.clientWidth);
 
             if (isInViewport) {
               const x = rect.left + rect.width / 2;
@@ -351,8 +350,7 @@ export class DOMDetectionService {
 
               if (
                 topElement &&
-                (topElement === htmlElement ||
-                  htmlElement.contains(topElement))
+                (topElement === htmlElement || htmlElement.contains(topElement))
               ) {
                 if (!loggedElements.has(htmlElement)) {
                   this.logger.debug(
@@ -386,8 +384,7 @@ export class DOMDetectionService {
       return visibleElements;
     } catch (error) {
       this.logger.error(
-        `Failed to list visible interactive elements: ${
-          error instanceof Error ? error.message : 'Unknown error'
+        `Failed to list visible interactive elements: ${error instanceof Error ? error.message : 'Unknown error'
         }`,
         'DOMDetectionService'
       );

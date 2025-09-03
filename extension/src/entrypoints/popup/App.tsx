@@ -6,6 +6,8 @@ import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes
 import { LoggingService } from '@/services/LoggingService';
 import { UserMessages } from '@/services/MessagesService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
+import { NavigationUtils } from '@/utils/NavigationUtils';
+import { DOMDetectionService } from '@/services/DOMDetectionService';
 import { PopupHeader } from '@/components/PopupHeader';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
 import { StatusMessage } from '@/components/StatusMessage';
@@ -243,6 +245,36 @@ function App() {
     }
   };
 
+  /**
+   * Handle listing visible interactive elements
+   */
+  const listInteractiveElements = async () => {
+    try {
+      setStatus('Detecting interactive elements...');
+      logger.info(
+        'Starting interactive elements detection from popup',
+        'PopupApp'
+      );
+
+      const tab = await getCurrentTab();
+
+      // Send message to content script to execute the detection
+      await browser.tabs.sendMessage(tab.id!, {
+        type: 'LIST_INTERACTIVE_ELEMENTS',
+      });
+
+      setStatus('Interactive elements logged to console');
+
+      // Clear status after 2 seconds
+      setTimeout(() => setStatus(''), 2000);
+    } catch (error) {
+      logger.logError(error as Error, 'PopupApp');
+      setStatus(
+        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  };
+
   return (
     <div
       className={`w-[360px] h-fit max-h-[600px] gradient-jotform text-white font-sans flex flex-col ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS}`}
@@ -270,6 +302,7 @@ function App() {
           isConnected={isConnected}
           onCreateForm={createForm}
           onBuildForm={buildForm}
+          onListInteractiveElements={listInteractiveElements}
         />
       </div>
 

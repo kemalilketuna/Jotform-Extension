@@ -13,7 +13,8 @@ export type AutomationMessageType =
   | 'AUTOMATION_STATE_RESPONSE'
   | 'NAVIGATION_DETECTED'
   | 'CONTENT_SCRIPT_READY'
-  | 'STEP_PROGRESS_UPDATE';
+  | 'STEP_PROGRESS_UPDATE'
+  | 'LIST_INTERACTIVE_ELEMENTS';
 
 export interface BaseAutomationMessage {
   type: AutomationMessageType;
@@ -74,6 +75,11 @@ export interface StepProgressUpdateMessage extends BaseAutomationMessage {
   payload: { completedStepIndex: number; sequenceId: string };
 }
 
+export interface ListInteractiveElementsMessage extends BaseAutomationMessage {
+  type: 'LIST_INTERACTIVE_ELEMENTS';
+  payload?: {};
+}
+
 export type AutomationMessage =
   | ExecuteSequenceMessage
   | SequenceCompleteMessage
@@ -84,4 +90,5 @@ export type AutomationMessage =
   | AutomationStateResponseMessage
   | NavigationDetectedMessage
   | ContentScriptReadyMessage
-  | StepProgressUpdateMessage;
+  | StepProgressUpdateMessage
+  | ListInteractiveElementsMessage;
