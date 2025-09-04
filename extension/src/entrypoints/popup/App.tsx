@@ -3,11 +3,14 @@ import { AutomationServerService } from '@/services/AutomationServerService';
 import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
 import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
-import { UserMessages } from '@/services/MessagesService';
+import {
+  ErrorMessages,
+  StatusMessages,
+  SuccessMessages,
+  PromptMessages,
+} from '@/services/MessagesService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { NavigationUtils } from '@/utils/NavigationUtils';
-// DOMDetectionService is not used in this file
-// import { DOMDetectionService } from '@/services/DOMDetectionService';
 import { PopupHeader } from '@/components/PopupHeader';
 import { StatusMessage } from '@/components/StatusMessage';
 import { ActionButtons } from '@/components/ActionButtons';
@@ -69,7 +72,7 @@ function App() {
     });
 
     if (!tab.id) {
-      throw new Error(UserMessages.ERRORS.NO_ACTIVE_TAB);
+      throw new Error(ErrorMessages.getAll().NO_ACTIVE_TAB);
     }
 
     return tab;
@@ -80,7 +83,7 @@ function App() {
    */
   const ensureJotformPage = async (tab: chrome.tabs.Tab) => {
     if (!tab.url || !NavigationUtils.isJotformUrl(tab.url)) {
-      setStatus(UserMessages.STATUS.NAVIGATING_TO_WORKSPACE);
+      setStatus(StatusMessages.getAll().NAVIGATING_TO_WORKSPACE);
       await browser.tabs.update(tab.id!, { url: NavigationUtils.WORKSPACE });
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
@@ -93,10 +96,10 @@ function App() {
     // WebSocket connection check is no longer needed as we're always "connected"
     // with the mock implementation
 
-    setStatus(UserMessages.STATUS.FETCHING_FROM_SERVER);
+    setStatus(StatusMessages.getAll().FETCHING_FROM_SERVER);
     const response = await AutomationServerService.fetchFormCreationSteps();
 
-    setStatus(UserMessages.STATUS.CONVERTING_RESPONSE);
+    setStatus(StatusMessages.getAll().CONVERTING_RESPONSE);
     return AutomationServerService.convertToAutomationSequence(response);
   };
 
@@ -104,7 +107,7 @@ function App() {
    * Execute automation sequence via background script
    */
   const executeAutomationSequence = async (sequence: AutomationSequence) => {
-    setStatus(UserMessages.STATUS.PREPARING_SEQUENCE);
+    setStatus(StatusMessages.getAll().PREPARING_SEQUENCE);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const message: ExecuteSequenceMessage = {
@@ -112,20 +115,20 @@ function App() {
       payload: sequence,
     };
 
-    setStatus(UserMessages.STATUS.EXECUTING_SEQUENCE);
+    setStatus(StatusMessages.getAll().EXECUTING_SEQUENCE);
 
     try {
       const response = await browser.runtime.sendMessage(message);
 
       if (response && response.type === 'SEQUENCE_COMPLETE') {
-        setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
+        setStatus(SuccessMessages.getAll().FORM_CREATION_COMPLETE);
         logger.info('Form creation completed successfully', 'PopupApp');
       } else if (response && response.type === 'SEQUENCE_ERROR') {
         throw new Error(
-          response.payload?.error || UserMessages.ERRORS.AUTOMATION_TIMEOUT
+          response.payload?.error || ErrorMessages.getAll().AUTOMATION_TIMEOUT
         );
       } else {
-        setStatus(UserMessages.SUCCESS.FORM_CREATION_COMPLETE);
+        setStatus(SuccessMessages.getAll().FORM_CREATION_COMPLETE);
       }
     } catch (messageError: unknown) {
       logger.logError(messageError as Error, 'PopupApp');
@@ -141,7 +144,7 @@ function App() {
 
     try {
       setIsExecuting(true);
-      setStatus(UserMessages.STATUS.STARTING_AUTOMATION);
+      setStatus(StatusMessages.getAll().STARTING_AUTOMATION);
       logger.info('Starting form creation from popup', 'PopupApp');
 
       const tab = await getCurrentTab();
@@ -242,7 +245,7 @@ function App() {
       <div className="flex-1 p-5">
         <div className="mb-5">
           <p className="m-0 text-sm leading-relaxed opacity-90">
-            {UserMessages.PROMPTS.EXTENSION_DESCRIPTION}
+            {PromptMessages.getAll().EXTENSION_DESCRIPTION}
           </p>
         </div>
 

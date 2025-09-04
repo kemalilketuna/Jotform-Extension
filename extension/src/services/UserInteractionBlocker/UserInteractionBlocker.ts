@@ -1,5 +1,5 @@
 import { LoggingService } from '@/services/LoggingService';
-import { UserMessages } from '@/services/MessagesService';
+import { ErrorMessages } from '@/services/MessagesService';
 import { EXTENSION_COMPONENTS } from './extensionComponents';
 
 /**
@@ -48,7 +48,7 @@ export class UserInteractionBlocker {
       );
     } catch (error) {
       this.logger.logError(error as Error, 'UserInteractionBlocker');
-      throw new Error(UserMessages.ERRORS.AUTOMATION_ALREADY_RUNNING);
+      throw new Error(ErrorMessages.getAll().AUTOMATION_ALREADY_RUNNING);
     }
   }
 

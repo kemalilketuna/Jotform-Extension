@@ -2,7 +2,11 @@ import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
 import { AutomationMessage, ExecuteSequenceMessage } from './MessageTypes';
 import { VisualAnimationConfig } from '@/services/VisualCursorService';
 import { LoggingService } from '@/services/LoggingService';
-import { UserMessages } from '@/services/MessagesService';
+import {
+  StatusMessages,
+  SuccessMessages,
+  ErrorMessages,
+} from '@/services/MessagesService';
 import { AutomationError, SequenceExecutionError } from './AutomationErrors';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
@@ -11,7 +15,6 @@ import { ActionsService } from '@/services/ActionsService';
 import { MessageHandler } from './MessageHandler';
 import { APIService } from '@/services/APIService';
 import { DOMDetectionService } from '@/services/DOMDetectionService';
-import { ExecutedAction } from '@/services/ActionsService/ActionTypes';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
@@ -128,7 +131,9 @@ export class AutomationEngine {
     visualConfig?: Partial<VisualAnimationConfig>
   ): Promise<void> {
     if (this.isExecuting) {
-      throw new AutomationError(UserMessages.ERRORS.AUTOMATION_ALREADY_RUNNING);
+      throw new AutomationError(
+        ErrorMessages.getAll().AUTOMATION_ALREADY_RUNNING
+      );
     }
 
     this.isExecuting = true;
@@ -151,7 +156,7 @@ export class AutomationEngine {
       for (let i = 0; i < sequence.actions.length; i++) {
         const action = sequence.actions[i];
         this.logger.info(
-          UserMessages.getStepExecutionMessage(i + 1, action.description),
+          StatusMessages.getStepExecutionMessage(i + 1, action.description),
           'AutomationEngine'
         );
 
@@ -166,7 +171,7 @@ export class AutomationEngine {
       }
 
       this.logger.info(
-        UserMessages.getSequenceCompletionMessage(sequence.name),
+        SuccessMessages.getSequenceCompletionMessage(sequence.name),
         'AutomationEngine'
       );
 

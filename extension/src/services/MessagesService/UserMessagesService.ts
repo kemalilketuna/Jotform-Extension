@@ -21,39 +21,4 @@ export class UserMessagesService {
   static readonly ERRORS = ErrorMessages.getAll();
   static readonly STATUS = StatusMessages.getAll();
   static readonly PROMPTS = PromptMessages.getAll();
-
-  /**
-   * Generate dynamic error message with context
-   * @deprecated Use ErrorMessages.getElementNotFoundError instead
-   */
-  static getElementNotFoundError(selector: string): string {
-    return ErrorMessages.getElementNotFoundError(selector);
-  }
-
-  /**
-   * Generate dynamic action error message
-   * @deprecated Use ErrorMessages.getUnknownActionError instead
-   */
-  static getUnknownActionError(actionType: string): string {
-    return ErrorMessages.getUnknownActionError(actionType);
-  }
-
-  /**
-   * Generate step execution message
-   * @deprecated Use StatusMessages.getStepExecutionMessage instead
-   */
-  static getStepExecutionMessage(
-    stepNumber: number,
-    description: string
-  ): string {
-    return StatusMessages.getStepExecutionMessage(stepNumber, description);
-  }
-
-  /**
-   * Generate sequence completion message
-   * @deprecated Use SuccessMessages.getSequenceCompletionMessage instead
-   */
-  static getSequenceCompletionMessage(sequenceName: string): string {
-    return SuccessMessages.getSequenceCompletionMessage(sequenceName);
-  }
 }

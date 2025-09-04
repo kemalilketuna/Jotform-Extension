@@ -296,22 +296,4 @@ export class AutomationServerService {
     // Always return 'open' as WebSockets are disabled
     return 'open';
   }
-
-  /**
-   * Get WebSocket connection status (kept for compatibility)
-   * This is a duplicate of the mock implementation at the top of the file
-   * @deprecated Use the implementation at the top of the file instead
-   */
-  // static async connect(): Promise<void> {
-  //   // Implementation removed to fix duplicate function error
-  // }
-
-  /**
-   * Disconnect from WebSocket server (kept for compatibility)
-   * This is a duplicate of the mock implementation at the top of the file
-   * @deprecated Use the implementation at the top of the file instead
-   */
-  // static disconnect(): void {
-  //   // Implementation removed to fix duplicate function error
-  // }
 }

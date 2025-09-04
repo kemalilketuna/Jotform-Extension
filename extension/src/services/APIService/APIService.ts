@@ -1,10 +1,7 @@
 import { APIClient } from './APIClient';
 import { APIConfig } from './APIConfig';
 import { APIError, APIValidationError } from './APIErrors';
-import {
-  InitSessionRequest,
-  APIRequestConfig,
-} from './APITypes';
+import { InitSessionRequest, APIRequestConfig } from './APITypes';
 
 import { StorageService } from '@/services/StorageService';
 import { LoggingService } from '@/services/LoggingService';
@@ -63,7 +60,6 @@ export class APIService {
       );
     }
   }
-
 
   async isHealthy(): Promise<boolean> {
     try {
