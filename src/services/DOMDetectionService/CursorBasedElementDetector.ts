@@ -1,6 +1,7 @@
 import { DOMDetectionError } from './DOMDetectionErrors.js';
 import { LoggingService } from '@/services/LoggingService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
+import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 
 export class CursorBasedElementDetector {
   private static instance: CursorBasedElementDetector | null = null;
@@ -58,7 +59,7 @@ export class CursorBasedElementDetector {
       const loggedElements = new Set<HTMLElement>();
       const allElements = document.querySelectorAll('*');
       const visibleElements: HTMLElement[] = [];
-
+      let count = 0;
       allElements.forEach((element) => {
         const htmlElement = element as HTMLElement;
 
@@ -69,6 +70,7 @@ export class CursorBasedElementDetector {
         if (this.hasInteractiveCursorStyle(htmlElement)) {
           if (this.isElementInViewport(htmlElement)) {
             if (this.isElementTopmost(htmlElement)) {
+              count += 1;
               if (!loggedElements.has(htmlElement)) {
                 this.logInteractiveElement(htmlElement);
                 loggedElements.add(htmlElement);
@@ -78,6 +80,8 @@ export class CursorBasedElementDetector {
           }
         }
       });
+
+      this.logger.warn(`Found ${count} interactive elements`, 'CursorBasedElementDetector');
 
       this.logger.info(
         `Found ${visibleElements.length} visible interactive elements`,
@@ -153,19 +157,31 @@ export class CursorBasedElementDetector {
       rect.top >= 0 &&
       rect.left >= 0 &&
       rect.bottom <=
-        (window.innerHeight || document.documentElement.clientHeight) &&
+      (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     );
   }
 
   /**
    * Checks if an element is the topmost element at its center point
+   * Handles UserInteractionBlocker overlay during automation
    */
   private isElementTopmost(element: HTMLElement): boolean {
     const rect = element.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
-    const topElement = document.elementFromPoint(x, y);
+    
+    // Get all elements at the point to handle overlays safely
+    const elementsAtPoint = document.elementsFromPoint(x, y);
+    
+    // Filter out the UserInteractionBlocker overlay if present
+    const userBlocker = UserInteractionBlocker.getInstance();
+    const filteredElements = elementsAtPoint.filter(el => 
+      !(el.classList.contains(EXTENSION_COMPONENTS.INTERACTION_BLOCKER_CLASS) && userBlocker.isActive)
+    );
+    
+    // Get the topmost non-blocker element
+    const topElement = filteredElements.length > 0 ? filteredElements[0] : null;
 
     return (
       topElement !== null &&
