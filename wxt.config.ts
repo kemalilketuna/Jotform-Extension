@@ -16,13 +16,12 @@ export default defineConfig({
     action: {
       default_title: 'AI-Form - Smart Form Assistant',
     },
-    permissions: [
-      'tabs',
-      'activeTab',
-      'scripting',
-      'storage',
+    permissions: ['tabs', 'activeTab', 'scripting', 'storage'],
+    host_permissions: [
       'http://*/*',
       'https://*/*',
+      '*://*.jotform.com/*',
+      'http://localhost/*',
     ],
     content_security_policy: {
       extension_pages:

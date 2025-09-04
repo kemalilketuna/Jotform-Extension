@@ -1,15 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { AutomationServerService } from '@/services/AutomationServerService';
-import { StartAutomationMessage } from '@/services/AutomationEngine/MessageTypes';
+import React, { useState } from 'react';
 import { LoggingService } from '@/services/LoggingService';
-import {
-  ErrorMessages,
-  StatusMessages,
-  SuccessMessages,
-  PromptMessages,
-} from '@/services/MessagesService';
+import { ErrorMessages, PromptMessages } from '@/services/MessagesService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
-import { NavigationUtils } from '@/utils/NavigationUtils';
 import { PopupHeader } from '@/components/PopupHeader';
 import { StatusMessage } from '@/components/StatusMessage';
 import { ActionButtons } from '@/components/ActionButtons';
@@ -19,47 +11,8 @@ import { PopupFooter } from '@/components/PopupFooter';
  * Main popup component for the JotForm extension
  */
 function App() {
-  const [isExecuting, setIsExecuting] = useState(false);
   const [status, setStatus] = useState<string>('');
-  const [isConnected, setIsConnected] = useState(true); // Always connected since WebSockets are removed
   const logger = LoggingService.getInstance();
-
-  /**
-   * Initialize component state on mount
-   * WebSockets have been removed, so we set connected state directly
-   */
-  useEffect(() => {
-    // Set connected state directly since WebSockets are removed
-    setIsConnected(true);
-
-    const initializeConnection = async () => {
-      try {
-        setStatus('Initializing automation...');
-
-        // This now uses the mock implementation
-        await AutomationServerService.connect();
-
-        setIsConnected(true);
-        setStatus('Automation ready');
-
-        // Clear status after 2 seconds
-        setTimeout(() => setStatus(''), 2000);
-      } catch (error) {
-        logger.logError(error as Error, 'PopupApp');
-        // Even if there's an error, we show as connected since WebSockets are disabled
-        setIsConnected(true);
-        setStatus('');
-      }
-    };
-
-    initializeConnection();
-
-    // Cleanup on unmount
-    return () => {
-      // No WebSocket listeners to remove since WebSockets are removed
-      AutomationServerService.disconnect();
-    };
-  }, [logger]);
 
   /**
    * Get the current active tab
@@ -75,108 +28,6 @@ function App() {
     }
 
     return tab;
-  };
-
-  /**
-   * Navigate to JotForm workspace if not already there
-   */
-  const ensureJotformPage = async (tab: chrome.tabs.Tab) => {
-    if (!tab.url || !NavigationUtils.isJotformUrl(tab.url)) {
-      setStatus(StatusMessages.getAll().NAVIGATING_TO_WORKSPACE);
-      await browser.tabs.update(tab.id!, { url: NavigationUtils.WORKSPACE });
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-    }
-  };
-
-  /**
-   * Execute step-by-step automation via background script
-   */
-  const executeStepByStepAutomation = async (objective: string) => {
-    setStatus(StatusMessages.getAll().PREPARING_SEQUENCE);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const message: StartAutomationMessage = {
-      type: 'START_AUTOMATION',
-      payload: {
-        objective,
-      },
-    };
-
-    setStatus(StatusMessages.getAll().EXECUTING_SEQUENCE);
-
-    try {
-      const response = await browser.runtime.sendMessage(message);
-
-      if (response && response.type === 'SEQUENCE_COMPLETE') {
-        setStatus(SuccessMessages.getAll().FORM_CREATION_COMPLETE);
-        logger.info('Automation completed successfully', 'PopupApp');
-      } else if (response && response.type === 'SEQUENCE_ERROR') {
-        throw new Error(
-          response.payload?.error || ErrorMessages.getAll().AUTOMATION_TIMEOUT
-        );
-      } else {
-        setStatus(SuccessMessages.getAll().FORM_CREATION_COMPLETE);
-      }
-    } catch (messageError: unknown) {
-      logger.logError(messageError as Error, 'PopupApp');
-      throw messageError;
-    }
-  };
-
-  /**
-   * Handle form creation automation
-   */
-  const createForm = async () => {
-    if (isExecuting) return;
-
-    try {
-      setIsExecuting(true);
-      setStatus(StatusMessages.getAll().STARTING_AUTOMATION);
-      logger.info('Starting form creation from popup', 'PopupApp');
-
-      const tab = await getCurrentTab();
-      await ensureJotformPage(tab);
-      await executeStepByStepAutomation('Create a new form in Jotform');
-
-      setTimeout(() => {
-        window.close();
-      }, 1500);
-    } catch (error) {
-      logger.logError(error as Error, 'PopupApp');
-      setStatus(
-        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-      setIsExecuting(false);
-    }
-  };
-
-  /**
-   * Handle form building automation
-   */
-  const buildForm = async () => {
-    if (isExecuting) return;
-
-    try {
-      setIsExecuting(true);
-      setStatus('Starting form building automation...');
-      logger.info('Starting form building from popup', 'PopupApp');
-
-      const tab = await getCurrentTab();
-      await ensureJotformPage(tab);
-      await executeStepByStepAutomation(
-        'Build and customize a form with various field types'
-      );
-
-      setTimeout(() => {
-        window.close();
-      }, 1500);
-    } catch (error) {
-      logger.logError(error as Error, 'PopupApp');
-      setStatus(
-        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-      setIsExecuting(false);
-    }
   };
 
   /**
@@ -225,10 +76,7 @@ function App() {
         <StatusMessage status={status} />
 
         <ActionButtons
-          isExecuting={isExecuting}
-          isConnected={isConnected}
-          onCreateForm={createForm}
-          onBuildForm={buildForm}
+          isExecuting={false}
           onListInteractiveElements={listInteractiveElements}
         />
       </div>
