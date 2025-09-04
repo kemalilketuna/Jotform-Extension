@@ -269,15 +269,40 @@ export class MessageHandler {
     sendResponse: (response?: StartAutomationResponseMessage) => void
   ): Promise<void> {
     try {
+      this.logger.info(
+        `Background handling START_AUTOMATION with objective: ${message.payload.objective}`,
+        'MessageHandler'
+      );
+
       const sessionId = await this.coordinator.initializeSession(
         message.payload.objective
       );
+
+      // Get the active tab to send the message to content script
+      const tabs = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+
+      if (tabs[0]?.id) {
+        this.logger.info(
+          `Forwarding START_AUTOMATION to content script on tab ${tabs[0].id}`,
+          'MessageHandler'
+        );
+
+        // Forward the START_AUTOMATION message to the content script
+        await browser.tabs.sendMessage(tabs[0].id, message);
+      } else {
+        throw new Error('No active tab found to send automation message');
+      }
+
       const response: StartAutomationResponseMessage = {
         type: 'START_AUTOMATION_RESPONSE',
         payload: { sessionId, success: true },
       };
       sendResponse(response);
     } catch (error) {
+      this.logger.logError(error as Error, 'MessageHandler');
       const response: StartAutomationResponseMessage = {
         type: 'START_AUTOMATION_RESPONSE',
         payload: {

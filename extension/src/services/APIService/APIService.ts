@@ -39,13 +39,20 @@ export class APIService {
     try {
       this.validateObjective(objective);
 
-      this.logger.debug(
+      this.logger.info(
         `Initializing session with objective: ${objective}`,
         'APIService'
       );
 
       const request: InitSessionRequest = { objective };
+      this.logger.info(`Making API call to initialize session`, 'APIService');
+
       const response = await this.apiClient.initSession(request, requestConfig);
+
+      this.logger.info(
+        `Received response from API: ${JSON.stringify(response)}`,
+        'APIService'
+      );
 
       const sessionId = response.data.sessionId;
       this.currentSessionId = sessionId;
@@ -59,6 +66,10 @@ export class APIService {
 
       return sessionId;
     } catch (error) {
+      this.logger.error(
+        `Session initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'APIService'
+      );
       this.logger.logError(error as Error, 'APIService');
       throw new APIError(
         `Failed to initialize session: ${(error as Error).message}`,

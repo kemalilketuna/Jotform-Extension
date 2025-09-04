@@ -50,9 +50,31 @@ export class StepByStepAutomationOrchestrator {
     try {
       // Get or initialize session ID
       let sessionId = await this.storageService.getSessionId();
+      this.logger.info(
+        `Retrieved session ID from storage: ${sessionId}`,
+        'StepByStepAutomationOrchestrator'
+      );
+
       if (!sessionId) {
-        sessionId = await this.apiService.initializeSession(objective);
-        await this.storageService.setSessionId(sessionId);
+        this.logger.info(
+          `No existing session found, initializing new session with objective: ${objective}`,
+          'StepByStepAutomationOrchestrator'
+        );
+
+        try {
+          sessionId = await this.apiService.initializeSession(objective);
+          this.logger.info(
+            `Successfully initialized session with ID: ${sessionId}`,
+            'StepByStepAutomationOrchestrator'
+          );
+          await this.storageService.setSessionId(sessionId);
+        } catch (initError) {
+          this.logger.error(
+            `Failed to initialize session: ${initError instanceof Error ? initError.message : 'Unknown error'}`,
+            'StepByStepAutomationOrchestrator'
+          );
+          throw initError;
+        }
       }
 
       // Setup automation environment

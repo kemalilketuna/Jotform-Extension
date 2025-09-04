@@ -108,6 +108,11 @@ export class AutomationEngine {
    * Handle incoming automation messages
    */
   async handleMessage(message: AutomationMessage): Promise<void> {
+    this.logger.info(
+      `AutomationEngine.handleMessage received message type: ${message.type}`,
+      'AutomationEngine'
+    );
+
     // Check if automation is already running before processing
     if (
       this.isExecuting &&
@@ -122,6 +127,7 @@ export class AutomationEngine {
     }
 
     if (message.type === 'START_AUTOMATION') {
+      this.logger.info('Routing to handleStartAutomation', 'AutomationEngine');
       await this.handleStartAutomation(message as StartAutomationMessage);
     } else {
       await this.messageHandler.processMessage(
@@ -163,8 +169,17 @@ export class AutomationEngine {
   private async handleStartAutomation(
     message: StartAutomationMessage
   ): Promise<void> {
+    this.logger.info(
+      `AutomationEngine received START_AUTOMATION message with objective: ${message.payload.objective}`,
+      'AutomationEngine'
+    );
+
     try {
       this.isExecuting = true;
+      this.logger.info(
+        `Calling stepByStepOrchestrator.execute with objective: ${message.payload.objective}`,
+        'AutomationEngine'
+      );
       await this.stepByStepOrchestrator.execute(message.payload.objective);
     } catch (error) {
       this.logger.logError(error as Error, 'AutomationEngine');
