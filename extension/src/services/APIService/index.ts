@@ -31,6 +31,7 @@ export {
   APITimeoutError,
   APIRetryError,
   APIValidationError,
+  PromptSubmissionError,
 } from './APIErrors';
 
 // HTTP client (for advanced usage)

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { LoggingService } from '@/services/LoggingService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
-import { APIService } from '@/services/APIService';
-import { PromptSubmissionError } from './ComponentErrors';
+import { APIService, PromptSubmissionError } from '@/services/APIService';
 import { ComponentStrings } from './ComponentStrings';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
