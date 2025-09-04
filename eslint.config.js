@@ -7,10 +7,14 @@ import tsParser from '@typescript-eslint/parser';
 import react from 'eslint-plugin-react';
 import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
-import autoImports from './.wxt/eslint-auto-imports.mjs';
+import { readFileSync } from 'fs';
+
+// Load WXT auto-imports
+const autoImportsConfig = JSON.parse(
+  readFileSync('./.wxt/eslintrc-auto-import.json', 'utf8')
+);
 
 export default [
-  autoImports,
   {
     ignores: [
       'dist/**',
@@ -29,6 +33,7 @@ export default [
         ...globals.browser,
         ...globals.webextensions,
         ...globals.node,
+        ...autoImportsConfig.globals,
       },
       parser: tsParser,
       parserOptions: {
