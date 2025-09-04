@@ -1,18 +1,10 @@
-import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
 import {
   AutomationMessage,
   ExecuteSequenceMessage,
   StartAutomationMessage,
-  StartAutomationResponseMessage,
 } from './MessageTypes';
-import { VisualAnimationConfig } from '@/services/VisualCursorService';
 import { LoggingService } from '@/services/LoggingService';
-import {
-  StatusMessages,
-  SuccessMessages,
-  ErrorMessages,
-} from '@/services/MessagesService';
-import { AutomationError, SequenceExecutionError } from './AutomationErrors';
+import { AutomationError } from './AutomationErrors';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
 import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
@@ -21,22 +13,25 @@ import { MessageHandler } from './MessageHandler';
 import { APIService } from '@/services/APIService';
 import { DOMDetectionService } from '@/services/DOMDetectionService';
 import { StorageService } from '@/services/StorageService';
-import { ExecutedAction, Action } from '@/services/APIService/APITypes';
+import { StepByStepAutomationOrchestrator } from './StepByStepAutomationOrchestrator';
+import { SequenceAutomationOrchestrator } from './SequenceAutomationOrchestrator';
+import { AutomationSessionManager } from './AutomationSessionManager';
+import { AutomationLifecycleManager } from './AutomationLifecycleManager';
+import { ElementActionExecutor } from './ElementActionExecutor';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
+ * Now acts as a lightweight coordinator that delegates to specialized orchestrators
  */
 export class AutomationEngine {
   private static instance: AutomationEngine;
   private isExecuting = false;
   private readonly logger: LoggingService;
-  private readonly visualCursor: VisualCursorService;
-  private readonly userInteractionBlocker: UserInteractionBlocker;
-  private readonly actionsService: ActionsService;
+  private readonly stepByStepOrchestrator: StepByStepAutomationOrchestrator;
+  private readonly sequenceOrchestrator: SequenceAutomationOrchestrator;
+  private readonly sessionManager: AutomationSessionManager;
+  private readonly lifecycleManager: AutomationLifecycleManager;
   private readonly messageHandler: MessageHandler;
-  private readonly apiService: APIService;
-  private readonly domDetectionService: DOMDetectionService;
-  private readonly storageService: StorageService;
 
   private constructor(
     logger: LoggingService = LoggingService.getInstance(),
@@ -44,17 +39,43 @@ export class AutomationEngine {
     typingService: TypingService = TypingService.getInstance()
   ) {
     this.logger = logger;
-    this.visualCursor = visualCursor;
-    this.userInteractionBlocker = UserInteractionBlocker.getInstance();
-    this.actionsService = ActionsService.getInstance(
+    const userInteractionBlocker = UserInteractionBlocker.getInstance();
+    const actionsService = ActionsService.getInstance(
       logger,
       visualCursor,
       typingService
     );
+    const apiService = APIService.getInstance();
+    const domDetectionService = DOMDetectionService.getInstance();
+    const storageService = StorageService.getInstance();
+    const elementActionExecutor = new ElementActionExecutor(
+      logger,
+      domDetectionService,
+      actionsService
+    );
+
     this.messageHandler = new MessageHandler(logger);
-    this.apiService = APIService.getInstance();
-    this.domDetectionService = DOMDetectionService.getInstance();
-    this.storageService = StorageService.getInstance();
+    this.lifecycleManager = new AutomationLifecycleManager(
+      logger,
+      visualCursor,
+      userInteractionBlocker
+    );
+    this.sessionManager = new AutomationSessionManager(logger, apiService);
+    this.stepByStepOrchestrator = new StepByStepAutomationOrchestrator(
+      logger,
+      apiService,
+      domDetectionService,
+      storageService,
+      this.messageHandler,
+      elementActionExecutor,
+      this.lifecycleManager
+    );
+    this.sequenceOrchestrator = new SequenceAutomationOrchestrator(
+      logger,
+      actionsService,
+      this.messageHandler,
+      this.lifecycleManager
+    );
   }
 
   static getInstance(
@@ -116,28 +137,24 @@ export class AutomationEngine {
   private async handleExecuteSequence(
     message: ExecuteSequenceMessage
   ): Promise<void> {
-    if (!message.payload) {
-      this.logger.error(
-        'EXECUTE_SEQUENCE message missing payload',
-        'AutomationEngine'
+    try {
+      this.isExecuting = true;
+      // Default visual animation configuration
+      const visualConfig = {
+        enabled: true,
+        animationSpeed: 2,
+        hoverDuration: 800,
+        clickDuration: 300,
+      };
+      await this.sequenceOrchestrator.execute(message.payload, visualConfig);
+    } catch (error) {
+      this.logger.logError(error as Error, 'AutomationEngine');
+      throw new AutomationError(
+        `Failed to execute sequence: ${(error as Error).message}`
       );
-      return;
+    } finally {
+      this.isExecuting = false;
     }
-
-    this.logger.info(
-      `Executing sequence: ${message.payload.name}`,
-      'AutomationEngine'
-    );
-
-    // Default visual animation configuration
-    const visualConfig: Partial<VisualAnimationConfig> = {
-      enabled: true,
-      animationSpeed: 2,
-      hoverDuration: 800,
-      clickDuration: 300,
-    };
-
-    await this.executeSequence(message.payload, visualConfig);
   }
 
   /**
@@ -147,7 +164,8 @@ export class AutomationEngine {
     message: StartAutomationMessage
   ): Promise<void> {
     try {
-      await this.executeStepByStepAutomation(message.payload.objective);
+      this.isExecuting = true;
+      await this.stepByStepOrchestrator.execute(message.payload.objective);
     } catch (error) {
       this.logger.logError(error as Error, 'AutomationEngine');
       // Send error message to background script
@@ -163,518 +181,16 @@ export class AutomationEngine {
         this.logger.error('Failed to send error message', 'AutomationEngine');
       }
       throw error;
-    }
-  }
-
-  /**
-   * Execute step-by-step automation using AI guidance with proper DOM detection and error handling
-   */
-  private async executeStepByStepAutomation(objective: string): Promise<void> {
-    if (this.isExecuting) {
-      throw new AutomationError(
-        ErrorMessages.getAll().AUTOMATION_ALREADY_RUNNING
-      );
-    }
-
-    this.isExecuting = true;
-    this.logger.info(
-      `Starting step-by-step automation for objective: ${objective}`,
-      'AutomationEngine'
-    );
-
-    try {
-      // Get or initialize session ID
-      let sessionId = await this.storageService.getSessionId();
-      if (!sessionId) {
-        sessionId = await this.apiService.initializeSession(objective);
-        await this.storageService.setSessionId(sessionId);
-      }
-
-      // Enable user interaction blocking
-      this.userInteractionBlocker.enableBlocking();
-
-      // Initialize visual cursor
-      await this.visualCursor.initialize();
-      this.visualCursor.show({ x: 100, y: 100 });
-
-      let stepCount = 0;
-      let lastTurnOutcome: ExecutedAction[] = [];
-      const maxSteps = 50; // Safety limit
-      const domLoadTimeout = 10000; // 10 seconds timeout for DOM loading
-
-      while (stepCount < maxSteps) {
-        this.logger.info(
-          `Starting automation step ${stepCount + 1}`,
-          'AutomationEngine'
-        );
-
-        // Step 1: Wait for DOM to be ready with timeout
-        try {
-          await Promise.race([
-            this.domDetectionService.waitForDOMAndAnalyze(),
-            new Promise((_, reject) =>
-              setTimeout(
-                () => reject(new Error('DOM load timeout')),
-                domLoadTimeout
-              )
-            ),
-          ]);
-        } catch (error) {
-          this.logger.warn(
-            `DOM loading timeout or error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            'AutomationEngine'
-          );
-          // Continue anyway, but log the issue
-        }
-
-        // Step 2: Get visible interactive elements
-        const visibleElements =
-          this.domDetectionService.listVisibleInteractiveElements();
-
-        if (visibleElements.length === 0) {
-          this.logger.warn(
-            'No visible interactive elements found',
-            'AutomationEngine'
-          );
-          // Create error outcome for backend
-          lastTurnOutcome = [
-            {
-              status: 'FAIL',
-              errorMessage: 'No visible interactive elements found on the page',
-            },
-          ];
-        } else {
-          this.logger.info(
-            `Found ${visibleElements.length} visible interactive elements`,
-            'AutomationEngine'
-          );
-        }
-
-        // Step 3: Convert elements to HTML strings for backend
-        const visibleElementsHtml = visibleElements.map((element) => {
-          try {
-            return element.outerHTML;
-          } catch (error) {
-            this.logger.warn(
-              `Failed to get outerHTML for element: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              'AutomationEngine'
-            );
-            return '<div>Element HTML unavailable</div>';
-          }
-        });
-
-        // Step 4: Request next action from backend
-        let nextActionResponse;
-        try {
-          nextActionResponse = await this.apiService.getNextAction(
-            sessionId,
-            visibleElementsHtml,
-            lastTurnOutcome
-          );
-        } catch (error) {
-          this.logger.error(
-            `Failed to get next action from backend: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            'AutomationEngine'
-          );
-          throw new AutomationError(
-            `Backend communication failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-          );
-        }
-
-        // Step 5: Process actions from backend response
-        if (
-          !nextActionResponse.actions ||
-          nextActionResponse.actions.length === 0
-        ) {
-          this.logger.info(
-            'No actions received from backend, ending automation',
-            'AutomationEngine'
-          );
-          break;
-        }
-
-        // Reset outcome for this turn
-        lastTurnOutcome = [];
-
-        // Step 6: Execute each action
-        for (const action of nextActionResponse.actions) {
-          this.logger.info(
-            `Executing action: ${action.type} - ${action.explanation}`,
-            'AutomationEngine'
-          );
-
-          // Handle different action types
-          if (action.type === 'FINISH') {
-            this.logger.info(
-              'Received FINISH action, completing automation',
-              'AutomationEngine'
-            );
-            lastTurnOutcome.push({ status: 'SUCCESS' });
-            stepCount = maxSteps; // Exit the main loop
-            break;
-          }
-
-          if (action.type === 'FAIL') {
-            const errorMsg =
-              action.message || 'Automation failed as directed by backend';
-            this.logger.error(errorMsg, 'AutomationEngine');
-            throw new AutomationError(errorMsg);
-          }
-
-          // Skip ASK_USER actions as requested
-          if (action.type === 'ASK_USER') {
-            this.logger.info(
-              'Skipping ASK_USER action as requested',
-              'AutomationEngine'
-            );
-            lastTurnOutcome.push({
-              status: 'FAIL',
-              errorMessage: 'ASK_USER actions are not supported in this mode',
-            });
-            continue;
-          }
-
-          // Execute CLICK and TYPE actions
-          if (action.type === 'CLICK' || action.type === 'TYPE') {
-            try {
-              await this.executeActionWithElementIndex(
-                action,
-                visibleElements,
-                stepCount
-              );
-              lastTurnOutcome.push({ status: 'SUCCESS' });
-            } catch (error) {
-              const errorMessage =
-                error instanceof Error ? error.message : 'Unknown error';
-              this.logger.error(
-                `Action execution failed: ${errorMessage}`,
-                'AutomationEngine'
-              );
-              lastTurnOutcome.push({
-                status: 'FAIL',
-                errorMessage,
-              });
-            }
-          }
-
-          // Add small delay between actions
-          await this.wait(500);
-        }
-
-        stepCount++;
-
-        // Send progress update
-        await this.messageHandler.sendProgressUpdate(stepCount - 1, sessionId);
-      }
-
-      if (stepCount >= maxSteps) {
-        throw new AutomationError(
-          'Automation reached maximum step limit without completion'
-        );
-      }
-
-      this.logger.info(
-        `Automation completed successfully after ${stepCount} steps`,
-        'AutomationEngine'
-      );
-
-      // Send completion message
-      await this.messageHandler.sendSequenceComplete(sessionId);
-    } catch (error) {
-      // Ensure interaction blocking is disabled on error
-      try {
-        this.userInteractionBlocker.disableBlocking();
-      } catch {
-        this.logger.warn(
-          'Failed to disable interaction blocking on error, forcing cleanup',
-          'AutomationEngine'
-        );
-        this.userInteractionBlocker.forceCleanup();
-      }
-
-      const automationError = new AutomationError(
-        error instanceof Error
-          ? error.message
-          : 'Unknown error during step-by-step automation'
-      );
-      this.logger.logError(automationError, 'AutomationEngine');
-      throw automationError;
     } finally {
       this.isExecuting = false;
-
-      // Disable user interaction blocking
-      this.userInteractionBlocker.disableBlocking();
-
-      // Hide cursor
-      this.visualCursor.hide();
-      setTimeout(() => {
-        this.visualCursor.destroy();
-      }, 1000);
     }
-  }
-
-  /**
-   * Execute a complete automation sequence
-   */
-  async executeSequence(
-    sequence: AutomationSequence,
-    visualConfig?: Partial<VisualAnimationConfig>
-  ): Promise<void> {
-    if (this.isExecuting) {
-      throw new AutomationError(
-        ErrorMessages.getAll().AUTOMATION_ALREADY_RUNNING
-      );
-    }
-
-    this.isExecuting = true;
-    this.logger.info(
-      `Starting automation sequence: ${sequence.name}`,
-      'AutomationEngine'
-    );
-
-    try {
-      // Enable user interaction blocking to prevent real clicks
-      this.userInteractionBlocker.enableBlocking();
-
-      // Initialize visual cursor with config
-      if (visualConfig) {
-        this.visualCursor.updateConfig(visualConfig);
-      }
-      await this.visualCursor.initialize();
-      this.visualCursor.show({ x: 100, y: 100 });
-
-      for (let i = 0; i < sequence.actions.length; i++) {
-        const action = sequence.actions[i];
-        this.logger.info(
-          StatusMessages.getStepExecutionMessage(i + 1, action.description),
-          'AutomationEngine'
-        );
-
-        await this.actionsService.executeAction(action, i);
-
-        // Send progress update to background script
-        await this.messageHandler.sendProgressUpdate(i, sequence.id);
-
-        if (action.delay) {
-          await this.wait(action.delay);
-        }
-      }
-
-      this.logger.info(
-        SuccessMessages.getSequenceCompletionMessage(sequence.name),
-        'AutomationEngine'
-      );
-
-      // Send sequence completion message to background script
-      await this.messageHandler.sendSequenceComplete(sequence.id);
-    } catch (error) {
-      // Ensure interaction blocking is disabled on error
-      try {
-        this.userInteractionBlocker.disableBlocking();
-      } catch {
-        this.logger.warn(
-          'Failed to disable interaction blocking on error, forcing cleanup',
-          'AutomationEngine'
-        );
-        this.userInteractionBlocker.forceCleanup();
-      }
-
-      const sequenceError = new SequenceExecutionError(
-        sequence.id,
-        error instanceof Error ? error.message : 'Unknown error',
-        this.getCurrentStepIndex(error)
-      );
-      this.logger.logError(sequenceError, 'AutomationEngine');
-      throw sequenceError;
-    } finally {
-      this.isExecuting = false;
-
-      // Disable user interaction blocking to restore normal clicking
-      this.userInteractionBlocker.disableBlocking();
-
-      // Hide cursor after sequence completion
-      this.visualCursor.hide();
-      setTimeout(() => {
-        this.visualCursor.destroy();
-      }, 1000);
-    }
-  }
-
-  /**
-   * Wait for a specified number of milliseconds
-   */
-  private async wait(ms: number): Promise<void> {
-    if (ms <= 0) {
-      return;
-    }
-
-    this.logger.debug(`Waiting ${ms}ms`, 'AutomationEngine');
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Get current step index from error context
-   */
-  private getCurrentStepIndex(error: unknown): number | undefined {
-    if (error instanceof Error && 'stepIndex' in error) {
-      return (error as Error & { stepIndex: number }).stepIndex;
-    }
-    return undefined;
   }
 
   /**
    * Initialize a new automation session
    */
   async initializeSession(objective: string): Promise<string> {
-    try {
-      return await this.apiService.initializeSession(objective);
-    } catch (error) {
-      this.logger.logError(error as Error, 'AutomationEngine');
-      throw new AutomationError(
-        `Failed to initialize session: ${(error as Error).message}`
-      );
-    }
-  }
-
-  /**
-   * Request session initialization from background script
-   */
-  private async requestSessionFromBackground(
-    objective: string
-  ): Promise<string> {
-    try {
-      const initMessage = {
-        type: 'START_AUTOMATION',
-        payload: { objective },
-      };
-
-      const response = (await browser.runtime.sendMessage(
-        initMessage
-      )) as StartAutomationResponseMessage;
-
-      if (!response.payload.success) {
-        throw new AutomationError(
-          response.payload.error || 'Failed to initialize session'
-        );
-      }
-
-      return response.payload.sessionId;
-    } catch (error) {
-      this.logger.logError(error as Error, 'AutomationEngine');
-      throw new AutomationError(
-        `Failed to request session from background: ${(error as Error).message}`
-      );
-    }
-  }
-
-  /**
-   * Execute action using element index from backend response
-   */
-  private async executeActionWithElementIndex(
-    action: Action,
-    visibleElements: HTMLElement[],
-    stepIndex: number
-  ): Promise<void> {
-    // Validate element index
-    if (
-      action.targetElementIndex === undefined ||
-      action.targetElementIndex === null
-    ) {
-      throw new Error('Action missing targetElementIndex');
-    }
-
-    if (
-      action.targetElementIndex < 0 ||
-      action.targetElementIndex >= visibleElements.length
-    ) {
-      throw new Error(
-        `Invalid element index ${action.targetElementIndex}. Available elements: 0-${visibleElements.length - 1}`
-      );
-    }
-
-    const targetElement = visibleElements[action.targetElementIndex];
-    if (!targetElement) {
-      throw new Error(
-        `Element at index ${action.targetElementIndex} is null or undefined`
-      );
-    }
-
-    // Generate JSPath for the element for more reliable targeting
-    let jsPath: string;
-    try {
-      jsPath = this.domDetectionService.generateElementPath(targetElement);
-    } catch (error) {
-      this.logger.warn(
-        `Failed to generate JSPath for element: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'AutomationEngine'
-      );
-      // Fallback to basic selector
-      jsPath = this.generateFallbackSelector(targetElement);
-    }
-
-    // Create automation action based on backend action type
-    if (action.type === 'CLICK') {
-      const automationAction = {
-        type: 'CLICK' as const,
-        target: jsPath,
-        description: action.explanation || 'Click action from AI backend',
-        delay: 100,
-      };
-
-      await this.actionsService.executeAction(automationAction, stepIndex);
-    } else if (action.type === 'TYPE') {
-      if (!action.value) {
-        throw new Error('TYPE action missing value');
-      }
-
-      const automationAction = {
-        type: 'TYPE' as const,
-        target: jsPath,
-        value: action.value,
-        description: action.explanation || 'Type action from AI backend',
-        delay: 100,
-      };
-
-      await this.actionsService.executeAction(automationAction, stepIndex);
-    } else {
-      throw new Error(
-        `Unsupported action type for element execution: ${action.type}`
-      );
-    }
-  }
-
-  /**
-   * Generate fallback selector when JSPath generation fails
-   */
-  private generateFallbackSelector(element: HTMLElement): string {
-    // Try ID first
-    if (element.id) {
-      return `#${element.id}`;
-    }
-
-    // Try class names
-    if (element.className && typeof element.className === 'string') {
-      const classes = element.className.trim().split(/\s+/);
-      if (classes.length > 0) {
-        return `.${classes[0]}`;
-      }
-    }
-
-    // Try tag name with attributes
-    const tagName = element.tagName.toLowerCase();
-    const name = element.getAttribute('name');
-    const type = element.getAttribute('type');
-
-    if (name) {
-      return `${tagName}[name="${name}"]`;
-    }
-
-    if (type) {
-      return `${tagName}[type="${type}"]`;
-    }
-
-    // Last resort: just tag name (not very reliable)
-    return tagName;
+    return await this.sessionManager.initializeSession(objective);
   }
 
   /**
