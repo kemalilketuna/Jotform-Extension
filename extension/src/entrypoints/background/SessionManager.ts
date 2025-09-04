@@ -1,7 +1,6 @@
 import { LoggingService } from '@/services/LoggingService';
 import { APIService } from '@/services/APIService';
 import { StorageService } from '@/services/StorageService';
-import { AutomationAction } from '@/services/ActionsService/ActionTypes';
 
 /**
  * Session manager for handling automation sessions and API communication
@@ -61,78 +60,6 @@ export class SessionManager {
     } catch (error) {
       this.logger.logError(error as Error, 'SessionManager');
       return null;
-    }
-  }
-
-  /**
-   * Request the next automation step from the backend
-   */
-  async requestNextStep(
-    sessionId: string,
-    currentStepIndex: number
-  ): Promise<{ step?: AutomationAction; hasMoreSteps: boolean }> {
-    try {
-      this.logger.info(
-        `Requesting next step for session ${sessionId}, step ${currentStepIndex}`,
-        'SessionManager'
-      );
-
-      const response = await this.apiService.getNextAction(
-        sessionId,
-        currentStepIndex
-      );
-
-      let step: AutomationAction | undefined;
-      if (response.action) {
-        // Convert API response to AutomationAction format
-        switch (response.action.type) {
-          case 'navigate':
-            step = {
-              type: 'NAVIGATE',
-              url: response.action.url || '',
-              description: response.action.description,
-              delay: response.action.delay,
-            };
-            break;
-          case 'click':
-            step = {
-              type: 'CLICK',
-              target: response.action.target || '',
-              description: response.action.description,
-              delay: response.action.delay,
-            };
-            break;
-          case 'type':
-            step = {
-              type: 'TYPE',
-              target: response.action.target || '',
-              value: response.action.text || '',
-              description: response.action.description,
-              delay: response.action.delay,
-            };
-            break;
-          case 'wait':
-            step = {
-              type: 'WAIT',
-              delay: response.action.delay || 1000,
-              description: response.action.description,
-            };
-            break;
-        }
-      }
-
-      this.logger.debug(
-        `Next step response: hasMoreSteps=${response.hasMoreSteps}, completed=${response.completed}`,
-        'SessionManager'
-      );
-
-      return {
-        step,
-        hasMoreSteps: response.hasMoreSteps && !response.completed,
-      };
-    } catch (error) {
-      this.logger.logError(error as Error, 'SessionManager');
-      throw error;
     }
   }
 

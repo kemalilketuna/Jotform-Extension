@@ -1,8 +1,5 @@
 import { LoggingService } from '@/services/LoggingService';
-import {
-  AutomationSequence,
-  AutomationAction,
-} from '@/services/ActionsService/ActionTypes';
+import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
 import {
   AutomationMessage,
   ExecuteSequenceMessage,
@@ -163,15 +160,5 @@ export class AutomationCoordinator {
    */
   async getCurrentSessionId(): Promise<string | null> {
     return this.sessionManager.getCurrentSessionId();
-  }
-
-  /**
-   * Request the next automation step from the backend
-   */
-  async requestNextStep(
-    sessionId: string,
-    currentStepIndex: number
-  ): Promise<{ step?: AutomationAction; hasMoreSteps: boolean }> {
-    return this.sessionManager.requestNextStep(sessionId, currentStepIndex);
   }
 }

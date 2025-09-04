@@ -3,8 +3,6 @@ import {
   AutomationMessage,
   ExecuteSequenceMessage,
   StartAutomationMessage,
-  RequestNextStepMessage,
-  NextStepResponseMessage,
   StartAutomationResponseMessage,
 } from './MessageTypes';
 import { VisualAnimationConfig } from '@/services/VisualCursorService';
@@ -22,6 +20,8 @@ import { ActionsService } from '@/services/ActionsService';
 import { MessageHandler } from './MessageHandler';
 import { APIService } from '@/services/APIService';
 import { DOMDetectionService } from '@/services/DOMDetectionService';
+import { StorageService } from '@/services/StorageService';
+import { ExecutedAction, Action } from '@/services/APIService/APITypes';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
@@ -36,6 +36,7 @@ export class AutomationEngine {
   private readonly messageHandler: MessageHandler;
   private readonly apiService: APIService;
   private readonly domDetectionService: DOMDetectionService;
+  private readonly storageService: StorageService;
 
   private constructor(
     logger: LoggingService = LoggingService.getInstance(),
@@ -53,6 +54,7 @@ export class AutomationEngine {
     this.messageHandler = new MessageHandler(logger);
     this.apiService = APIService.getInstance();
     this.domDetectionService = DOMDetectionService.getInstance();
+    this.storageService = StorageService.getInstance();
   }
 
   static getInstance(
@@ -165,7 +167,7 @@ export class AutomationEngine {
   }
 
   /**
-   * Execute step-by-step automation using AI guidance
+   * Execute step-by-step automation using AI guidance with proper DOM detection and error handling
    */
   private async executeStepByStepAutomation(objective: string): Promise<void> {
     if (this.isExecuting) {
@@ -181,8 +183,12 @@ export class AutomationEngine {
     );
 
     try {
-      // Initialize session with the AI service via background script
-      const sessionId = await this.requestSessionFromBackground(objective);
+      // Get or initialize session ID
+      let sessionId = await this.storageService.getSessionId();
+      if (!sessionId) {
+        sessionId = await this.apiService.initializeSession(objective);
+        await this.storageService.setSessionId(sessionId);
+      }
 
       // Enable user interaction blocking
       this.userInteractionBlocker.enableBlocking();
@@ -192,62 +198,176 @@ export class AutomationEngine {
       this.visualCursor.show({ x: 100, y: 100 });
 
       let stepCount = 0;
-      let hasMoreSteps = true;
+      let lastTurnOutcome: ExecutedAction[] = [];
+      const maxSteps = 50; // Safety limit
+      const domLoadTimeout = 10000; // 10 seconds timeout for DOM loading
 
-      while (hasMoreSteps && stepCount < 50) {
-        // Safety limit
-        // Request next step from background script
-        const nextStepMessage: RequestNextStepMessage = {
-          type: 'REQUEST_NEXT_STEP',
-          payload: {
-            sessionId,
-            currentStepIndex: stepCount,
-          },
-        };
+      while (stepCount < maxSteps) {
+        this.logger.info(
+          `Starting automation step ${stepCount + 1}`,
+          'AutomationEngine'
+        );
 
-        // Send request and wait for response
-        const response = (await browser.runtime.sendMessage(
-          nextStepMessage
-        )) as NextStepResponseMessage;
+        // Step 1: Wait for DOM to be ready with timeout
+        try {
+          await Promise.race([
+            this.domDetectionService.waitForDOMAndAnalyze(),
+            new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error('DOM load timeout')),
+                domLoadTimeout
+              )
+            ),
+          ]);
+        } catch (error) {
+          this.logger.warn(
+            `DOM loading timeout or error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            'AutomationEngine'
+          );
+          // Continue anyway, but log the issue
+        }
 
-        if (!response.payload.success) {
-          throw new AutomationError(
-            response.payload.error || 'Failed to get next step'
+        // Step 2: Get visible interactive elements
+        const visibleElements =
+          this.domDetectionService.listVisibleInteractiveElements();
+
+        if (visibleElements.length === 0) {
+          this.logger.warn(
+            'No visible interactive elements found',
+            'AutomationEngine'
+          );
+          // Create error outcome for backend
+          lastTurnOutcome = [
+            {
+              status: 'FAIL',
+              errorMessage: 'No visible interactive elements found on the page',
+            },
+          ];
+        } else {
+          this.logger.info(
+            `Found ${visibleElements.length} visible interactive elements`,
+            'AutomationEngine'
           );
         }
 
-        hasMoreSteps = response.payload.hasMoreSteps;
+        // Step 3: Convert elements to HTML strings for backend
+        const visibleElementsHtml = visibleElements.map((element) => {
+          try {
+            return element.outerHTML;
+          } catch (error) {
+            this.logger.warn(
+              `Failed to get outerHTML for element: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              'AutomationEngine'
+            );
+            return '<div>Element HTML unavailable</div>';
+          }
+        });
 
-        if (response.payload.step) {
-          stepCount++;
+        // Step 4: Request next action from backend
+        let nextActionResponse;
+        try {
+          nextActionResponse = await this.apiService.getNextAction(
+            sessionId,
+            visibleElementsHtml,
+            lastTurnOutcome
+          );
+        } catch (error) {
+          this.logger.error(
+            `Failed to get next action from backend: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            'AutomationEngine'
+          );
+          throw new AutomationError(
+            `Backend communication failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+
+        // Step 5: Process actions from backend response
+        if (
+          !nextActionResponse.actions ||
+          nextActionResponse.actions.length === 0
+        ) {
           this.logger.info(
-            `Executing step ${stepCount}: ${response.payload.step.description}`,
+            'No actions received from backend, ending automation',
+            'AutomationEngine'
+          );
+          break;
+        }
+
+        // Reset outcome for this turn
+        lastTurnOutcome = [];
+
+        // Step 6: Execute each action
+        for (const action of nextActionResponse.actions) {
+          this.logger.info(
+            `Executing action: ${action.type} - ${action.explanation}`,
             'AutomationEngine'
           );
 
-          // Execute the action
-          await this.actionsService.executeAction(
-            response.payload.step,
-            stepCount - 1
-          );
-
-          // Send progress update
-          await this.messageHandler.sendProgressUpdate(
-            stepCount - 1,
-            sessionId
-          );
-
-          // Wait if delay is specified
-          if (response.payload.step.delay) {
-            await this.wait(response.payload.step.delay);
+          // Handle different action types
+          if (action.type === 'FINISH') {
+            this.logger.info(
+              'Received FINISH action, completing automation',
+              'AutomationEngine'
+            );
+            lastTurnOutcome.push({ status: 'SUCCESS' });
+            stepCount = maxSteps; // Exit the main loop
+            break;
           }
-        } else {
-          // No more steps
-          hasMoreSteps = false;
+
+          if (action.type === 'FAIL') {
+            const errorMsg =
+              action.message || 'Automation failed as directed by backend';
+            this.logger.error(errorMsg, 'AutomationEngine');
+            throw new AutomationError(errorMsg);
+          }
+
+          // Skip ASK_USER actions as requested
+          if (action.type === 'ASK_USER') {
+            this.logger.info(
+              'Skipping ASK_USER action as requested',
+              'AutomationEngine'
+            );
+            lastTurnOutcome.push({
+              status: 'FAIL',
+              errorMessage: 'ASK_USER actions are not supported in this mode',
+            });
+            continue;
+          }
+
+          // Execute CLICK and TYPE actions
+          if (action.type === 'CLICK' || action.type === 'TYPE') {
+            try {
+              await this.executeActionWithElementIndex(
+                action,
+                visibleElements,
+                stepCount
+              );
+              lastTurnOutcome.push({ status: 'SUCCESS' });
+            } catch (error) {
+              const errorMessage =
+                error instanceof Error ? error.message : 'Unknown error';
+              this.logger.error(
+                `Action execution failed: ${errorMessage}`,
+                'AutomationEngine'
+              );
+              lastTurnOutcome.push({
+                status: 'FAIL',
+                errorMessage,
+              });
+            }
+          }
+
+          // Add small delay between actions
+          await this.wait(500);
         }
+
+        stepCount++;
+
+        // Send progress update
+        await this.messageHandler.sendProgressUpdate(stepCount - 1, sessionId);
       }
 
-      if (stepCount >= 50) {
+      if (stepCount >= maxSteps) {
         throw new AutomationError(
           'Automation reached maximum step limit without completion'
         );
@@ -445,6 +565,116 @@ export class AutomationEngine {
         `Failed to request session from background: ${(error as Error).message}`
       );
     }
+  }
+
+  /**
+   * Execute action using element index from backend response
+   */
+  private async executeActionWithElementIndex(
+    action: Action,
+    visibleElements: HTMLElement[],
+    stepIndex: number
+  ): Promise<void> {
+    // Validate element index
+    if (
+      action.targetElementIndex === undefined ||
+      action.targetElementIndex === null
+    ) {
+      throw new Error('Action missing targetElementIndex');
+    }
+
+    if (
+      action.targetElementIndex < 0 ||
+      action.targetElementIndex >= visibleElements.length
+    ) {
+      throw new Error(
+        `Invalid element index ${action.targetElementIndex}. Available elements: 0-${visibleElements.length - 1}`
+      );
+    }
+
+    const targetElement = visibleElements[action.targetElementIndex];
+    if (!targetElement) {
+      throw new Error(
+        `Element at index ${action.targetElementIndex} is null or undefined`
+      );
+    }
+
+    // Generate JSPath for the element for more reliable targeting
+    let jsPath: string;
+    try {
+      jsPath = this.domDetectionService.generateElementPath(targetElement);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to generate JSPath for element: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'AutomationEngine'
+      );
+      // Fallback to basic selector
+      jsPath = this.generateFallbackSelector(targetElement);
+    }
+
+    // Create automation action based on backend action type
+    if (action.type === 'CLICK') {
+      const automationAction = {
+        type: 'CLICK' as const,
+        target: jsPath,
+        description: action.explanation || 'Click action from AI backend',
+        delay: 100,
+      };
+
+      await this.actionsService.executeAction(automationAction, stepIndex);
+    } else if (action.type === 'TYPE') {
+      if (!action.value) {
+        throw new Error('TYPE action missing value');
+      }
+
+      const automationAction = {
+        type: 'TYPE' as const,
+        target: jsPath,
+        value: action.value,
+        description: action.explanation || 'Type action from AI backend',
+        delay: 100,
+      };
+
+      await this.actionsService.executeAction(automationAction, stepIndex);
+    } else {
+      throw new Error(
+        `Unsupported action type for element execution: ${action.type}`
+      );
+    }
+  }
+
+  /**
+   * Generate fallback selector when JSPath generation fails
+   */
+  private generateFallbackSelector(element: HTMLElement): string {
+    // Try ID first
+    if (element.id) {
+      return `#${element.id}`;
+    }
+
+    // Try class names
+    if (element.className && typeof element.className === 'string') {
+      const classes = element.className.trim().split(/\s+/);
+      if (classes.length > 0) {
+        return `.${classes[0]}`;
+      }
+    }
+
+    // Try tag name with attributes
+    const tagName = element.tagName.toLowerCase();
+    const name = element.getAttribute('name');
+    const type = element.getAttribute('type');
+
+    if (name) {
+      return `${tagName}[name="${name}"]`;
+    }
+
+    if (type) {
+      return `${tagName}[type="${type}"]`;
+    }
+
+    // Last resort: just tag name (not very reliable)
+    return tagName;
   }
 
   /**

@@ -10,8 +10,6 @@ import {
   StepProgressUpdateMessage,
   InitSessionMessage,
   InitSessionResponseMessage,
-  RequestNextStepMessage,
-  NextStepResponseMessage,
   StartAutomationMessage,
   StartAutomationResponseMessage,
 } from '@/services/AutomationEngine/MessageTypes';
@@ -99,13 +97,6 @@ export class MessageHandler {
         case 'START_AUTOMATION':
           await this.handleStartAutomation(
             message as StartAutomationMessage,
-            sendResponse
-          );
-          break;
-
-        case 'REQUEST_NEXT_STEP':
-          await this.handleRequestNextStep(
-            message as RequestNextStepMessage,
             sendResponse
           );
           break;
@@ -291,39 +282,6 @@ export class MessageHandler {
         type: 'START_AUTOMATION_RESPONSE',
         payload: {
           sessionId: '',
-          success: false,
-          error: (error as Error).message,
-        },
-      };
-      sendResponse(response);
-    }
-  }
-
-  private async handleRequestNextStep(
-    message: RequestNextStepMessage,
-    sendResponse: (response?: NextStepResponseMessage) => void
-  ): Promise<void> {
-    try {
-      const result = await this.coordinator.requestNextStep(
-        message.payload.sessionId,
-        message.payload.currentStepIndex
-      );
-      const response: NextStepResponseMessage = {
-        type: 'NEXT_STEP_RESPONSE',
-        payload: {
-          sessionId: message.payload.sessionId,
-          step: result.step,
-          hasMoreSteps: result.hasMoreSteps,
-          success: true,
-        },
-      };
-      sendResponse(response);
-    } catch (error) {
-      const response: NextStepResponseMessage = {
-        type: 'NEXT_STEP_RESPONSE',
-        payload: {
-          sessionId: message.payload.sessionId,
-          hasMoreSteps: false,
           success: false,
           error: (error as Error).message,
         },

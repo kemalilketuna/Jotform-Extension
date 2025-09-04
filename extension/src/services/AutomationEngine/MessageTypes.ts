@@ -17,8 +17,6 @@ export type AutomationMessageType =
   | 'LIST_INTERACTIVE_ELEMENTS'
   | 'INIT_SESSION'
   | 'INIT_SESSION_RESPONSE'
-  | 'REQUEST_NEXT_STEP'
-  | 'NEXT_STEP_RESPONSE'
   | 'START_AUTOMATION'
   | 'START_AUTOMATION_RESPONSE';
 
@@ -96,22 +94,6 @@ export interface InitSessionResponseMessage extends BaseAutomationMessage {
   payload: { sessionId: string; success: boolean; error?: string };
 }
 
-export interface RequestNextStepMessage extends BaseAutomationMessage {
-  type: 'REQUEST_NEXT_STEP';
-  payload: { sessionId: string; currentStepIndex: number };
-}
-
-export interface NextStepResponseMessage extends BaseAutomationMessage {
-  type: 'NEXT_STEP_RESPONSE';
-  payload: {
-    sessionId: string;
-    step?: AutomationAction;
-    hasMoreSteps: boolean;
-    success: boolean;
-    error?: string;
-  };
-}
-
 export interface StartAutomationMessage extends BaseAutomationMessage {
   type: 'START_AUTOMATION';
   payload: { objective: string };
@@ -136,7 +118,5 @@ export type AutomationMessage =
   | ListInteractiveElementsMessage
   | InitSessionMessage
   | InitSessionResponseMessage
-  | RequestNextStepMessage
-  | NextStepResponseMessage
   | StartAutomationMessage
   | StartAutomationResponseMessage;

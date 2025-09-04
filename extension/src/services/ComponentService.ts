@@ -205,11 +205,9 @@ export class ComponentService {
    */
   private async handleAutomationStart(objective: string): Promise<void> {
     try {
-      this.logger.info(
-        'Starting automation',
-        'ComponentService',
-        { objective }
-      );
+      this.logger.info('Starting automation', 'ComponentService', {
+        objective,
+      });
 
       await browser.runtime.sendMessage({
         type: 'START_AUTOMATION',
