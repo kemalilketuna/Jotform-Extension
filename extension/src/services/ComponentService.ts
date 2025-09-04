@@ -1,7 +1,6 @@
 import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { LoggingService } from './LoggingService';
-import { APIService } from './APIService';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
 
 import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
@@ -117,17 +116,13 @@ export class ComponentService {
       // Create React root
       this.reactRoot = createRoot(this.containerElement);
 
-      // Get API service instance
-      const apiService = APIService.getInstance();
-
       // Render the AI text field component
       this.reactRoot.render(
         React.createElement(AiTextFieldComponent, {
-          onSubmit: (text: string) => {
+          onSubmit: async (text: string) => {
             this.logger.info('AI text submitted', 'ComponentService', { text });
-            // Note: The actual API call is now handled within the AiTextFieldComponent
+            await this.handleAutomationStart(text);
           },
-          apiService: apiService,
         })
       );
 
@@ -204,6 +199,35 @@ export class ComponentService {
    */
   isServiceInitialized(): boolean {
     return this.isInitialized;
+  }
+
+  /**
+   * Handle automation start by sending START_AUTOMATION message to background script
+   */
+  private async handleAutomationStart(objective: string): Promise<void> {
+    try {
+      this.logger.info(
+        'Sending START_AUTOMATION message to background script',
+        'ComponentService',
+        { objective }
+      );
+
+      await browser.runtime.sendMessage({
+        type: 'START_AUTOMATION',
+        payload: { objective },
+      });
+
+      this.logger.info(
+        'START_AUTOMATION message sent successfully',
+        'ComponentService'
+      );
+    } catch (error) {
+      this.logger.error(
+        'Failed to send START_AUTOMATION message',
+        'ComponentService',
+        { error: String(error) }
+      );
+    }
   }
 
   /**

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { LoggingService } from '@/services/LoggingService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
-import { APIService, PromptSubmissionError } from '@/services/APIService';
 import { ComponentStrings } from './ComponentStrings';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
@@ -13,13 +12,11 @@ import { StatusMessage } from './StatusMessage';
 export interface AiTextFieldComponentProps {
   onSubmit?: (text: string) => void;
   className?: string;
-  apiService?: APIService;
 }
 
 export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
   onSubmit,
   className = '',
-  apiService = APIService.getInstance(),
 }) => {
   const [inputText, setInputText] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -44,8 +41,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
         { inputText: trimmedText }
       );
 
-      // Initialize session with the prompt
-      await apiService.initializeSession(trimmedText);
+      // ComponentService will handle the automation start via onSubmit callback
 
       // Call the onSubmit callback if provided
       onSubmit?.(trimmedText);
@@ -68,9 +64,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
       );
 
       const errorMessage =
-        error instanceof PromptSubmissionError
-          ? error.message
-          : ComponentStrings.USER_MESSAGES.PROMPT_SUBMISSION_FAILED;
+        ComponentStrings.USER_MESSAGES.PROMPT_SUBMISSION_FAILED;
 
       setStatus({ message: errorMessage, type: 'error' });
     }
