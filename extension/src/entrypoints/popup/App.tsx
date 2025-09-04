@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AutomationServerService } from '@/services/AutomationServerService';
-import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
-import { ExecuteSequenceMessage } from '@/services/AutomationEngine/MessageTypes';
+import { StartAutomationMessage } from '@/services/AutomationEngine/MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
 import {
   ErrorMessages,
@@ -90,29 +89,17 @@ function App() {
   };
 
   /**
-   * Fetch automation sequence (now using mock data)
+   * Execute step-by-step automation via background script
    */
-  const fetchAutomationSequence = async () => {
-    // WebSocket connection check is no longer needed as we're always "connected"
-    // with the mock implementation
-
-    setStatus(StatusMessages.getAll().FETCHING_FROM_SERVER);
-    const response = await AutomationServerService.fetchFormCreationSteps();
-
-    setStatus(StatusMessages.getAll().CONVERTING_RESPONSE);
-    return AutomationServerService.convertToAutomationSequence(response);
-  };
-
-  /**
-   * Execute automation sequence via background script
-   */
-  const executeAutomationSequence = async (sequence: AutomationSequence) => {
+  const executeStepByStepAutomation = async (objective: string) => {
     setStatus(StatusMessages.getAll().PREPARING_SEQUENCE);
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const message: ExecuteSequenceMessage = {
-      type: 'EXECUTE_SEQUENCE',
-      payload: sequence,
+    const message: StartAutomationMessage = {
+      type: 'START_AUTOMATION',
+      payload: {
+        objective,
+      },
     };
 
     setStatus(StatusMessages.getAll().EXECUTING_SEQUENCE);
@@ -122,7 +109,7 @@ function App() {
 
       if (response && response.type === 'SEQUENCE_COMPLETE') {
         setStatus(SuccessMessages.getAll().FORM_CREATION_COMPLETE);
-        logger.info('Form creation completed successfully', 'PopupApp');
+        logger.info('Automation completed successfully', 'PopupApp');
       } else if (response && response.type === 'SEQUENCE_ERROR') {
         throw new Error(
           response.payload?.error || ErrorMessages.getAll().AUTOMATION_TIMEOUT
@@ -149,8 +136,7 @@ function App() {
 
       const tab = await getCurrentTab();
       await ensureJotformPage(tab);
-      const sequence = await fetchAutomationSequence();
-      await executeAutomationSequence(sequence);
+      await executeStepByStepAutomation('Create a new form in Jotform');
 
       setTimeout(() => {
         window.close();
@@ -162,20 +148,6 @@ function App() {
       );
       setIsExecuting(false);
     }
-  };
-
-  /**
-   * Fetch form building automation sequence (now using mock data)
-   */
-  const fetchFormBuildingSequence = async () => {
-    // WebSocket connection check is no longer needed as we're always "connected"
-    // with the mock implementation
-
-    setStatus('Fetching form building steps...');
-    const response = await AutomationServerService.fetchFormBuildingSteps();
-
-    setStatus('Converting server response...');
-    return AutomationServerService.convertToAutomationSequence(response);
   };
 
   /**
@@ -191,8 +163,9 @@ function App() {
 
       const tab = await getCurrentTab();
       await ensureJotformPage(tab);
-      const sequence = await fetchFormBuildingSequence();
-      await executeAutomationSequence(sequence);
+      await executeStepByStepAutomation(
+        'Build and customize a form with various field types'
+      );
 
       setTimeout(() => {
         window.close();

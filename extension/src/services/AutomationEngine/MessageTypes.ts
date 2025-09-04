@@ -14,7 +14,13 @@ export type AutomationMessageType =
   | 'NAVIGATION_DETECTED'
   | 'CONTENT_SCRIPT_READY'
   | 'STEP_PROGRESS_UPDATE'
-  | 'LIST_INTERACTIVE_ELEMENTS';
+  | 'LIST_INTERACTIVE_ELEMENTS'
+  | 'INIT_SESSION'
+  | 'INIT_SESSION_RESPONSE'
+  | 'REQUEST_NEXT_STEP'
+  | 'NEXT_STEP_RESPONSE'
+  | 'START_AUTOMATION'
+  | 'START_AUTOMATION_RESPONSE';
 
 export interface BaseAutomationMessage {
   type: AutomationMessageType;
@@ -80,6 +86,42 @@ export interface ListInteractiveElementsMessage extends BaseAutomationMessage {
   payload?: {};
 }
 
+export interface InitSessionMessage extends BaseAutomationMessage {
+  type: 'INIT_SESSION';
+  payload: { objective: string };
+}
+
+export interface InitSessionResponseMessage extends BaseAutomationMessage {
+  type: 'INIT_SESSION_RESPONSE';
+  payload: { sessionId: string; success: boolean; error?: string };
+}
+
+export interface RequestNextStepMessage extends BaseAutomationMessage {
+  type: 'REQUEST_NEXT_STEP';
+  payload: { sessionId: string; currentStepIndex: number };
+}
+
+export interface NextStepResponseMessage extends BaseAutomationMessage {
+  type: 'NEXT_STEP_RESPONSE';
+  payload: {
+    sessionId: string;
+    step?: AutomationAction;
+    hasMoreSteps: boolean;
+    success: boolean;
+    error?: string;
+  };
+}
+
+export interface StartAutomationMessage extends BaseAutomationMessage {
+  type: 'START_AUTOMATION';
+  payload: { objective: string };
+}
+
+export interface StartAutomationResponseMessage extends BaseAutomationMessage {
+  type: 'START_AUTOMATION_RESPONSE';
+  payload: { sessionId: string; success: boolean; error?: string };
+}
+
 export type AutomationMessage =
   | ExecuteSequenceMessage
   | SequenceCompleteMessage
@@ -91,4 +133,10 @@ export type AutomationMessage =
   | NavigationDetectedMessage
   | ContentScriptReadyMessage
   | StepProgressUpdateMessage
-  | ListInteractiveElementsMessage;
+  | ListInteractiveElementsMessage
+  | InitSessionMessage
+  | InitSessionResponseMessage
+  | RequestNextStepMessage
+  | NextStepResponseMessage
+  | StartAutomationMessage
+  | StartAutomationResponseMessage;

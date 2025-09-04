@@ -1,4 +1,6 @@
 import { LoggingService } from '@/services/LoggingService';
+import { APIService } from '@/services/APIService';
+import { StorageService } from '@/services/StorageService';
 import {
   AutomationSequence,
   AutomationAction,
@@ -12,6 +14,12 @@ import {
   SequenceCompleteMessage,
   SequenceErrorMessage,
   StepProgressUpdateMessage,
+  InitSessionMessage,
+  InitSessionResponseMessage,
+  RequestNextStepMessage,
+  NextStepResponseMessage,
+  StartAutomationMessage,
+  StartAutomationResponseMessage,
 } from '@/services/AutomationEngine/MessageTypes';
 
 /**
@@ -32,11 +40,16 @@ interface AutomationState {
 class AutomationCoordinator {
   private static instance: AutomationCoordinator;
   private readonly logger: LoggingService;
+  private readonly apiService: APIService;
+  private readonly storageService: StorageService;
   private automationState: AutomationState;
   private readonly CONTENT_SCRIPT_INJECTION_DELAY = 1000;
+  private currentSessionId: string | null = null;
 
   private constructor() {
     this.logger = LoggingService.getInstance();
+    this.apiService = APIService.getInstance();
+    this.storageService = StorageService.getInstance();
     this.automationState = {
       isActive: false,
       currentStepIndex: 0,
@@ -173,18 +186,136 @@ class AutomationCoordinator {
     message: AutomationMessage
   ): Promise<void> {
     try {
+      this.logger.debug(
+        `Sending message to content script on tab ${tabId}: ${message.type}`,
+        'AutomationCoordinator'
+      );
+
       await browser.tabs.sendMessage(tabId, message);
     } catch (error) {
       this.logger.error(
         `Failed to send message to content script: ${error}`,
         'AutomationCoordinator'
       );
-      // WXT handles content script injection automatically
-      // Manual injection removed to prevent multiple instances
-      this.logger.warn(
-        'Content script not ready, message will be retried when script loads',
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize a new automation session
+   */
+  async initializeSession(objective: string): Promise<string> {
+    try {
+      this.logger.info(
+        `Initializing automation session with objective: ${objective}`,
         'AutomationCoordinator'
       );
+
+      const sessionId = await this.apiService.initializeSession(objective);
+      this.currentSessionId = sessionId;
+      await this.storageService.setSessionId(sessionId);
+
+      this.logger.info(
+        `Session initialized successfully: ${sessionId}`,
+        'AutomationCoordinator'
+      );
+
+      return sessionId;
+    } catch (error) {
+      this.logger.logError(error as Error, 'AutomationCoordinator');
+      throw error;
+    }
+  }
+
+  /**
+   * Get the current session ID
+   */
+  async getCurrentSessionId(): Promise<string | null> {
+    if (this.currentSessionId) {
+      return this.currentSessionId;
+    }
+
+    try {
+      const storedSessionId = await this.storageService.getSessionId();
+      if (storedSessionId) {
+        this.currentSessionId = storedSessionId;
+      }
+      return this.currentSessionId;
+    } catch (error) {
+      this.logger.logError(error as Error, 'AutomationCoordinator');
+      return null;
+    }
+  }
+
+  /**
+   * Request the next automation step from the backend
+   */
+  async requestNextStep(
+    sessionId: string,
+    currentStepIndex: number
+  ): Promise<{ step?: AutomationAction; hasMoreSteps: boolean }> {
+    try {
+      this.logger.info(
+        `Requesting next step for session ${sessionId}, step ${currentStepIndex}`,
+        'AutomationCoordinator'
+      );
+
+      const response = await this.apiService.getNextAction(
+        sessionId,
+        currentStepIndex
+      );
+
+      let step: AutomationAction | undefined;
+      if (response.action) {
+        // Convert API response to AutomationAction format
+        switch (response.action.type) {
+          case 'navigate':
+            step = {
+              type: 'NAVIGATE',
+              url: response.action.url || '',
+              description: response.action.description,
+              delay: response.action.delay,
+            };
+            break;
+          case 'click':
+            step = {
+              type: 'CLICK',
+              target: response.action.target || '',
+              description: response.action.description,
+              delay: response.action.delay,
+            };
+            break;
+          case 'type':
+            step = {
+              type: 'TYPE',
+              target: response.action.target || '',
+              value: response.action.text || '',
+              description: response.action.description,
+              delay: response.action.delay,
+            };
+            break;
+          case 'wait':
+            step = {
+              type: 'WAIT',
+              delay: response.action.delay || 1000,
+              description: response.action.description,
+            };
+            break;
+        }
+      }
+
+      this.logger.debug(
+        `Next step response: hasMoreSteps=${response.hasMoreSteps}, completed=${response.completed}`,
+        'AutomationCoordinator'
+      );
+
+      return {
+        step,
+        hasMoreSteps: response.hasMoreSteps && !response.completed,
+      };
+    } catch (error) {
+      this.logger.logError(error as Error, 'AutomationCoordinator');
+      throw error;
     }
   }
 
@@ -358,6 +489,88 @@ export default defineBackground(() => {
                   'BackgroundScript'
                 );
               }
+            }
+            break;
+          }
+
+          case 'INIT_SESSION': {
+            const initMessage = message as InitSessionMessage;
+            try {
+              const sessionId = await coordinator.initializeSession(
+                initMessage.payload.objective
+              );
+              const response: InitSessionResponseMessage = {
+                type: 'INIT_SESSION_RESPONSE',
+                payload: { sessionId, success: true },
+              };
+              sendResponse(response);
+            } catch (error) {
+              const response: InitSessionResponseMessage = {
+                type: 'INIT_SESSION_RESPONSE',
+                payload: {
+                  sessionId: '',
+                  success: false,
+                  error: (error as Error).message,
+                },
+              };
+              sendResponse(response);
+            }
+            break;
+          }
+
+          case 'START_AUTOMATION': {
+            const startMessage = message as StartAutomationMessage;
+            try {
+              const sessionId = await coordinator.initializeSession(
+                startMessage.payload.objective
+              );
+              const response: StartAutomationResponseMessage = {
+                type: 'START_AUTOMATION_RESPONSE',
+                payload: { sessionId, success: true },
+              };
+              sendResponse(response);
+            } catch (error) {
+              const response: StartAutomationResponseMessage = {
+                type: 'START_AUTOMATION_RESPONSE',
+                payload: {
+                  sessionId: '',
+                  success: false,
+                  error: (error as Error).message,
+                },
+              };
+              sendResponse(response);
+            }
+            break;
+          }
+
+          case 'REQUEST_NEXT_STEP': {
+            const stepMessage = message as RequestNextStepMessage;
+            try {
+              const result = await coordinator.requestNextStep(
+                stepMessage.payload.sessionId,
+                stepMessage.payload.currentStepIndex
+              );
+              const response: NextStepResponseMessage = {
+                type: 'NEXT_STEP_RESPONSE',
+                payload: {
+                  sessionId: stepMessage.payload.sessionId,
+                  step: result.step,
+                  hasMoreSteps: result.hasMoreSteps,
+                  success: true,
+                },
+              };
+              sendResponse(response);
+            } catch (error) {
+              const response: NextStepResponseMessage = {
+                type: 'NEXT_STEP_RESPONSE',
+                payload: {
+                  sessionId: stepMessage.payload.sessionId,
+                  hasMoreSteps: false,
+                  success: false,
+                  error: (error as Error).message,
+                },
+              };
+              sendResponse(response);
             }
             break;
           }

@@ -6,6 +6,24 @@ export interface InitSessionResponse {
   session_id: string;
 }
 
+export interface NextActionRequest {
+  session_id: string;
+  current_step_index: number;
+}
+
+export interface NextActionResponse {
+  action?: {
+    type: 'click' | 'navigate' | 'wait' | 'type';
+    target?: string;
+    url?: string;
+    text?: string;
+    delay?: number;
+    description: string;
+  };
+  has_more_steps: boolean;
+  completed: boolean;
+}
+
 export interface APIRequestConfig {
   timeout?: number;
   retries?: number;

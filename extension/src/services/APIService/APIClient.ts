@@ -5,6 +5,8 @@ import {
   APIRequestConfig,
   InitSessionRequest,
   InitSessionResponse,
+  NextActionRequest,
+  NextActionResponse,
 } from './APITypes';
 import { LoggingService } from '@/services/LoggingService';
 
@@ -91,6 +93,30 @@ export class APIClient {
   ): Promise<APIResponse<InitSessionResponse>> {
     const timeout = requestConfig?.timeout ?? this.config.getTimeout();
     const url = this.config.getEndpointUrl('INIT_SESSION');
+
+    this.logger.debug(`API Request: POST ${url}`, 'APIClient');
+
+    return this.executeWithRetry(() => {
+      const controller = new AbortController();
+      if (timeout) {
+        setTimeout(() => controller.abort(), timeout);
+      }
+
+      return fetch(url, {
+        method: 'POST',
+        headers: this.defaultHeaders,
+        body: JSON.stringify(request),
+        signal: controller.signal,
+      });
+    }, requestConfig);
+  }
+
+  async nextAction(
+    request: NextActionRequest,
+    requestConfig?: APIRequestConfig
+  ): Promise<APIResponse<NextActionResponse>> {
+    const timeout = requestConfig?.timeout ?? this.config.getTimeout();
+    const url = this.config.getEndpointUrl('NEXT_ACTION');
 
     this.logger.debug(`API Request: POST ${url}`, 'APIClient');
 

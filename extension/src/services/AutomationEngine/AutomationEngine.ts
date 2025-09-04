@@ -1,5 +1,12 @@
 import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
-import { AutomationMessage, ExecuteSequenceMessage } from './MessageTypes';
+import {
+  AutomationMessage,
+  ExecuteSequenceMessage,
+  StartAutomationMessage,
+  RequestNextStepMessage,
+  NextStepResponseMessage,
+  StartAutomationResponseMessage,
+} from './MessageTypes';
 import { VisualAnimationConfig } from '@/services/VisualCursorService';
 import { LoggingService } from '@/services/LoggingService';
 import {
@@ -79,18 +86,26 @@ export class AutomationEngine {
    */
   async handleMessage(message: AutomationMessage): Promise<void> {
     // Check if automation is already running before processing
-    if (this.isExecuting && message.type === 'EXECUTE_SEQUENCE') {
+    if (
+      this.isExecuting &&
+      (message.type === 'EXECUTE_SEQUENCE' ||
+        message.type === 'START_AUTOMATION')
+    ) {
       this.logger.warn(
-        'Automation already running, ignoring duplicate EXECUTE_SEQUENCE message',
+        'Automation already running, ignoring duplicate automation message',
         'AutomationEngine'
       );
       return;
     }
 
-    await this.messageHandler.processMessage(
-      message,
-      this.handleExecuteSequence.bind(this)
-    );
+    if (message.type === 'START_AUTOMATION') {
+      await this.handleStartAutomation(message as StartAutomationMessage);
+    } else {
+      await this.messageHandler.processMessage(
+        message,
+        this.handleExecuteSequence.bind(this)
+      );
+    }
   }
 
   /**
@@ -121,6 +136,161 @@ export class AutomationEngine {
     };
 
     await this.executeSequence(message.payload, visualConfig);
+  }
+
+  /**
+   * Handle start automation message - new step-by-step approach
+   */
+  private async handleStartAutomation(
+    message: StartAutomationMessage
+  ): Promise<void> {
+    try {
+      await this.executeStepByStepAutomation(message.payload.objective);
+    } catch (error) {
+      this.logger.logError(error as Error, 'AutomationEngine');
+      // Send error message to background script
+      try {
+        await browser.runtime.sendMessage({
+          type: 'SEQUENCE_ERROR',
+          payload: {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            step: 0,
+          },
+        });
+      } catch {
+        this.logger.error('Failed to send error message', 'AutomationEngine');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Execute step-by-step automation using AI guidance
+   */
+  private async executeStepByStepAutomation(objective: string): Promise<void> {
+    if (this.isExecuting) {
+      throw new AutomationError(
+        ErrorMessages.getAll().AUTOMATION_ALREADY_RUNNING
+      );
+    }
+
+    this.isExecuting = true;
+    this.logger.info(
+      `Starting step-by-step automation for objective: ${objective}`,
+      'AutomationEngine'
+    );
+
+    try {
+      // Initialize session with the AI service via background script
+      const sessionId = await this.requestSessionFromBackground(objective);
+
+      // Enable user interaction blocking
+      this.userInteractionBlocker.enableBlocking();
+
+      // Initialize visual cursor
+      await this.visualCursor.initialize();
+      this.visualCursor.show({ x: 100, y: 100 });
+
+      let stepCount = 0;
+      let hasMoreSteps = true;
+
+      while (hasMoreSteps && stepCount < 50) {
+        // Safety limit
+        // Request next step from background script
+        const nextStepMessage: RequestNextStepMessage = {
+          type: 'REQUEST_NEXT_STEP',
+          payload: {
+            sessionId,
+            currentStepIndex: stepCount,
+          },
+        };
+
+        // Send request and wait for response
+        const response = (await browser.runtime.sendMessage(
+          nextStepMessage
+        )) as NextStepResponseMessage;
+
+        if (!response.payload.success) {
+          throw new AutomationError(
+            response.payload.error || 'Failed to get next step'
+          );
+        }
+
+        hasMoreSteps = response.payload.hasMoreSteps;
+
+        if (response.payload.step) {
+          stepCount++;
+          this.logger.info(
+            `Executing step ${stepCount}: ${response.payload.step.description}`,
+            'AutomationEngine'
+          );
+
+          // Execute the action
+          await this.actionsService.executeAction(
+            response.payload.step,
+            stepCount - 1
+          );
+
+          // Send progress update
+          await this.messageHandler.sendProgressUpdate(
+            stepCount - 1,
+            sessionId
+          );
+
+          // Wait if delay is specified
+          if (response.payload.step.delay) {
+            await this.wait(response.payload.step.delay);
+          }
+        } else {
+          // No more steps
+          hasMoreSteps = false;
+        }
+      }
+
+      if (stepCount >= 50) {
+        throw new AutomationError(
+          'Automation reached maximum step limit without completion'
+        );
+      }
+
+      this.logger.info(
+        `Automation completed successfully after ${stepCount} steps`,
+        'AutomationEngine'
+      );
+
+      // Send completion message
+      await this.messageHandler.sendSequenceComplete(sessionId);
+    } catch (error) {
+      // Ensure interaction blocking is disabled on error
+      try {
+        this.userInteractionBlocker.disableBlocking();
+      } catch {
+        this.logger.warn(
+          'Failed to disable interaction blocking on error, forcing cleanup',
+          'AutomationEngine'
+        );
+        this.userInteractionBlocker.forceCleanup();
+      }
+
+      const automationError = new AutomationError(
+        error instanceof Error
+          ? error.message
+          : 'Unknown error during step-by-step automation'
+      );
+      this.logger.logError(automationError, 'AutomationEngine');
+      throw automationError;
+    } finally {
+      this.isExecuting = false;
+
+      // Disable user interaction blocking
+      this.userInteractionBlocker.disableBlocking();
+
+      // Hide cursor
+      this.visualCursor.hide();
+      setTimeout(() => {
+        this.visualCursor.destroy();
+      }, 1000);
+    }
   }
 
   /**
@@ -242,6 +412,37 @@ export class AutomationEngine {
       this.logger.logError(error as Error, 'AutomationEngine');
       throw new AutomationError(
         `Failed to initialize session: ${(error as Error).message}`
+      );
+    }
+  }
+
+  /**
+   * Request session initialization from background script
+   */
+  private async requestSessionFromBackground(
+    objective: string
+  ): Promise<string> {
+    try {
+      const initMessage = {
+        type: 'START_AUTOMATION',
+        payload: { objective },
+      };
+
+      const response = (await browser.runtime.sendMessage(
+        initMessage
+      )) as StartAutomationResponseMessage;
+
+      if (!response.payload.success) {
+        throw new AutomationError(
+          response.payload.error || 'Failed to initialize session'
+        );
+      }
+
+      return response.payload.sessionId;
+    } catch (error) {
+      this.logger.logError(error as Error, 'AutomationEngine');
+      throw new AutomationError(
+        `Failed to request session from background: ${(error as Error).message}`
       );
     }
   }

@@ -1,7 +1,11 @@
 import { APIClient } from './APIClient';
 import { APIConfig } from './APIConfig';
 import { APIError, APIValidationError } from './APIErrors';
-import { InitSessionRequest, APIRequestConfig } from './APITypes';
+import {
+  InitSessionRequest,
+  NextActionRequest,
+  APIRequestConfig,
+} from './APITypes';
 
 import { StorageService } from '@/services/StorageService';
 import { LoggingService } from '@/services/LoggingService';
@@ -84,6 +88,54 @@ export class APIService {
     } catch (error) {
       this.logger.logError(error as Error, 'APIService');
       return null;
+    }
+  }
+
+  async getNextAction(
+    sessionId: string,
+    currentStepIndex: number,
+    requestConfig?: APIRequestConfig
+  ): Promise<{
+    action?: {
+      type: 'click' | 'navigate' | 'wait' | 'type';
+      target?: string;
+      url?: string;
+      text?: string;
+      delay?: number;
+      description: string;
+    };
+    hasMoreSteps: boolean;
+    completed: boolean;
+  }> {
+    try {
+      this.logger.debug(
+        `Getting next action for session ${sessionId}, step ${currentStepIndex}`,
+        'APIService'
+      );
+
+      const request: NextActionRequest = {
+        session_id: sessionId,
+        current_step_index: currentStepIndex,
+      };
+
+      const response = await this.apiClient.nextAction(request, requestConfig);
+
+      this.logger.debug(
+        `Next action response: hasMoreSteps=${response.data.has_more_steps}, completed=${response.data.completed}`,
+        'APIService'
+      );
+
+      return {
+        action: response.data.action,
+        hasMoreSteps: response.data.has_more_steps,
+        completed: response.data.completed,
+      };
+    } catch (error) {
+      this.logger.logError(error as Error, 'APIService');
+      throw new APIError(
+        `Failed to get next action: ${(error as Error).message}`,
+        'NEXT_ACTION_ERROR'
+      );
     }
   }
 
