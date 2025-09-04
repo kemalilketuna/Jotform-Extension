@@ -1,6 +1,6 @@
-import { ScrollableArea } from './DOMDetectionTypes.ts';
-import { JSPathGenerator } from './JSPathGenerator.ts';
-import { ScrollDetectionError } from './DOMDetectionErrors.ts';
+import { ScrollableArea } from './DOMDetectionTypes.js';
+import { JSPathGenerator } from './JSPathGenerator.js';
+import { ScrollDetectionError } from './DOMDetectionErrors.js';
 
 export class ScrollableAreaDetector {
   private pathGenerator: JSPathGenerator;

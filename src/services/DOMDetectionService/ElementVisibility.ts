@@ -1,4 +1,4 @@
-import { VisibilityDetectionError } from './DOMDetectionErrors.ts';
+import { VisibilityDetectionError } from './DOMDetectionErrors.js';
 import { LoggingService } from '@/services/LoggingService';
 
 export class ElementVisibility {

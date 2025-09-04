@@ -1,7 +1,7 @@
-import { ScrollableArea, DOMDetectionConfig } from './DOMDetectionTypes.ts';
-import { DOMDetectionError } from './DOMDetectionErrors.ts';
-import { ScrollableAreaDetector } from './ScrollableAreaDetector.ts';
-import { CursorBasedElementDetector } from './CursorBasedElementDetector.ts';
+import { ScrollableArea, DOMDetectionConfig } from './DOMDetectionTypes.js';
+import { DOMDetectionError } from './DOMDetectionErrors.js';
+import { ScrollableAreaDetector } from './ScrollableAreaDetector.js';
+import { CursorBasedElementDetector } from './CursorBasedElementDetector.js';
 import { LoggingService } from '@/services/LoggingService';
 
 export class PageAnalysis {

@@ -1,8 +1,8 @@
-import { ScrollableArea, DOMDetectionConfig } from './DOMDetectionTypes.ts';
-import { DOMDetectionError } from './DOMDetectionErrors.ts';
-import { JSPathGenerator } from './JSPathGenerator.ts';
-import { ElementVisibility } from './ElementVisibility.ts';
-import { PageAnalysis } from './PageAnalysis.ts';
+import { ScrollableArea, DOMDetectionConfig } from './DOMDetectionTypes.js';
+import { DOMDetectionError } from './DOMDetectionErrors.js';
+import { JSPathGenerator } from './JSPathGenerator.js';
+import { ElementVisibility } from './ElementVisibility.js';
+import { PageAnalysis } from './PageAnalysis.js';
 import { LoggingService } from '@/services/LoggingService';
 
 export class DOMDetection {

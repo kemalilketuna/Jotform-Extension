@@ -1,4 +1,4 @@
-import { JSPathGenerationError } from './DOMDetectionErrors.ts';
+import { JSPathGenerationError } from './DOMDetectionErrors.js';
 
 export class JSPathGenerator {
   private static readonly MAX_DEPTH = 50;
