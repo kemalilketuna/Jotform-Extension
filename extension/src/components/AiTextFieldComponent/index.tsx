@@ -35,11 +35,6 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
         message: ComponentStrings.USER_MESSAGES.SUBMITTING_PROMPT,
         type: 'loading',
       });
-      LoggingService.getInstance().info(
-        'AI text submitted',
-        'AiTextFieldComponent',
-        { inputText: trimmedText }
-      );
 
       // ComponentService will handle the automation start via onSubmit callback
 

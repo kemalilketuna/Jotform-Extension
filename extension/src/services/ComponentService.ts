@@ -120,7 +120,6 @@ export class ComponentService {
       this.reactRoot.render(
         React.createElement(AiTextFieldComponent, {
           onSubmit: async (text: string) => {
-            this.logger.info('AI text submitted', 'ComponentService', { text });
             await this.handleAutomationStart(text);
           },
         })
@@ -207,7 +206,7 @@ export class ComponentService {
   private async handleAutomationStart(objective: string): Promise<void> {
     try {
       this.logger.info(
-        'Sending START_AUTOMATION message to background script',
+        'Starting automation',
         'ComponentService',
         { objective }
       );
@@ -216,11 +215,6 @@ export class ComponentService {
         type: 'START_AUTOMATION',
         payload: { objective },
       });
-
-      this.logger.info(
-        'START_AUTOMATION message sent successfully',
-        'ComponentService'
-      );
     } catch (error) {
       this.logger.error(
         'Failed to send START_AUTOMATION message',
