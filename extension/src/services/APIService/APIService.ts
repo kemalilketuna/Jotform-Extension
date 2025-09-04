@@ -5,6 +5,8 @@ import {
   InitSessionRequest,
   NextActionRequest,
   APIRequestConfig,
+  ExecutedAction,
+  NextActionResponse,
 } from './APITypes';
 
 import { StorageService } from '@/services/StorageService';
@@ -45,7 +47,7 @@ export class APIService {
       const request: InitSessionRequest = { objective };
       const response = await this.apiClient.initSession(request, requestConfig);
 
-      const sessionId = response.data.session_id;
+      const sessionId = response.data.sessionId;
       this.currentSessionId = sessionId;
 
       await this.storageService.setSessionId(sessionId);
@@ -93,43 +95,32 @@ export class APIService {
 
   async getNextAction(
     sessionId: string,
-    currentStepIndex: number,
+    visibleElementsHtml: string[],
+    lastTurnOutcome: ExecutedAction[],
+    userResponse?: string,
     requestConfig?: APIRequestConfig
-  ): Promise<{
-    action?: {
-      type: 'click' | 'navigate' | 'wait' | 'type';
-      target?: string;
-      url?: string;
-      text?: string;
-      delay?: number;
-      description: string;
-    };
-    hasMoreSteps: boolean;
-    completed: boolean;
-  }> {
+  ): Promise<NextActionResponse> {
     try {
       this.logger.debug(
-        `Getting next action for session ${sessionId}, step ${currentStepIndex}`,
+        `Getting next action for session ${sessionId}`,
         'APIService'
       );
 
       const request: NextActionRequest = {
-        session_id: sessionId,
-        current_step_index: currentStepIndex,
+        sessionId: sessionId,
+        visibleElementsHtml: visibleElementsHtml,
+        lastTurnOutcome: lastTurnOutcome,
+        userResponse: userResponse,
       };
 
       const response = await this.apiClient.nextAction(request, requestConfig);
 
       this.logger.debug(
-        `Next action response: hasMoreSteps=${response.data.has_more_steps}, completed=${response.data.completed}`,
+        `Next action response: ${response.data.actions.length} actions received`,
         'APIService'
       );
 
-      return {
-        action: response.data.action,
-        hasMoreSteps: response.data.has_more_steps,
-        completed: response.data.completed,
-      };
+      return response.data;
     } catch (error) {
       this.logger.logError(error as Error, 'APIService');
       throw new APIError(
@@ -141,6 +132,48 @@ export class APIService {
 
   setCurrentSessionId(sessionId: string | null): void {
     this.currentSessionId = sessionId;
+  }
+
+  /**
+   * Execute actions and get the next set of actions
+   */
+  async executeAndGetNext(
+    sessionId: string,
+    visibleElementsHtml: string[],
+    executedActions: ExecutedAction[],
+    userResponse?: string,
+    requestConfig?: APIRequestConfig
+  ): Promise<NextActionResponse> {
+    return this.getNextAction(
+      sessionId,
+      visibleElementsHtml,
+      executedActions,
+      userResponse,
+      requestConfig
+    );
+  }
+
+  /**
+   * Create an ExecutedAction from an Action and its outcome
+   */
+  createExecutedAction(
+    status: 'SUCCESS' | 'FAIL',
+    errorMessage?: string
+  ): ExecutedAction {
+    return {
+      status,
+      errorMessage: errorMessage,
+    };
+  }
+
+  /**
+   * Clear the current session
+   */
+  async clearSession(): Promise<void> {
+    this.currentSessionId = null;
+    // Clear session ID from storage by setting it to empty string
+    await this.storageService.set('sessionId', '', { area: 'local' });
+    this.logger.debug('Session cleared', 'APIService');
   }
 
   private validateObjective(objective: string): void {

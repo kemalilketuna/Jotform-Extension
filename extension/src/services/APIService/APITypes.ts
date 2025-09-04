@@ -3,25 +3,35 @@ export interface InitSessionRequest {
 }
 
 export interface InitSessionResponse {
-  session_id: string;
+  sessionId: string;
+}
+
+export interface ExecutedAction {
+  status: 'SUCCESS' | 'FAIL';
+  errorMessage?: string;
 }
 
 export interface NextActionRequest {
-  session_id: string;
-  current_step_index: number;
+  sessionId: string;
+  visibleElementsHtml: string[];
+  userResponse?: string;
+  lastTurnOutcome: ExecutedAction[];
+}
+
+export interface Action {
+  type: 'CLICK' | 'TYPE' | 'ASK_USER' | 'FINISH' | 'FAIL';
+  targetElementIndex?: number;
+  value?: string;
+  question?: string;
+  message?: string;
+  explanation: string;
 }
 
 export interface NextActionResponse {
-  action?: {
-    type: 'click' | 'navigate' | 'wait' | 'type';
-    target?: string;
-    url?: string;
-    text?: string;
-    delay?: number;
-    description: string;
-  };
-  has_more_steps: boolean;
-  completed: boolean;
+  sessionId: string;
+  actions: Action[];
+  overallExplanationOfBundle: string;
+  fullThoughtProcess?: string;
 }
 
 export interface APIRequestConfig {
@@ -44,3 +54,9 @@ export interface APIErrorResponse {
 }
 
 export type APIEndpoint = 'INIT_SESSION' | 'NEXT_ACTION';
+
+// Backend API endpoint paths
+export const API_ENDPOINTS = {
+  INIT_SESSION: '/agent/init',
+  NEXT_ACTION: '/agent/next_action',
+} as const;

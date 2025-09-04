@@ -15,11 +15,18 @@ export { APIConfig } from './APIConfig';
 export type {
   InitSessionRequest,
   InitSessionResponse,
+  NextActionRequest,
+  NextActionResponse,
+  ExecutedAction,
+  Action,
   APIRequestConfig,
   APIResponse,
   APIErrorResponse,
   APIEndpoint,
 } from './APITypes';
+
+// Constants
+export { API_ENDPOINTS } from './APITypes';
 
 // Error classes
 export {
