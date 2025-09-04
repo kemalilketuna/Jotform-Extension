@@ -11,7 +11,7 @@ import { ActionsService } from '@/services/ActionsService';
 import { MessageHandler } from './MessageHandler';
 import { APIService } from '@/services/APIService';
 import { DOMDetectionService } from '@/services/DOMDetectionService';
-import { Action, ExecutedAction } from '@/services/APIService/APITypes';
+import { ExecutedAction } from '@/services/ActionsService/ActionTypes';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
@@ -225,55 +225,6 @@ export class AutomationEngine {
       return (error as Error & { stepIndex: number }).stepIndex;
     }
     return undefined;
-  }
-
-  /**
-   * Get next actions from API by coordinating DOM detection and action results
-   */
-  async getNextActions(userResponse?: string): Promise<Action[]> {
-    try {
-      // Get visible elements from DOM detection service
-      const elements =
-        this.domDetectionService.listVisibleInteractiveElements();
-      const visibleElements = elements.map(
-        (element: HTMLElement) => element.outerHTML || element.toString()
-      );
-
-      // Get last action results from actions service
-      const lastActionResults =
-        await this.actionsService.getLastActionResults();
-
-      // Call API service with coordinated data
-      const actions = await this.apiService.getNextActions(
-        visibleElements,
-        lastActionResults,
-        userResponse
-      );
-
-      // Clear last action results after successful API call
-      await this.actionsService.clearLastActionResults();
-
-      return actions;
-    } catch (error) {
-      this.logger.logError(error as Error, 'AutomationEngine');
-      throw new AutomationError(
-        `Failed to get next actions: ${(error as Error).message}`
-      );
-    }
-  }
-
-  /**
-   * Store action results using actions service
-   */
-  async storeActionResults(results: ExecutedAction[]): Promise<void> {
-    try {
-      await this.actionsService.storeActionResults(results);
-    } catch (error) {
-      this.logger.logError(error as Error, 'AutomationEngine');
-      throw new AutomationError(
-        `Failed to store action results: ${(error as Error).message}`
-      );
-    }
   }
 
   /**

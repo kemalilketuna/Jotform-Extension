@@ -15,10 +15,6 @@ export { APIConfig } from './APIConfig';
 export type {
   InitSessionRequest,
   InitSessionResponse,
-  ExecutedAction,
-  NextActionRequest,
-  Action,
-  NextActionResponse,
   APIRequestConfig,
   APIResponse,
   APIErrorResponse,

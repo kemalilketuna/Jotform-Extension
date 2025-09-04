@@ -1,10 +1,9 @@
-import { AutomationAction } from './ActionTypes';
+import { AutomationAction, ExecutedAction } from './ActionTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
 import { ActionHandlers } from './ActionHandlers';
 import { StorageService } from '@/services/StorageService';
-import { ExecutedAction } from '@/services/APIService/APITypes';
 import { ActionsStrings } from './ActionsStrings';
 import { ElementUtils } from '@/utils/ElementUtils';
 

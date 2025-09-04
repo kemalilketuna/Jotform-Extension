@@ -38,3 +38,8 @@ export interface AutomationSequence {
   name: string;
   actions: AutomationAction[];
 }
+
+export interface ExecutedAction {
+  status: 'SUCCESS' | 'FAIL';
+  error_message?: string;
+}

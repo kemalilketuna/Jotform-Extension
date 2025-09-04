@@ -3,9 +3,6 @@ import { APIConfig } from './APIConfig';
 import { APIError, APIValidationError } from './APIErrors';
 import {
   InitSessionRequest,
-  NextActionRequest,
-  ExecutedAction,
-  Action,
   APIRequestConfig,
 } from './APITypes';
 
@@ -67,49 +64,6 @@ export class APIService {
     }
   }
 
-  async getNextActions(
-    visibleElements: string[],
-    lastActionResults: ExecutedAction[],
-    userResponse?: string,
-    requestConfig?: APIRequestConfig
-  ): Promise<Action[]> {
-    try {
-      const sessionId = await this.getCurrentSessionId();
-      if (!sessionId) {
-        throw new APIError('No active session found', 'SESSION_ERROR');
-      }
-
-      this.logger.debug(
-        `Getting next actions for session: ${sessionId}`,
-        'APIService'
-      );
-
-      const request: NextActionRequest = {
-        session_id: sessionId,
-        visible_elements_html: visibleElements,
-        user_response: userResponse,
-        last_turn_outcome: lastActionResults,
-      };
-
-      const response = await this.apiClient.getNextAction(
-        request,
-        requestConfig
-      );
-
-      this.logger.debug(
-        `Received ${response.data.actions.length} actions from API`,
-        'APIService'
-      );
-
-      return response.data.actions;
-    } catch (error) {
-      this.logger.logError(error as Error, 'APIService');
-      throw new APIError(
-        `Failed to get next actions: ${(error as Error).message}`,
-        'GET_ACTIONS_ERROR'
-      );
-    }
-  }
 
   async isHealthy(): Promise<boolean> {
     try {
