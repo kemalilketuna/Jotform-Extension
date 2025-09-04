@@ -82,20 +82,3 @@ export class APIValidationError extends APIError {
     this.name = 'APIValidationError';
   }
 }
-
-export class APISessionError extends APIError {
-  constructor(sessionId: string, reason: string) {
-    super(`Session error for '${sessionId}': ${reason}`, 'SESSION_ERROR');
-    this.name = 'APISessionError';
-  }
-}
-
-export class PromptSubmissionError extends APIError {
-  constructor(
-    message: string,
-    public readonly cause?: Error
-  ) {
-    super(message, 'PROMPT_SUBMISSION_ERROR');
-    this.name = 'PromptSubmissionError';
-  }
-}

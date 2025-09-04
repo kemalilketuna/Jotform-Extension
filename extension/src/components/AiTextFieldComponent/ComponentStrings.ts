@@ -1,13 +1,7 @@
 /**
- * String constants for API Service
+ * String constants for AI Text Field Component
  */
-export class APIStrings {
-  static readonly STORAGE_KEYS = {
-    SESSION_ID: 'api_session_id',
-    SESSION_DATA: 'api_session_data',
-    LAST_ACTION_RESULTS: 'api_last_action_results',
-  } as const;
-
+export class ComponentStrings {
   static readonly USER_MESSAGES = {
     SUBMITTING_PROMPT: 'Submitting your prompt...',
     PROMPT_SUBMITTED: 'Prompt submitted successfully!',
@@ -23,10 +17,5 @@ export class APIStrings {
       INIT_SUCCESS: 'Session initialized successfully',
       INIT_ERROR: 'Failed to initialize session',
     },
-  } as const;
-
-  static readonly ERROR_TYPES = {
-    SESSION_INIT_ERROR: 'SESSION_INIT_ERROR',
-    PROMPT_SUBMISSION_ERROR: 'PROMPT_SUBMISSION_ERROR',
   } as const;
 }

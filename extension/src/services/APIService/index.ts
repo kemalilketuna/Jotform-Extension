@@ -23,7 +23,6 @@ export type {
   APIResponse,
   APIErrorResponse,
   APIEndpoint,
-  SessionData,
 } from './APITypes';
 
 // Error classes
@@ -32,7 +31,6 @@ export {
   APITimeoutError,
   APIRetryError,
   APIValidationError,
-  APISessionError,
 } from './APIErrors';
 
 // HTTP client (for advanced usage)

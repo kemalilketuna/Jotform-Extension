@@ -54,10 +54,3 @@ export interface APIErrorResponse {
 }
 
 export type APIEndpoint = 'INIT_SESSION' | 'NEXT_ACTION';
-
-export interface SessionData {
-  sessionId: string;
-  objective: string;
-  createdAt: Date;
-  lastActionAt: Date;
-}

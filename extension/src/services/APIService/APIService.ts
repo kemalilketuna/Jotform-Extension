@@ -1,39 +1,28 @@
 import { APIClient } from './APIClient';
 import { APIConfig } from './APIConfig';
-import { APIError, APISessionError, APIValidationError } from './APIErrors';
-import { APIStrings } from './APIStrings';
+import { APIError, APIValidationError } from './APIErrors';
 import {
   InitSessionRequest,
-  // InitSessionResponse, // Unused import
   NextActionRequest,
-  // NextActionResponse, // Unused import
   ExecutedAction,
   Action,
-  SessionData,
   APIRequestConfig,
 } from './APITypes';
-import { DOMDetectionService } from '@/services/DOMDetectionService';
-import { StorageService } from '@/services/StorageService/StorageService';
+
+import { StorageService } from '@/services/StorageService';
 import { LoggingService } from '@/services/LoggingService';
 
 export class APIService {
   private static instance: APIService | null = null;
   private readonly apiClient: APIClient;
-  private readonly domDetectionService: DOMDetectionService;
+
   private readonly storageService = StorageService.getInstance();
   private readonly logger = LoggingService.getInstance();
   private currentSessionId: string | null = null;
 
-  private static readonly STORAGE_KEYS = {
-    SESSION_ID: 'api_service_session_id',
-    SESSION_DATA: 'api_service_session_data',
-    LAST_ACTION_RESULTS: 'api_service_last_action_results',
-  } as const;
-
   private constructor(config?: APIConfig) {
     const apiConfig = config ?? APIConfig.getDefaultConfig();
     this.apiClient = new APIClient(apiConfig);
-    this.domDetectionService = DOMDetectionService.getInstance();
   }
 
   static getInstance(config?: APIConfig): APIService {
@@ -61,14 +50,6 @@ export class APIService {
       const sessionId = response.data.session_id;
       this.currentSessionId = sessionId;
 
-      const sessionData: SessionData = {
-        sessionId,
-        objective,
-        createdAt: new Date(),
-        lastActionAt: new Date(),
-      };
-
-      await this.storeSessionData(sessionData);
       await this.storageService.setSessionId(sessionId);
 
       this.logger.debug(
@@ -87,22 +68,21 @@ export class APIService {
   }
 
   async getNextActions(
+    visibleElements: string[],
+    lastActionResults: ExecutedAction[],
     userResponse?: string,
     requestConfig?: APIRequestConfig
   ): Promise<Action[]> {
     try {
       const sessionId = await this.getCurrentSessionId();
       if (!sessionId) {
-        throw new APISessionError('', 'No active session found');
+        throw new APIError('No active session found', 'SESSION_ERROR');
       }
 
       this.logger.debug(
         `Getting next actions for session: ${sessionId}`,
         'APIService'
       );
-
-      const visibleElements = await this.getVisibleElements();
-      const lastActionResults = await this.getLastActionResults();
 
       const request: NextActionRequest = {
         session_id: sessionId,
@@ -115,9 +95,6 @@ export class APIService {
         request,
         requestConfig
       );
-
-      await this.updateSessionLastAction();
-      await this.clearLastActionResults();
 
       this.logger.debug(
         `Received ${response.data.actions.length} actions from API`,
@@ -134,22 +111,12 @@ export class APIService {
     }
   }
 
-  async storeActionResults(results: ExecutedAction[]): Promise<void> {
+  async isHealthy(): Promise<boolean> {
     try {
-      const preferences = await this.storageService.getUserPreferences();
-      preferences.api_action_results = results;
-      await this.storageService.setUserPreferences(preferences);
-
-      this.logger.debug(
-        `Stored ${results.length} action results`,
-        'APIService'
-      );
+      return await this.apiClient.healthCheck();
     } catch (error) {
       this.logger.logError(error as Error, 'APIService');
-      throw new APIError(
-        `Failed to store action results: ${(error as Error).message}`,
-        'STORAGE_ERROR'
-      );
+      return false;
     }
   }
 
@@ -160,11 +127,9 @@ export class APIService {
 
     try {
       const storedSessionId = await this.storageService.getSessionId();
-
       if (storedSessionId) {
         this.currentSessionId = storedSessionId;
       }
-
       return this.currentSessionId;
     } catch (error) {
       this.logger.logError(error as Error, 'APIService');
@@ -172,106 +137,8 @@ export class APIService {
     }
   }
 
-  async getSessionData(): Promise<SessionData | null> {
-    try {
-      const preferences = await this.storageService.getUserPreferences();
-      const sessionData = preferences.api_session as SessionData;
-
-      if (!sessionData) {
-        return null;
-      }
-
-      sessionData.createdAt = new Date(sessionData.createdAt);
-      sessionData.lastActionAt = new Date(sessionData.lastActionAt);
-
-      return sessionData;
-    } catch (error) {
-      this.logger.logError(error as Error, 'APIService');
-      return null;
-    }
-  }
-
-  async clearSession(): Promise<void> {
-    try {
-      this.currentSessionId = null;
-
-      // Clear session ID from storage
-      const preferences = await this.storageService.getUserPreferences();
-      delete preferences[APIStrings.STORAGE_KEYS.SESSION_ID];
-      delete preferences.api_session;
-      delete preferences.api_action_results;
-      await this.storageService.setUserPreferences(preferences);
-
-      // Clear from memory cache
-      this.storageService.clearCache();
-
-      this.logger.debug('Session cleared successfully', 'APIService');
-    } catch (error) {
-      this.logger.logError(error as Error, 'APIService');
-      throw new APIError(
-        `Failed to clear session: ${(error as Error).message}`,
-        'CLEAR_SESSION_ERROR'
-      );
-    }
-  }
-
-  async isHealthy(): Promise<boolean> {
-    try {
-      return await this.apiClient.healthCheck();
-    } catch (error) {
-      this.logger.logError(error as Error, 'APIService');
-      return false;
-    }
-  }
-
-  private async getVisibleElements(): Promise<string[]> {
-    try {
-      const elements =
-        this.domDetectionService.listVisibleInteractiveElements();
-      return elements.map(
-        (element: HTMLElement) => element.outerHTML || element.toString()
-      );
-    } catch (error) {
-      this.logger.logError(error as Error, 'APIService');
-      return [];
-    }
-  }
-
-  private async getLastActionResults(): Promise<ExecutedAction[]> {
-    try {
-      const preferences = await this.storageService.getUserPreferences();
-      const results = preferences.api_action_results as ExecutedAction[];
-      return results || [];
-    } catch (error) {
-      this.logger.logError(error as Error, 'APIService');
-      return [];
-    }
-  }
-
-  private async storeSessionData(sessionData: SessionData): Promise<void> {
-    try {
-      const preferences = await this.storageService.getUserPreferences();
-      preferences.api_session = sessionData;
-      await this.storageService.setUserPreferences(preferences);
-      this.logger.debug('Session data stored successfully', 'APIService');
-    } catch (error) {
-      this.logger.logError(error as Error, 'APIService');
-      throw new APIError('Failed to store session data', 'STORAGE_ERROR');
-    }
-  }
-
-  private async updateSessionLastAction(): Promise<void> {
-    const sessionData = await this.getSessionData();
-    if (sessionData) {
-      sessionData.lastActionAt = new Date();
-      await this.storeSessionData(sessionData);
-    }
-  }
-
-  private async clearLastActionResults(): Promise<void> {
-    const preferences = await this.storageService.getUserPreferences();
-    delete preferences.api_action_results;
-    await this.storageService.setUserPreferences(preferences);
+  setCurrentSessionId(sessionId: string | null): void {
+    this.currentSessionId = sessionId;
   }
 
   private validateObjective(objective: string): void {

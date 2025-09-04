@@ -3,6 +3,10 @@ import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
 import { ActionHandlers } from './ActionHandlers';
+import { StorageService } from '@/services/StorageService';
+import { ExecutedAction } from '@/services/APIService/APITypes';
+import { ActionsStrings } from './ActionsStrings';
+import { ElementUtils } from '@/utils/ElementUtils';
 
 /**
  * Service responsible for executing individual automation actions
@@ -13,6 +17,7 @@ export class ActionsService {
   private readonly logger: LoggingService;
   private readonly actionHandlers: ActionHandlers;
   private readonly elementUtils: ElementUtils;
+  private readonly storageService: StorageService;
 
   private constructor(
     logger: LoggingService = LoggingService.getInstance(),
@@ -20,6 +25,7 @@ export class ActionsService {
     typingService: TypingService = TypingService.getInstance()
   ) {
     this.logger = logger;
+    this.storageService = StorageService.getInstance();
     this.elementUtils = new ElementUtils(logger);
     this.actionHandlers = new ActionHandlers(
       logger,
@@ -95,5 +101,59 @@ export class ActionsService {
    */
   getActionHandlers(): ActionHandlers {
     return this.actionHandlers;
+  }
+
+  /**
+   * Store action execution results
+   */
+  async storeActionResults(results: ExecutedAction[]): Promise<void> {
+    try {
+      await this.storageService.set(
+        ActionsStrings.STORAGE_KEYS.LAST_ACTION_RESULTS,
+        results,
+        { area: 'local' }
+      );
+
+      this.logger.debug(
+        `Stored ${results.length} action results`,
+        'ActionsService'
+      );
+    } catch (error) {
+      this.logger.logError(error as Error, 'ActionsService');
+      throw new Error(
+        `Failed to store action results: ${(error as Error).message}`
+      );
+    }
+  }
+
+  /**
+   * Get last action execution results
+   */
+  async getLastActionResults(): Promise<ExecutedAction[]> {
+    try {
+      const results = await this.storageService.get<ExecutedAction[]>(
+        ActionsStrings.STORAGE_KEYS.LAST_ACTION_RESULTS,
+        { area: 'local' }
+      );
+      return results || [];
+    } catch (error) {
+      this.logger.logError(error as Error, 'ActionsService');
+      return [];
+    }
+  }
+
+  /**
+   * Clear stored action results
+   */
+  async clearLastActionResults(): Promise<void> {
+    try {
+      await this.storageService.set(
+        ActionsStrings.STORAGE_KEYS.LAST_ACTION_RESULTS,
+        [],
+        { area: 'local' }
+      );
+    } catch (error) {
+      this.logger.logError(error as Error, 'ActionsService');
+    }
   }
 }

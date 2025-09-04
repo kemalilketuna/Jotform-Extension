@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { LoggingService } from '@/services/LoggingService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { APIService } from '@/services/APIService';
-import { PromptSubmissionError } from '@/services/APIService/APIErrors';
-import { APIStrings } from '@/services/APIService/APIStrings';
+import { PromptSubmissionError } from './ComponentErrors';
+import { ComponentStrings } from './ComponentStrings';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
 import { StatusMessage } from './StatusMessage';
@@ -36,7 +36,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 
     try {
       setStatus({
-        message: APIStrings.USER_MESSAGES.SUBMITTING_PROMPT,
+        message: ComponentStrings.USER_MESSAGES.SUBMITTING_PROMPT,
         type: 'loading',
       });
       LoggingService.getInstance().info(
@@ -53,7 +53,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 
       setInputText('');
       setStatus({
-        message: APIStrings.USER_MESSAGES.PROMPT_SUBMITTED,
+        message: ComponentStrings.USER_MESSAGES.PROMPT_SUBMITTED,
         type: 'success',
       });
 
@@ -71,7 +71,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
       const errorMessage =
         error instanceof PromptSubmissionError
           ? error.message
-          : APIStrings.USER_MESSAGES.PROMPT_SUBMISSION_FAILED;
+          : ComponentStrings.USER_MESSAGES.PROMPT_SUBMISSION_FAILED;
 
       setStatus({ message: errorMessage, type: 'error' });
     }

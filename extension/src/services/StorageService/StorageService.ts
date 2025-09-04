@@ -1,5 +1,5 @@
 import { LoggingService } from '../LoggingService';
-import { APIStrings } from '../APIService/APIStrings';
+import { StorageStrings } from './StorageStrings';
 import {
   StorageQuotaExceededError,
   InvalidStorageKeyError,
@@ -191,7 +191,7 @@ export class StorageService {
    */
   async setSessionId(sessionId: string): Promise<void> {
     try {
-      await this.set(APIStrings.STORAGE_KEYS.SESSION_ID, sessionId, {
+      await this.set(StorageStrings.STORAGE_KEYS.SESSION_ID, sessionId, {
         area: 'local',
       });
     } catch (error) {
@@ -208,7 +208,7 @@ export class StorageService {
   async getSessionId(): Promise<string | null> {
     try {
       const sessionId = await this.get<string>(
-        APIStrings.STORAGE_KEYS.SESSION_ID,
+        StorageStrings.STORAGE_KEYS.SESSION_ID,
         { area: 'local' }
       );
       return sessionId;
