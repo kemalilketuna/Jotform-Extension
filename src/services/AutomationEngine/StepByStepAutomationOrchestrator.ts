@@ -103,11 +103,9 @@ export class StepByStepAutomationOrchestrator {
             ),
           ]);
         } catch (error) {
-          this.logger.warn(
-            `DOM loading timeout or error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            'StepByStepAutomationOrchestrator'
-          );
-          // Continue anyway, but log the issue
+          const errorMessage = `DOM loading failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          this.logger.error(errorMessage, 'StepByStepAutomationOrchestrator');
+          throw new AutomationError(errorMessage);
         }
 
         // Step 2: Get visible interactive elements
@@ -115,23 +113,15 @@ export class StepByStepAutomationOrchestrator {
           this.domDetectionService.listVisibleInteractiveElements();
 
         if (visibleElements.length === 0) {
-          this.logger.warn(
-            'No visible interactive elements found',
-            'StepByStepAutomationOrchestrator'
-          );
-          // Create error outcome for backend
-          lastTurnOutcome = [
-            {
-              status: 'FAIL',
-              errorMessage: 'No visible interactive elements found on the page',
-            },
-          ];
-        } else {
-          this.logger.info(
-            `Found ${visibleElements.length} visible interactive elements`,
-            'StepByStepAutomationOrchestrator'
-          );
+          const errorMessage = 'No visible interactive elements found on the page';
+          this.logger.error(errorMessage, 'StepByStepAutomationOrchestrator');
+          throw new AutomationError(errorMessage);
         }
+
+        this.logger.info(
+          `Found ${visibleElements.length} visible interactive elements`,
+          'StepByStepAutomationOrchestrator'
+        );
 
         // Step 3: Convert elements to HTML strings for backend
         const visibleElementsHtml = visibleElements.map((element) => {

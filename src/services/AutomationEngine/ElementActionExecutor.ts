@@ -1,6 +1,7 @@
 import { LoggingService } from '@/services/LoggingService';
 import { DOMDetectionService } from '@/services/DOMDetectionService';
 import { ActionsService } from '@/services/ActionsService';
+import { VisualCursorService } from '@/services/VisualCursorService';
 import { Action } from '@/services/APIService/APITypes';
 
 /**
@@ -10,6 +11,7 @@ export class ElementActionExecutor {
   private readonly logger: LoggingService;
   private readonly domDetectionService: DOMDetectionService;
   private readonly actionsService: ActionsService;
+  private readonly visualCursorService: VisualCursorService;
 
   constructor(
     logger: LoggingService,
@@ -19,6 +21,7 @@ export class ElementActionExecutor {
     this.logger = logger;
     this.domDetectionService = domDetectionService;
     this.actionsService = actionsService;
+    this.visualCursorService = VisualCursorService.getInstance(logger);
   }
 
   /**
@@ -53,43 +56,15 @@ export class ElementActionExecutor {
       );
     }
 
-    // Generate JSPath for the element for more reliable targeting
-    let jsPath: string;
-    try {
-      jsPath = this.domDetectionService.generateElementPath(targetElement);
-    } catch (error) {
-      this.logger.warn(
-        `Failed to generate JSPath for element: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'ElementActionExecutor'
-      );
-      // Fallback to basic selector
-      jsPath = this.generateFallbackSelector(targetElement);
-    }
-
-    // Create automation action based on backend action type
+    // Use element directly instead of generating selector path
+    // This avoids CSS selector issues and is more reliable
     if (action.type === 'CLICK') {
-      const automationAction = {
-        type: 'CLICK' as const,
-        target: jsPath,
-        description: action.explanation || 'Click action from AI backend',
-        delay: 100,
-      };
-
-      await this.actionsService.executeAction(automationAction, stepIndex);
+      await this.executeClickOnElement(targetElement, action.explanation, stepIndex);
     } else if (action.type === 'TYPE') {
       if (!action.value) {
         throw new Error('TYPE action missing value');
       }
-
-      const automationAction = {
-        type: 'TYPE' as const,
-        target: jsPath,
-        value: action.value,
-        description: action.explanation || 'Type action from AI backend',
-        delay: 100,
-      };
-
-      await this.actionsService.executeAction(automationAction, stepIndex);
+      await this.executeTypeOnElement(targetElement, action.value, action.explanation, stepIndex);
     } else {
       throw new Error(
         `Unsupported action type for element execution: ${action.type}`
@@ -98,36 +73,104 @@ export class ElementActionExecutor {
   }
 
   /**
-   * Generate fallback selector when JSPath generation fails
+   * Execute click action directly on element with visual cursor
    */
-  private generateFallbackSelector(element: HTMLElement): string {
-    // Try ID first
-    if (element.id) {
-      return `#${element.id}`;
+  private async executeClickOnElement(
+    element: HTMLElement,
+    description: string | undefined,
+    stepIndex: number
+  ): Promise<void> {
+    this.logger.info(
+      `Executing direct click on element: ${element.tagName}`,
+      'ElementActionExecutor'
+    );
+
+    try {
+      // Initialize visual cursor if not already done
+      await this.visualCursorService.initialize();
+
+      // Show cursor and move to element
+      this.visualCursorService.show();
+      await this.visualCursorService.moveToElement(element);
+
+      // Perform visual click animation
+      await this.visualCursorService.performClick();
+
+      // Actually click the element
+      element.click();
+
+      // Small delay to show the click effect
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+    } catch (error) {
+      this.logger.warn(
+        `Visual cursor failed, falling back to direct click: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'ElementActionExecutor'
+      );
+      // Fallback to direct click if visual cursor fails
+      element.click();
     }
 
-    // Try class names
-    if (element.className && typeof element.className === 'string') {
-      const classes = element.className.trim().split(/\s+/);
-      if (classes.length > 0) {
-        return `.${classes[0]}`;
-      }
+    this.logger.info(
+      `Direct click completed on: ${element.tagName}`,
+      'ElementActionExecutor'
+    );
+  }
+
+  /**
+   * Execute type action directly on element with visual cursor
+   */
+  private async executeTypeOnElement(
+    element: HTMLElement,
+    value: string,
+    description: string | undefined,
+    stepIndex: number
+  ): Promise<void> {
+    this.logger.info(
+      `Executing direct type on element: ${element.tagName}`,
+      'ElementActionExecutor'
+    );
+
+    try {
+      // Initialize visual cursor if not already done
+      await this.visualCursorService.initialize();
+
+      // Show cursor and move to element
+      this.visualCursorService.show();
+      await this.visualCursorService.moveToElement(element);
+
+      // Perform visual click to focus
+      await this.visualCursorService.performClick();
+
+    } catch (error) {
+      this.logger.warn(
+        `Visual cursor failed for type action: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'ElementActionExecutor'
+      );
     }
 
-    // Try tag name with attributes
-    const tagName = element.tagName.toLowerCase();
-    const name = element.getAttribute('name');
-    const type = element.getAttribute('type');
+    // Focus the element first
+    element.focus();
 
-    if (name) {
-      return `${tagName}[name="${name}"]`;
+    // Clear existing value if it's an input element
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      element.value = '';
     }
 
-    if (type) {
-      return `${tagName}[type="${type}"]`;
+    // Type the value
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      element.value = value;
+      // Trigger input event to notify any listeners
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+      // For contenteditable elements
+      element.textContent = value;
     }
 
-    // Last resort: just tag name (not very reliable)
-    return tagName;
+    this.logger.info(
+      `Direct type completed on: ${element.tagName}`,
+      'ElementActionExecutor'
+    );
   }
 }
