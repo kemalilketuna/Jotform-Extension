@@ -6,5 +6,18 @@ export default {
     './src/components/**/*.{js,ts,jsx,tsx}',
     './public/**/*.html',
   ],
+  theme: {
+    extend: {
+      fontFamily: {
+        'inter': ['Inter', 'sans-serif'],
+      },
+      letterSpacing: {
+        'tight-custom': '-0.176px',
+      },
+      colors: {
+        'custom-blue': '#01105c',
+      },
+    },
+  },
   plugins: [],
 };

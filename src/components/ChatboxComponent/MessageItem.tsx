@@ -38,7 +38,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       role="listitem"
       aria-label={ComponentStrings.ACCESSIBILITY.MESSAGE_ITEM}
     >
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 shadow-sm">
+      <div className="bg-white border border-gray-100 p-3 shadow-sm" style={{borderRadius: '12px', border: '1px solid #f3f3f3'}}>
         <div className="flex items-start space-x-2">
           {/* AI Agent Icon */}
           <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">

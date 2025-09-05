@@ -58,17 +58,10 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
       role="region"
       aria-label={ComponentStrings.ACCESSIBILITY.CHATBOX_CONTAINER}
     >
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
-        {/* Header */}
-        <div className="bg-blue-500 text-white px-4 py-2">
-          <h3 className="text-sm font-medium">
-            {ComponentStrings.CHATBOX_LABELS.TITLE}
-          </h3>
-        </div>
-
+      <div className="bg-white border shadow-lg overflow-hidden" style={{ borderRadius: '12px', border: '1px solid #f3f3f3' }}>
         {/* Messages Container */}
         <div
-          className={`${ComponentStrings.CSS_CLASSES.MESSAGE_LIST} overflow-y-auto p-3`}
+          className={`${ComponentStrings.CSS_CLASSES.MESSAGE_LIST} overflow-y-auto p-3 min-h-[200px]`}
           style={{ maxHeight }}
           role="log"
           aria-label={ComponentStrings.ACCESSIBILITY.SCROLL_AREA}
@@ -78,7 +71,10 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
             <div
               className={`${ComponentStrings.CSS_CLASSES.EMPTY_STATE} text-center py-8`}
             >
-              <div className="text-gray-400 text-sm">
+              <div
+                className="z-[2] text-base leading-6 tracking-tight-custom font-inter"
+                style={{ color: '#01105c' }}
+              >
                 {ComponentStrings.CHATBOX_LABELS.EMPTY_STATE}
               </div>
             </div>

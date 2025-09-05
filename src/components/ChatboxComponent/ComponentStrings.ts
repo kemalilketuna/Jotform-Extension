@@ -4,7 +4,7 @@
 export class ComponentStrings {
   static readonly CHATBOX_LABELS = {
     TITLE: 'AI Agent Messages',
-    EMPTY_STATE: 'No messages yet',
+    EMPTY_STATE: '🚀 Ready to automate! I\'m your AI agent that can interact with any website, fill forms, click buttons, and complete tasks just like a human. What would you like me to help you with?',
     LOADING: 'AI is thinking...',
   } as const;
 
