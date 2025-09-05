@@ -4,6 +4,7 @@ import { LoggingService } from './LoggingService';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
 
 import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
+import { ChatboxComponent, ChatMessage } from '@/components/ChatboxComponent';
 
 /**
  * Service to manage React components rendered by the extension
@@ -14,6 +15,7 @@ export class ComponentService {
   private containerElement: HTMLElement | null = null;
   private reactRoot: Root | null = null;
   private isInitialized = false;
+  private chatMessages: ChatMessage[] = [];
 
   private constructor() {
     this.logger = LoggingService.getInstance();
@@ -105,7 +107,7 @@ export class ComponentService {
   }
 
   /**
-   * Render the AI text field React component
+   * Render both the chatbox and AI text field React components
    */
   private renderAiTextFieldComponent(): void {
     try {
@@ -116,22 +118,30 @@ export class ComponentService {
       // Create React root
       this.reactRoot = createRoot(this.containerElement);
 
-      // Render the AI text field component
+      // Render both components in a fragment
       this.reactRoot.render(
-        React.createElement(AiTextFieldComponent, {
-          onSubmit: async (text: string) => {
-            await this.handleAutomationStart(text);
-          },
-        })
+        React.createElement(React.Fragment, null, [
+          React.createElement(ChatboxComponent, {
+            key: 'chatbox',
+            messages: this.chatMessages,
+            isVisible: true,
+          }),
+          React.createElement(AiTextFieldComponent, {
+            key: 'textfield',
+            onSubmit: async (text: string) => {
+              await this.handleAutomationStart(text);
+            },
+          }),
+        ])
       );
 
       this.logger.info(
-        'AI text field component rendered successfully',
+        'Chatbox and AI text field components rendered successfully',
         'ComponentService'
       );
     } catch (error) {
       this.logger.error(
-        'Failed to render AI text field component',
+        'Failed to render components',
         'ComponentService',
         { error: String(error) }
       );
@@ -231,5 +241,69 @@ export class ComponentService {
       this.containerElement.parentNode !== null &&
       this.reactRoot !== null
     );
+  }
+
+  /**
+   * Add a message to the chatbox
+   */
+  addChatMessage(message: string): void {
+    try {
+      const chatMessage: ChatMessage = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        message: message.trim(),
+        timestamp: new Date(),
+      };
+
+      this.chatMessages.push(chatMessage);
+
+      // Re-render components to show new message
+      if (this.isInitialized && this.reactRoot) {
+        this.renderAiTextFieldComponent();
+      }
+
+      this.logger.info(
+        'Chat message added successfully',
+        'ComponentService',
+        { messageId: chatMessage.id }
+      );
+    } catch (error) {
+      this.logger.error(
+        'Failed to add chat message',
+        'ComponentService',
+        { error: String(error) }
+      );
+    }
+  }
+
+  /**
+   * Clear all chat messages
+   */
+  clearChatMessages(): void {
+    try {
+      this.chatMessages = [];
+
+      // Re-render components to clear messages
+      if (this.isInitialized && this.reactRoot) {
+        this.renderAiTextFieldComponent();
+      }
+
+      this.logger.info(
+        'Chat messages cleared successfully',
+        'ComponentService'
+      );
+    } catch (error) {
+      this.logger.error(
+        'Failed to clear chat messages',
+        'ComponentService',
+        { error: String(error) }
+      );
+    }
+  }
+
+  /**
+   * Get current chat messages
+   */
+  getChatMessages(): ChatMessage[] {
+    return [...this.chatMessages];
   }
 }

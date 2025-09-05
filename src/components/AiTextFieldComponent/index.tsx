@@ -74,7 +74,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 
   return (
     <div
-      className={`fixed bottom-5 right-5 z-[999999] pointer-events-auto transition-all duration-300 ${isFocused ? 'w-80' : 'w-64'} ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
+      className={`fixed bottom-5 right-5 z-[999999] pointer-events-auto transition-all duration-300 w-80 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
     >
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
