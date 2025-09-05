@@ -1,4 +1,8 @@
 import { defineConfig } from 'wxt';
+import { config } from 'dotenv';
+
+// Load environment variables
+config();
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({

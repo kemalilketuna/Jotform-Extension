@@ -2,12 +2,7 @@
  * Centralized logging service that respects user privacy
  */
 
-export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-}
+import { EnvironmentConfig, LogLevel } from '../utils/EnvironmentConfig';
 
 export interface LogEntry {
   level: LogLevel;
@@ -21,7 +16,7 @@ export class LoggingService {
   private static instance: LoggingService;
   private logs: LogEntry[] = [];
   private readonly maxLogs = 1000;
-  private readonly logLevel = LogLevel.DEBUG;
+  private readonly logLevel = EnvironmentConfig.getInstance().getDebugLogLevel();
 
   private constructor() {
     // Private constructor for singleton

@@ -1,5 +1,6 @@
+import { EnvironmentConfig } from '../../utils/EnvironmentConfig';
+
 export class APIConfig {
-  private static readonly DEFAULT_BASE_URL = 'http://localhost:8000' as const;
   private static readonly DEFAULT_TIMEOUT = 30000 as const;
   private static readonly DEFAULT_RETRY_ATTEMPTS = 3 as const;
   private static readonly DEFAULT_RETRY_DELAY = 1000 as const;
@@ -15,7 +16,7 @@ export class APIConfig {
   private readonly retryDelay: number;
 
   constructor(config?: Partial<APIConfigOptions>) {
-    this.baseUrl = config?.baseUrl ?? APIConfig.DEFAULT_BASE_URL;
+    this.baseUrl = EnvironmentConfig.getInstance().getBackendBaseUrl();
     this.timeout = config?.timeout ?? APIConfig.DEFAULT_TIMEOUT;
     this.retryAttempts =
       config?.retryAttempts ?? APIConfig.DEFAULT_RETRY_ATTEMPTS;
