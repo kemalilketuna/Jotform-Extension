@@ -4,6 +4,13 @@ alwaysApply: true
 
 # Common Implementation Patterns
 
+## Package Management
+- **USE 'pnpm' not 'npm'** for all package management operations
+- **DO NOT use 'pnpm dev' or 'pnpm run dev'** - use appropriate WXT commands
+- Use `pnpm install` for dependency installation
+- Use `pnpm add` for adding new dependencies
+- Use `pnpm remove` for removing dependencies
+
 ## Message Passing Pattern
 ```typescript
 // Define message types
@@ -79,4 +86,37 @@ class ActionQueue {
 }
 ```
 
-These patterns provide reusable, tested approaches for common browser extension and AI automation scenarios.
+## String Management Pattern
+```typescript
+// NavigationUrls class example
+class NavigationUrls {
+  static readonly JOTFORM_BASE = 'https://www.jotform.com' as const;
+  static readonly FORM_BUILDER = '/build' as const;
+  
+  static getFormUrl(formId: string): string {
+    return `${this.JOTFORM_BASE}/form/${formId}`;
+  }
+}
+
+// ElementSelectors class example
+class ElementSelectors {
+  static readonly FORM_SUBMIT = '[type="submit"]' as const;
+  static readonly TEXT_INPUT = 'input[type="text"]' as const;
+}
+```
+
+## Error Handling Pattern
+```typescript
+class StringError extends Error {
+  constructor(
+    message: string,
+    public readonly type: string,
+    public readonly originalValue: string
+  ) {
+    super(message);
+    this.name = 'StringError';
+  }
+}
+```
+
+These patterns provide reusable, tested approaches for common browser extension and AI automation scenarios while following strict string management and package management requirements.

@@ -5,20 +5,20 @@ alwaysApply: true
 # Project Architecture & Tech Stack
 
 ## Project Overview
-You are developing a cross-browser extension using TypeScript and React that emulates user input through AI agents for site automation.
+You are developing a cross-browser extension using TypeScript and React that emulates user input through AI agents for Jotform automation.
 
 ## Core Technologies
-- **WXT Framework**: Use WXT for extension development and build configuration
+- **WXT Framework**: Use WXT for extension development with TypeScript and React
 - **TypeScript**: Strict type checking, use latest ES features
 - **React**: For popup UI and content script components (with @wxt-dev/module-react)
 - **Tailwind CSS**: Use Tailwind CSS for all styling needs
-- **Web Extensions API**: Use the standardized WebExtensions API for maximum compatibility
+- **webextension-polyfill**: For consistency across browsers
 
 ## Browser Compatibility
 - Primary targets: Chrome, Firefox, Safari, Edge
 - Use `webextension-polyfill` for API consistency across browsers
 - Avoid browser-specific APIs unless absolutely necessary
-- Test manifest v3 compatibility (Chrome/Edge) and v2 fallbacks (Firefox/Safari)
+- Cross-browser testing with manifest v3/v2 compatibility
 
 ## Directory Structure (WXT Framework)
 ```
@@ -35,8 +35,20 @@ src/
 └── assets/             # Static assets
 ```
 
-## Key Files (WXT Configuration)
-- `wxt.config.ts` - WXT framework configuration
+## Key Configuration Files
+- `wxt.config.ts` - WXT framework configuration with minimal permissions
 - `src/entrypoints/background.ts` - Service worker/background page
 - `src/entrypoints/content.ts` - Content script injection
 - `src/entrypoints/popup/` - Extension popup interface directory
+
+## WXT Framework Integration
+- Use WXT auto-imports for browser APIs
+- Proper message passing between scripts
+- Handle navigation and dynamic content
+- Use @wxt-dev/module-react for React integration
+
+## Jotform-Specific Requirements
+- Target Jotform URLs and form elements
+- Implement NavigationUrls class for Jotform URLs
+- ElementSelectors class for DOM targeting
+- UserMessages class for user-facing text

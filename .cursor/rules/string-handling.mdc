@@ -2,30 +2,34 @@
 alwaysApply: true
 ---
 
-# String Handling & OOP Architecture
+# String Handling & OOP Architecture (CRITICAL)
 
 ## String Management Philosophy
+- **ALL static strings must be managed through OOP classes - NO magic strings**
 - **OOP-First**: All static strings (URLs, XPaths, messages) must be managed through object-oriented classes
 - **No Magic Strings**: Never use hardcoded strings directly in business logic
 - **Type Safety**: All string constants must be strongly typed with TypeScript
 - **Maintainability**: Centralize string management for easy updates and localization
 
-## String Categories
+## Required String Classes
 
-### Navigation URLs
+### NavigationUrls Class
 - Create `NavigationUrls` class for all Jotform URLs
 - Use static readonly properties for base URLs
 - Implement static methods for dynamic URL generation
+- Use `as const` for type safety
 
-### Element Selectors & XPaths
-- Create `ElementSelectors` class for DOM element targeting
+### ElementSelectors Class
+- Create `ElementSelectors` class for DOM targeting
 - Separate button selectors, form XPaths, and dynamic selectors
 - Use `as const` for type safety on selector objects
+- Validate all dynamic inputs
 
-### User Messages & Text Content
+### UserMessages Class
 - Create `UserMessages` class for all user-facing text
 - Organize by categories: SUCCESS, ERRORS, PROMPTS
 - Implement static methods for dynamic message generation
+- Support localization patterns
 
 ## Implementation Requirements
 
@@ -45,3 +49,10 @@ alwaysApply: true
 - Create custom `StringError` class for string-related errors
 - Include error type and original value for debugging
 - Validate all external string inputs before use
+- Implement proper error boundaries for string operations
+
+## Critical Rules
+- NEVER use hardcoded strings in business logic
+- ALL static strings must go through OOP classes
+- Use static readonly properties with 'as const'
+- Validate all dynamic inputs before use

@@ -5,22 +5,34 @@ alwaysApply: true
 # AI & Automation Implementation
 
 ## Input Emulation
-- **DOM Events**: Use DOM events (click, input, keydown) with proper event dispatching
+- **DOM Events**: Use DOM events (click, input, keydown) with proper dispatching
 - **Element Selection**: Implement robust element selection (CSS selectors, XPath, AI-based recognition)
-- **Action Sequencing**: Build a queue system for action execution with proper timing
+- **Action Queue System**: Build action queue system with timing, safety guards against infinite loops
 - **Safety**: Add safeguards to prevent infinite loops or harmful actions
 
 ## AI Agent Decision Making
-- Implement explainable AI decisions for user transparency
-- Use confidence scores for action recommendations
-- Provide fallback strategies for low-confidence scenarios
-- Log decision reasoning for debugging
+- **Explainable AI**: Implement explainable AI decisions with confidence scores
+- **Fallback Strategies**: Provide fallback strategies for low-confidence scenarios
+- **Decision Reasoning**: Log decision reasoning for debugging and transparency
+- **Confidence Scores**: Use confidence scores for action recommendations
 
 ## User Interaction Guidelines
-- Always request permission before performing actions
-- Provide clear feedback during automation
-- Allow users to interrupt or modify automation sequences
-- Respect user preferences and site-specific settings
+- **Always request user permission** before performing actions
+- **Provide clear feedback** during automation
+- **Allow interruption**: Users must be able to interrupt or modify automation sequences
+- **Respect preferences**: Honor user preferences and site-specific settings
+
+## Action Queue System
+- Build systematic action queue with proper timing
+- Implement safety guards against infinite loops
+- Allow users to interrupt automation sequences
+- Provide clear feedback on automation progress
+
+## Element Selection Strategy
+- CSS selectors as primary method
+- XPath for complex targeting
+- AI-based recognition for dynamic elements
+- Robust fallback mechanisms
 
 ## Learning & Adaptation
 - Store successful interaction patterns
@@ -28,7 +40,14 @@ alwaysApply: true
 - Adapt to site changes and updates
 - Maintain privacy while improving performance
 
-## Error Handling
+## Error Handling & Safety
 - Implement graceful fallbacks when automation fails
-- Validate DOM manipulation targets
+- Validate DOM manipulation targets before action
 - Implement rate limiting for automation actions
+- Safety guards against harmful or destructive actions
+
+## Permission & Feedback Requirements
+- Always request permission before performing actions
+- Provide clear feedback during automation
+- Allow interruption of automation sequences
+- Implement explainable AI decisions
