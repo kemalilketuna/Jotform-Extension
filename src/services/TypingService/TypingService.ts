@@ -3,7 +3,13 @@ import { EventDispatcher } from './EventDispatcher';
 import { BackspaceCleaner } from './BackspaceCleaner';
 import { AudioService } from '@/services/AudioService';
 import { LoggingService } from '@/services/LoggingService';
-import { TypingError, ElementTypingError } from './TypingServiceErrors';
+import {
+  TypingOperationConfig,
+  TypingOptions,
+  TypingFunction,
+} from './TypingOperationConfig';
+import { TypingErrorHandler } from './TypingErrorHandler';
+import { TypingOperationFactory } from './TypingOperationFactory';
 
 /**
  * Human-like typing simulation service with realistic typing patterns
@@ -13,10 +19,12 @@ export class TypingService {
   private static instance: TypingService;
   private readonly logger: LoggingService;
   private readonly audioService: AudioService;
+  private readonly errorHandler: TypingErrorHandler;
 
   private constructor(logger: LoggingService = LoggingService.getInstance()) {
     this.logger = logger;
     this.audioService = AudioService.getInstance();
+    this.errorHandler = new TypingErrorHandler(logger);
   }
 
   static getInstance(logger?: LoggingService): TypingService {
@@ -35,23 +43,17 @@ export class TypingService {
   async simulateTyping(
     element: HTMLInputElement | HTMLTextAreaElement,
     text: string,
-    options: {
-      onProgress?: (currentText: string) => void;
-      onComplete?: () => void;
-      speedMultiplier?: number;
-    } = {}
+    options: TypingOptions = {}
   ): Promise<void> {
-    return this.executeTypingWithErrorHandling(
+    const config: TypingOperationConfig = {
       element,
       text,
       options,
-      'typing simulation',
-      'Empty text provided for typing simulation',
-      'Failed to simulate typing',
-      'TypingService.simulateTyping',
-      'Typing simulation failed',
-      'Unknown error during typing simulation',
-      (el, txt, opts) => this.simulateBasicTyping(el, txt, opts)
+      operation: TypingOperationFactory.createBasicTypingOperation(),
+    };
+
+    return this.executeTypingOperation(config, (el, txt, opts) =>
+      this.simulateBasicTyping(el, txt, opts)
     );
   }
 
@@ -61,82 +63,37 @@ export class TypingService {
   async simulateRealisticTyping(
     element: HTMLInputElement | HTMLTextAreaElement,
     text: string,
-    options: {
-      onProgress?: (currentText: string) => void;
-      onComplete?: () => void;
-      speedMultiplier?: number;
-    } = {}
+    options: TypingOptions = {}
   ): Promise<void> {
-    return this.executeTypingWithErrorHandling(
+    const config: TypingOperationConfig = {
       element,
       text,
       options,
-      'realistic typing simulation',
-      'Empty text provided for realistic typing simulation',
-      'Failed to simulate realistic typing',
-      'TypingService.simulateRealisticTyping',
-      'Realistic typing simulation failed',
-      'Unknown error during realistic typing simulation',
-      (el, txt, opts) => this.performRealisticTyping(el, txt, opts)
+      operation: TypingOperationFactory.createRealisticTypingOperation(),
+    };
+
+    return this.executeTypingOperation(config, (el, txt, opts) =>
+      this.performRealisticTyping(el, txt, opts)
     );
   }
 
   /**
-   * Common error handling wrapper for typing operations
+   * Execute typing operation with configuration-based error handling
    */
-  private async executeTypingWithErrorHandling(
-    element: HTMLInputElement | HTMLTextAreaElement,
-    text: string,
-    options: {
-      onProgress?: (currentText: string) => void;
-      onComplete?: () => void;
-      speedMultiplier?: number;
-    },
-    operationType: string,
-    emptyTextWarning: string,
-    errorLogMessage: string,
-    errorLogContext: string,
-    elementErrorPrefix: string,
-    unknownErrorMessage: string,
-    typingFunction: (
-      el: HTMLInputElement | HTMLTextAreaElement,
-      txt: string,
-      opts: {
-        onProgress?: (currentText: string) => void;
-        onComplete?: () => void;
-        speedMultiplier?: number;
-      }
-    ) => Promise<void>
+  private async executeTypingOperation(
+    config: TypingOperationConfig,
+    typingFunction: TypingFunction
   ): Promise<void> {
     try {
-      if (!element) {
-        throw new ElementTypingError('Element is null or undefined', element);
-      }
-      if (!text) {
-        this.logger.warn(emptyTextWarning, 'TypingService');
+      this.errorHandler.validateConfig(config);
+
+      if (this.errorHandler.shouldSkipEmptyText(config.text)) {
         return;
       }
 
-      return await typingFunction(element, text, options);
+      return await typingFunction(config.element, config.text, config.options);
     } catch (error) {
-      this.logger.error(errorLogMessage, 'TypingService', {
-        text: text.substring(0, 50),
-      });
-
-      if (error instanceof TypingError) {
-        throw error;
-      }
-
-      if (error instanceof Error) {
-        this.logger.logError(error, errorLogContext);
-        throw new ElementTypingError(
-          `${elementErrorPrefix}: ${error.message}`,
-          element,
-          error
-        );
-      }
-
-      throw new TypingError(unknownErrorMessage);
+      this.errorHandler.handleTypingError(error, config);
     }
   }
 
@@ -146,11 +103,7 @@ export class TypingService {
   private async simulateBasicTyping(
     element: HTMLInputElement | HTMLTextAreaElement,
     text: string,
-    options: {
-      onProgress?: (currentText: string) => void;
-      onComplete?: () => void;
-      speedMultiplier?: number;
-    } = {}
+    options: TypingOptions = {}
   ): Promise<void> {
     const { onProgress, onComplete, speedMultiplier = 1 } = options;
 
@@ -208,11 +161,7 @@ export class TypingService {
   private async performRealisticTyping(
     element: HTMLInputElement | HTMLTextAreaElement,
     text: string,
-    options: {
-      onProgress?: (currentText: string) => void;
-      onComplete?: () => void;
-      speedMultiplier?: number;
-    } = {}
+    options: TypingOptions = {}
   ): Promise<void> {
     const { onProgress, onComplete, speedMultiplier = 1 } = options;
 
