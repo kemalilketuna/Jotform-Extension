@@ -3,12 +3,12 @@ import { LoggingService } from '@/services/LoggingService';
 import { ErrorMessages } from '@/services/MessagesService';
 import { UIConfig } from '@/config/UIConfig';
 import { EXTENSION_COMPONENTS } from './extensionComponents';
+import { SingletonManager } from '@/utils/SingletonService';
 
 /**
  * Service for blocking user interactions during automation while keeping extension components clickable
  */
 export class UserInteractionBlocker {
-  private static instance: UserInteractionBlocker;
   private readonly logger: LoggingService;
   private isBlocking = false;
   private blockerElement: HTMLElement | null = null;
@@ -23,10 +23,10 @@ export class UserInteractionBlocker {
   }
 
   static getInstance(): UserInteractionBlocker {
-    if (!UserInteractionBlocker.instance) {
-      UserInteractionBlocker.instance = new UserInteractionBlocker();
-    }
-    return UserInteractionBlocker.instance;
+    return SingletonManager.getInstance(
+      'UserInteractionBlocker',
+      () => new UserInteractionBlocker()
+    );
   }
 
   /**

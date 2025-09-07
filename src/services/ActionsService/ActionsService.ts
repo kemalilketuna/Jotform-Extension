@@ -7,13 +7,13 @@ import { ActionHandlers } from './ActionHandlers';
 import { StorageService } from '@/services/StorageService';
 import { ActionsStrings } from './ActionsStrings';
 import { ElementUtils } from '@/utils/ElementUtils';
+import { SingletonManager } from '@/utils/SingletonService';
 
 /**
  * Service responsible for executing individual automation actions
  * Provides a clean interface for action execution with proper error handling
  */
 export class ActionsService {
-  private static instance: ActionsService;
   private readonly logger: LoggingService;
   private readonly actionHandlers: ActionHandlers;
   private readonly elementUtils: ElementUtils;
@@ -41,14 +41,10 @@ export class ActionsService {
     visualCursor?: VisualCursorService,
     typingService?: TypingService
   ): ActionsService {
-    if (!ActionsService.instance) {
-      ActionsService.instance = new ActionsService(
-        logger,
-        visualCursor,
-        typingService
-      );
-    }
-    return ActionsService.instance;
+    return SingletonManager.getInstance(
+      'ActionsService',
+      () => new ActionsService(logger, visualCursor, typingService)
+    );
   }
 
   /**

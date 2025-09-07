@@ -1,5 +1,6 @@
 import { ServiceFactory } from './DIContainer';
 import { LoggingService } from './LoggingService';
+import { SingletonManager } from '@/utils/SingletonService';
 
 /**
  * Service to disable Jotform agent components using mutation observer
@@ -16,7 +17,6 @@ export class JotformAgentDisabler {
       '#form-agent-helper',
     ],
   } as const;
-  private static instance: JotformAgentDisabler;
   private readonly logger: LoggingService;
   private mutationObserver: MutationObserver | null = null;
   private isObserving = false;
@@ -30,10 +30,10 @@ export class JotformAgentDisabler {
   }
 
   static getInstance(): JotformAgentDisabler {
-    if (!JotformAgentDisabler.instance) {
-      JotformAgentDisabler.instance = new JotformAgentDisabler();
-    }
-    return JotformAgentDisabler.instance;
+    return SingletonManager.getInstance(
+      'JotformAgentDisabler',
+      () => new JotformAgentDisabler()
+    );
   }
 
   /**

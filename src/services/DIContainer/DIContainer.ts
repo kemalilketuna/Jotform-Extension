@@ -14,13 +14,13 @@ import { NavigationDetector } from '@/entrypoints/content/NavigationDetector';
 import { EventBus } from '@/events';
 import { ServiceType, ServiceFactory, ServiceInstance } from './DITypes';
 import { DIError } from './DIErrors';
+import { SingletonManager } from '../../utils/SingletonService';
 
 /**
  * Dependency Injection Container for managing service lifecycle and dependencies
  * Replaces manual singleton pattern with proper dependency management
  */
 export class DIContainer {
-  private static instance: DIContainer;
   private readonly services = new Map<ServiceType, ServiceInstance>();
   private readonly factories = new Map<ServiceType, ServiceFactory>();
   private readonly singletons = new Set<ServiceType>();
@@ -33,10 +33,7 @@ export class DIContainer {
   }
 
   static getInstance(): DIContainer {
-    if (!DIContainer.instance) {
-      DIContainer.instance = new DIContainer();
-    }
-    return DIContainer.instance;
+    return SingletonManager.getInstance('DIContainer', () => new DIContainer());
   }
 
   /**

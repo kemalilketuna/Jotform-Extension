@@ -4,6 +4,7 @@
 
 import { EnvironmentConfig, LogLevel } from '../utils/EnvironmentConfig';
 import { LoggingConfig } from '../config';
+import { SingletonManager } from '../utils/SingletonService';
 
 export interface LogEntry {
   level: LogLevel;
@@ -14,7 +15,6 @@ export interface LogEntry {
 }
 
 export class LoggingService {
-  private static instance: LoggingService;
   private logs: LogEntry[] = [];
   private readonly maxLogs = LoggingConfig.LIMITS.MAX_LOGS;
   private readonly logLevel =
@@ -25,10 +25,10 @@ export class LoggingService {
   }
 
   static getInstance(): LoggingService {
-    if (!LoggingService.instance) {
-      LoggingService.instance = new LoggingService();
-    }
-    return LoggingService.instance;
+    return SingletonManager.getInstance(
+      'LoggingService',
+      () => new LoggingService()
+    );
   }
 
   /**

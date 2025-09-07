@@ -5,12 +5,12 @@ import {
   NavigationDetectedMessage,
 } from '@/services/AutomationEngine/MessageTypes';
 import { EventBus, EventTypes, NavigationEvent } from '@/events';
+import { SingletonManager } from '@/utils/SingletonService';
 
 /**
  * Navigation detection and content script coordination
  */
 export class NavigationDetector {
-  private static instance: NavigationDetector;
   private readonly logger: LoggingService;
   private readonly eventBus: EventBus;
   private currentUrl: string;
@@ -24,10 +24,10 @@ export class NavigationDetector {
   }
 
   static getInstance(): NavigationDetector {
-    if (!NavigationDetector.instance) {
-      NavigationDetector.instance = new NavigationDetector();
-    }
-    return NavigationDetector.instance;
+    return SingletonManager.getInstance(
+      'NavigationDetector',
+      () => new NavigationDetector()
+    );
   }
 
   /**

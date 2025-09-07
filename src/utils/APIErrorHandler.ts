@@ -2,6 +2,8 @@ import { LoggingService } from '@/services/LoggingService';
 import { ErrorHandlingUtils, ErrorHandlingConfig } from './ErrorHandlingUtils';
 import { APIConfig } from '@/config/APIConfig';
 
+type RetryableStatusCode = (typeof APIConfig.RETRY_STATUS_CODES)[number];
+
 /**
  * Configuration for API operation error handling
  */
@@ -30,7 +32,7 @@ export class APIErrorHandler {
   private static readonly DEFAULT_RETRY_ATTEMPTS = APIConfig.MAX_RETRY_ATTEMPTS;
   private static readonly RETRY_STATUS_CODES = [
     ...APIConfig.RETRY_STATUS_CODES,
-  ];
+  ] as const;
 
   /**
    * Execute API request with comprehensive error handling
@@ -159,7 +161,9 @@ export class APIErrorHandler {
     }
 
     if (error instanceof APIHTTPError) {
-      return this.RETRY_STATUS_CODES.includes(error.statusCode);
+      return this.RETRY_STATUS_CODES.includes(
+        error.statusCode as RetryableStatusCode
+      );
     }
 
     return false;

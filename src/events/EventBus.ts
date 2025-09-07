@@ -5,6 +5,7 @@
 
 import { ExtensionEvent, EventType } from './EventTypes';
 import { LoggingService } from '@/services/LoggingService';
+import { SingletonManager } from '../utils/SingletonService';
 
 type EventHandler<T extends ExtensionEvent = ExtensionEvent> = (
   event: T
@@ -17,7 +18,6 @@ interface EventSubscription {
 }
 
 export class EventBus {
-  private static instance: EventBus | null = null;
   private readonly subscriptions = new Map<EventType, EventSubscription[]>();
   private readonly logger: LoggingService;
   private subscriptionCounter = 0;
@@ -30,13 +30,12 @@ export class EventBus {
    * Get the singleton instance of EventBus
    */
   public static getInstance(logger?: LoggingService): EventBus {
-    if (!EventBus.instance) {
+    return SingletonManager.getInstance('EventBus', () => {
       if (!logger) {
         throw new Error('Logger is required for EventBus initialization');
       }
-      EventBus.instance = new EventBus(logger);
-    }
-    return EventBus.instance;
+      return new EventBus(logger);
+    });
   }
 
   /**
@@ -198,6 +197,6 @@ export class EventBus {
    * Reset the EventBus instance (mainly for testing)
    */
   public static reset(): void {
-    EventBus.instance = null;
+    SingletonManager.reset('EventBus');
   }
 }

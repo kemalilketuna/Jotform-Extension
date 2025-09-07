@@ -5,9 +5,9 @@ import { ElementVisibility } from './ElementVisibility.js';
 import { PageAnalysis } from './PageAnalysis.js';
 import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
+import { SingletonManager } from '@/utils/SingletonService';
 
 export class DOMDetection {
-  private static instance: DOMDetection | null = null;
   private config: DOMDetectionConfig;
   private readonly logger: LoggingService;
   private readonly pageAnalysisService: PageAnalysis;
@@ -25,10 +25,10 @@ export class DOMDetection {
    * Gets the singleton instance of DOMDetectionService
    */
   static getInstance(config?: Partial<DOMDetectionConfig>): DOMDetection {
-    if (!DOMDetection.instance) {
-      DOMDetection.instance = new DOMDetection(config);
-    }
-    return DOMDetection.instance;
+    return SingletonManager.getInstance(
+      'DOMDetection',
+      () => new DOMDetection(config)
+    );
   }
 
   /**

@@ -1,9 +1,9 @@
 import { VisibilityDetectionError } from './DOMDetectionErrors.js';
 import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
+import { SingletonManager } from '@/utils/SingletonService';
 
 export class ElementVisibility {
-  private static instance: ElementVisibility | null = null;
   private readonly logger: LoggingService;
 
   private constructor() {
@@ -15,10 +15,10 @@ export class ElementVisibility {
    * Gets the singleton instance of ElementVisibilityService
    */
   static getInstance(): ElementVisibility {
-    if (!ElementVisibility.instance) {
-      ElementVisibility.instance = new ElementVisibility();
-    }
-    return ElementVisibility.instance;
+    return SingletonManager.getInstance(
+      'ElementVisibility',
+      () => new ElementVisibility()
+    );
   }
 
   /**

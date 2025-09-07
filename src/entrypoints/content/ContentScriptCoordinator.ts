@@ -9,12 +9,12 @@ import { ServiceCoordinator } from './ServiceCoordinator';
 import { AutomationStateManager } from './AutomationStateManager';
 import { ServiceFactory } from '@/services/DIContainer';
 import { ExtensionConfig } from '@/config/ExtensionConfig';
+import { SingletonManager } from '@/utils/SingletonService';
 
 /**
  * Content script coordinator for persistent automation
  */
 export class ContentScriptCoordinator {
-  private static instance: ContentScriptCoordinator;
   private readonly serviceFactory: ServiceFactory;
   private readonly serviceCoordinator: ServiceCoordinator;
   private readonly automationStateManager: AutomationStateManager;
@@ -30,15 +30,11 @@ export class ContentScriptCoordinator {
   }
 
   static getInstance(contentScriptId?: string): ContentScriptCoordinator {
-    if (!ContentScriptCoordinator.instance) {
-      if (!contentScriptId) {
-        contentScriptId = ExtensionConfig.generateContentScriptId();
-      }
-      ContentScriptCoordinator.instance = new ContentScriptCoordinator(
-        contentScriptId
-      );
-    }
-    return ContentScriptCoordinator.instance;
+    const id = contentScriptId || ExtensionConfig.generateContentScriptId();
+    return SingletonManager.getInstance(
+      'ContentScriptCoordinator',
+      () => new ContentScriptCoordinator(id)
+    );
   }
 
   /**

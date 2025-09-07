@@ -3,12 +3,12 @@ import { LoggingService } from '@/services/LoggingService';
 import { AutomationMessage } from '@/services/AutomationEngine/MessageTypes';
 import { MessageResponse, MessageSender } from './ExtensionTypes';
 import { ContentScriptCoordinator } from './ContentScriptCoordinator';
+import { SingletonManager } from '@/utils/SingletonService';
 
 /**
  * Message routing and handling for content script
  */
 export class MessageRouter {
-  private static instance: MessageRouter;
   private readonly logger: LoggingService;
   private isListenerRegistered = false;
   private coordinator: ContentScriptCoordinator | null = null;
@@ -19,10 +19,10 @@ export class MessageRouter {
   }
 
   static getInstance(): MessageRouter {
-    if (!MessageRouter.instance) {
-      MessageRouter.instance = new MessageRouter();
-    }
-    return MessageRouter.instance;
+    return SingletonManager.getInstance(
+      'MessageRouter',
+      () => new MessageRouter()
+    );
   }
 
   /**

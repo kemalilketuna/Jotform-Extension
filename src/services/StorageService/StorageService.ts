@@ -12,6 +12,7 @@ import {
   StorageChangedEvent,
   AutomationErrorEvent,
 } from '@/events';
+import { SingletonManager } from '../../utils/SingletonService';
 
 /**
  * Centralized storage service for managing extension data
@@ -30,7 +31,6 @@ interface StorageOptions {
 }
 
 export class StorageService {
-  private static instance: StorageService;
   private memoryCache: Map<string, unknown> = new Map();
   private logger: LoggingService;
   private eventBus: EventBus;
@@ -42,10 +42,10 @@ export class StorageService {
   }
 
   static getInstance(): StorageService {
-    if (!StorageService.instance) {
-      StorageService.instance = new StorageService();
-    }
-    return StorageService.instance;
+    return SingletonManager.getInstance(
+      'StorageService',
+      () => new StorageService()
+    );
   }
 
   /**

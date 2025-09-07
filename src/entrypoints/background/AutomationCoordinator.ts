@@ -8,12 +8,12 @@ import {
 } from '@/services/AutomationEngine/MessageTypes';
 import { AutomationState, AutomationStateManager } from './AutomationState';
 import { SessionManager } from './SessionManager';
+import { SingletonManager } from '@/utils/SingletonService';
 
 /**
  * Background script automation coordinator for cross-page persistence
  */
 export class AutomationCoordinator {
-  private static instance: AutomationCoordinator;
   private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
   private readonly storageService: StorageService;
@@ -30,10 +30,10 @@ export class AutomationCoordinator {
   }
 
   static getInstance(): AutomationCoordinator {
-    if (!AutomationCoordinator.instance) {
-      AutomationCoordinator.instance = new AutomationCoordinator();
-    }
-    return AutomationCoordinator.instance;
+    return SingletonManager.getInstance(
+      'AutomationCoordinator',
+      () => new AutomationCoordinator()
+    );
   }
 
   /**

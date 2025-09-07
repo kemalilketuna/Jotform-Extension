@@ -21,13 +21,13 @@ import {
   AutomationErrorEvent,
   AudioPlayEvent,
 } from '@/events';
+import { SingletonManager } from '../../utils/SingletonService';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
  * Now acts as a lightweight coordinator that delegates to specialized orchestrators
  */
 export class AutomationEngine {
-  private static instance: AutomationEngine;
   private isExecuting = false;
   private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
@@ -153,10 +153,10 @@ export class AutomationEngine {
   }
 
   static getInstance(): AutomationEngine {
-    if (!AutomationEngine.instance) {
-      AutomationEngine.instance = new AutomationEngine();
-    }
-    return AutomationEngine.instance;
+    return SingletonManager.getInstance(
+      'AutomationEngine',
+      () => new AutomationEngine()
+    );
   }
 
   /**

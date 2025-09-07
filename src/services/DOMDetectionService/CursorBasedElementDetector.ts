@@ -3,9 +3,9 @@ import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
+import { SingletonManager } from '@/utils/SingletonService';
 
 export class CursorBasedElementDetector {
-  private static instance: CursorBasedElementDetector | null = null;
   private readonly logger: LoggingService;
 
   private constructor() {
@@ -17,10 +17,10 @@ export class CursorBasedElementDetector {
    * Gets the singleton instance of CursorBasedElementDetector
    */
   static getInstance(): CursorBasedElementDetector {
-    if (!CursorBasedElementDetector.instance) {
-      CursorBasedElementDetector.instance = new CursorBasedElementDetector();
-    }
-    return CursorBasedElementDetector.instance;
+    return SingletonManager.getInstance(
+      'CursorBasedElementDetector',
+      () => new CursorBasedElementDetector()
+    );
   }
 
   // Interactive cursor styles that indicate an element is interactive

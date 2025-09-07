@@ -14,13 +14,13 @@ import { ComponentService } from '@/services/ComponentService';
 import { JotformAgentDisabler } from '@/services/JotformAgentDisabler';
 import { NavigationDetector } from '@/entrypoints/content/NavigationDetector';
 import { EventBus } from '@/events';
+import { SingletonManager } from '../../utils/SingletonService';
 
 /**
  * Factory for creating and configuring services with proper dependency injection
  * Centralizes service creation logic and eliminates tight coupling
  */
 export class ServiceFactory {
-  private static instance: ServiceFactory;
   private readonly container: DIContainer;
   private readonly logger: LoggingService;
 
@@ -30,10 +30,10 @@ export class ServiceFactory {
   }
 
   static getInstance(): ServiceFactory {
-    if (!ServiceFactory.instance) {
-      ServiceFactory.instance = new ServiceFactory();
-    }
-    return ServiceFactory.instance;
+    return SingletonManager.getInstance(
+      'ServiceFactory',
+      () => new ServiceFactory()
+    );
   }
 
   /**

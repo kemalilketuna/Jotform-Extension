@@ -17,12 +17,12 @@ import {
   AutomationStoppedEvent,
   ElementDetectedEvent,
 } from '@/events';
+import { SingletonManager } from '../../utils/SingletonService';
 
 /**
  * Visual cursor service for showing automation actions to users
  */
 export class VisualCursorService {
-  private static instance: VisualCursorService;
   private readonly logger: LoggingService;
   private readonly eventBus: EventBus;
   private readonly audioService: AudioService;
@@ -112,10 +112,10 @@ export class VisualCursorService {
   }
 
   static getInstance(logger?: LoggingService): VisualCursorService {
-    if (!VisualCursorService.instance) {
-      VisualCursorService.instance = new VisualCursorService(logger);
-    }
-    return VisualCursorService.instance;
+    return SingletonManager.getInstance(
+      'VisualCursorService',
+      () => new VisualCursorService(logger)
+    );
   }
 
   /**

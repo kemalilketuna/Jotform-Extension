@@ -13,9 +13,9 @@ import { ServiceFactory } from '@/services/DIContainer';
 import { StorageService } from '@/services/StorageService';
 import { LoggingService } from '@/services/LoggingService';
 import { APIErrorHandler } from '@/utils/APIErrorHandler';
+import { SingletonManager } from '@/utils/SingletonService';
 
 export class APIService {
-  private static instance: APIService | null = null;
   private readonly apiClient: APIClient;
 
   private readonly storageService: StorageService;
@@ -31,10 +31,10 @@ export class APIService {
   }
 
   static getInstance(config?: APIConfig): APIService {
-    if (!APIService.instance) {
-      APIService.instance = new APIService(config);
-    }
-    return APIService.instance;
+    return SingletonManager.getInstance(
+      'APIService',
+      () => new APIService(config)
+    );
   }
 
   async initializeSession(

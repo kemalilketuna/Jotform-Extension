@@ -9,9 +9,9 @@ import {
   ErrorHandlingConfig,
 } from '@/utils/ErrorHandlingUtils';
 import { TimingConfig } from '@/config';
+import { SingletonManager } from '@/utils/SingletonService';
 
 export class PageAnalysis {
-  private static instance: PageAnalysis | null = null;
   private config: DOMDetectionConfig;
   private scrollableDetector: ScrollableAreaDetector;
   private cursorDetector: CursorBasedElementDetector;
@@ -29,10 +29,10 @@ export class PageAnalysis {
    * Gets the singleton instance of PageAnalysisService
    */
   static getInstance(config?: Partial<DOMDetectionConfig>): PageAnalysis {
-    if (!PageAnalysis.instance) {
-      PageAnalysis.instance = new PageAnalysis(config);
-    }
-    return PageAnalysis.instance;
+    return SingletonManager.getInstance(
+      'PageAnalysis',
+      () => new PageAnalysis(config)
+    );
   }
 
   /**

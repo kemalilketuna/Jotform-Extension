@@ -5,6 +5,7 @@ import { AudioService } from '@/services/AudioService';
 import { LoggingService } from '@/services/LoggingService';
 import { ServiceFactory } from '@/services/DIContainer';
 import { TimingConfig } from '../../config';
+import { SingletonManager } from '@/utils/SingletonService';
 import {
   TypingOperationConfig,
   TypingOptions,
@@ -18,7 +19,6 @@ import { TypingOperationFactory } from './TypingOperationFactory';
  * Singleton service that orchestrates typing components
  */
 export class TypingService {
-  private static instance: TypingService;
   private readonly logger: LoggingService;
   private readonly audioService: AudioService;
   private readonly errorHandler: TypingErrorHandler;
@@ -31,10 +31,10 @@ export class TypingService {
   }
 
   static getInstance(logger?: LoggingService): TypingService {
-    if (!TypingService.instance) {
-      TypingService.instance = new TypingService(logger);
-    }
-    return TypingService.instance;
+    return SingletonManager.getInstance(
+      'TypingService',
+      () => new TypingService(logger)
+    );
   }
 
   static createInstance(logger: LoggingService): TypingService {

@@ -4,6 +4,7 @@ import { ServiceFactory } from './DIContainer';
 import { LoggingService } from './LoggingService';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
 import { UIConfig } from '@/config/UIConfig';
+import { SingletonManager } from '@/utils/SingletonService';
 
 import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
 import { ChatboxComponent, ChatMessage } from '@/components/ChatboxComponent';
@@ -12,7 +13,6 @@ import { ChatboxComponent, ChatMessage } from '@/components/ChatboxComponent';
  * Service to manage React components rendered by the extension
  */
 export class ComponentService {
-  private static instance: ComponentService;
   private readonly logger: LoggingService;
   private containerElement: HTMLElement | null = null;
   private reactRoot: Root | null = null;
@@ -25,10 +25,10 @@ export class ComponentService {
   }
 
   static getInstance(): ComponentService {
-    if (!ComponentService.instance) {
-      ComponentService.instance = new ComponentService();
-    }
-    return ComponentService.instance;
+    return SingletonManager.getInstance(
+      'ComponentService',
+      () => new ComponentService()
+    );
   }
 
   /**

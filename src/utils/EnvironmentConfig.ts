@@ -3,6 +3,8 @@
  * following the OOP string management pattern
  */
 
+import { SingletonManager } from './SingletonService';
+
 export class EnvironmentVariableNames {
   static readonly BACKEND_BASE_URL = 'BACKEND_BASE_URL' as const;
   static readonly DEBUG_LOG_LEVEL = 'DEBUG_LOG_LEVEL' as const;
@@ -33,7 +35,6 @@ export enum LogLevel {
 }
 
 export class EnvironmentConfig {
-  private static instance: EnvironmentConfig | undefined;
   private readonly config: Map<string, string> = new Map();
 
   private constructor() {
@@ -41,10 +42,10 @@ export class EnvironmentConfig {
   }
 
   static getInstance(): EnvironmentConfig {
-    if (!EnvironmentConfig.instance) {
-      EnvironmentConfig.instance = new EnvironmentConfig();
-    }
-    return EnvironmentConfig.instance;
+    return SingletonManager.getInstance(
+      'EnvironmentConfig',
+      () => new EnvironmentConfig()
+    );
   }
 
   private loadEnvironmentVariables(): void {
@@ -111,6 +112,6 @@ export class EnvironmentConfig {
 
   // Reset singleton for testing
   static resetInstance(): void {
-    EnvironmentConfig.instance = undefined;
+    SingletonManager.resetInstance('EnvironmentConfig');
   }
 }

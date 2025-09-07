@@ -1,5 +1,6 @@
 import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
+import { SingletonManager } from '@/utils/SingletonService';
 import { AudioError } from './AudioErrors';
 import { AudioElementManager } from './AudioElementManager';
 import { AudioCacheManager } from './AudioCacheManager';
@@ -17,7 +18,6 @@ import { ExtensionUtils } from '@/utils/ExtensionUtils';
  * Service for managing audio playback in the browser extension
  */
 export class AudioService {
-  private static instance: AudioService;
   private readonly logger: LoggingService;
   private readonly eventBus: EventBus;
   private readonly elementManager: AudioElementManager;
@@ -41,10 +41,10 @@ export class AudioService {
   }
 
   static getInstance(logger?: LoggingService): AudioService {
-    if (!AudioService.instance) {
-      AudioService.instance = new AudioService(logger);
-    }
-    return AudioService.instance;
+    return SingletonManager.getInstance(
+      'AudioService',
+      () => new AudioService(logger)
+    );
   }
 
   /**

@@ -1,11 +1,11 @@
 import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
+import { SingletonManager } from '@/utils/SingletonService';
 
 /**
  * Service initialization and setup for content script
  */
 export class ServiceInitializer {
-  private static instance: ServiceInitializer;
   private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
   private isInitialized = false;
@@ -16,10 +16,10 @@ export class ServiceInitializer {
   }
 
   static getInstance(): ServiceInitializer {
-    if (!ServiceInitializer.instance) {
-      ServiceInitializer.instance = new ServiceInitializer();
-    }
-    return ServiceInitializer.instance;
+    return SingletonManager.getInstance(
+      'ServiceInitializer',
+      () => new ServiceInitializer()
+    );
   }
 
   /**
