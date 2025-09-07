@@ -104,7 +104,10 @@ function App() {
           // Visual feedback for audio events
           if (event.soundType === 'error') {
             setStatus('Audio feedback: Error sound played');
-            setTimeout(() => setStatus(''), 1000);
+            setTimeout(
+              () => setStatus(''),
+              TimingConfig.STATUS_MESSAGE_DISPLAY_DURATION
+            );
           }
           break;
       }

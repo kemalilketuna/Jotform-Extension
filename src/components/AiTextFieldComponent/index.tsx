@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ServiceFactory } from '@/services/DIContainer';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
+import { TimingConfig } from '@/config/TimingConfig';
 import { ComponentStrings } from './ComponentStrings';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
@@ -49,7 +50,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
       // Clear success message after 3 seconds
       setTimeout(() => {
         setStatus(null);
-      }, 3000);
+      }, TimingConfig.AI_TEXT_FIELD_STATUS_DURATION);
     } catch (error) {
       ServiceFactory.getInstance()
         .createLoggingService()

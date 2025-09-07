@@ -27,14 +27,6 @@ export class SingletonManager {
   }
 
   /**
-   * Reset a singleton instance (alias for resetInstance)
-   * @param className - The name of the class
-   */
-  static reset(className: string): void {
-    SingletonManager.instances.delete(className);
-  }
-
-  /**
    * Check if an instance exists
    * @param className - The name of the class
    * @returns True if instance exists

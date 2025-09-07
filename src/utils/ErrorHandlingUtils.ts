@@ -1,4 +1,5 @@
 import { LoggingService } from '@/services/LoggingService';
+import { TimingConfig } from '@/config/TimingConfig';
 
 /**
  * Configuration for error handling operations
@@ -28,7 +29,8 @@ export interface ErrorHandlingResult<T> {
  */
 export class ErrorHandlingUtils {
   private static readonly DEFAULT_RETRY_ATTEMPTS = 3;
-  private static readonly DEFAULT_RETRY_DELAY = 1000;
+  private static readonly DEFAULT_RETRY_DELAY =
+    TimingConfig.DEFAULT_RETRY_DELAY;
   private static readonly DEFAULT_LOG_LEVEL = 'error';
 
   /**

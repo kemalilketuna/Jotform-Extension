@@ -9,6 +9,7 @@ import {
 import { AutomationState, AutomationStateManager } from './AutomationState';
 import { SessionManager } from './SessionManager';
 import { SingletonManager } from '@/utils/SingletonService';
+import { TimingConfig } from '@/config/TimingConfig';
 
 /**
  * Background script automation coordinator for cross-page persistence
@@ -19,7 +20,8 @@ export class AutomationCoordinator {
   private readonly storageService: StorageService;
   private readonly stateManager: AutomationStateManager;
   private readonly sessionManager: SessionManager;
-  private readonly CONTENT_SCRIPT_INJECTION_DELAY = 1000;
+  private readonly CONTENT_SCRIPT_INJECTION_DELAY =
+    TimingConfig.CONTENT_SCRIPT_INJECTION_DELAY;
 
   private constructor() {
     this.serviceFactory = ServiceFactory.getInstance();

@@ -89,7 +89,7 @@ export class ElementUtils {
       let stabilityCheckCount = 0;
       const STABILITY_THRESHOLD = 3; // Number of consecutive stable checks needed
       const STABILITY_CHECK_INTERVAL = 500; // ms between stability checks
-      const MIN_STABILITY_DURATION = 1000; // Minimum time DOM must be stable
+      const MIN_STABILITY_DURATION = TimingConfig.MIN_STABILITY_DURATION; // Minimum time DOM must be stable
 
       // Wait for document ready state first
       const checkReadyState = () => {
