@@ -4,6 +4,7 @@ import {
   ContentScriptReadyMessage,
   NavigationDetectedMessage,
 } from '@/services/AutomationEngine/MessageTypes';
+import { EventBus, EventTypes, NavigationEvent } from '@/events';
 
 /**
  * Navigation detection and content script coordination
@@ -11,12 +12,14 @@ import {
 export class NavigationDetector {
   private static instance: NavigationDetector;
   private readonly logger: LoggingService;
+  private readonly eventBus: EventBus;
   private currentUrl: string;
   private isInitialized = false;
 
   private constructor() {
     const serviceFactory = ServiceFactory.getInstance();
     this.logger = serviceFactory.createLoggingService();
+    this.eventBus = serviceFactory.createEventBus();
     this.currentUrl = window?.location?.href || '';
   }
 
@@ -83,8 +86,37 @@ export class NavigationDetector {
         'NavigationDetector'
       );
 
-      // Notify background script about navigation
+      // Emit navigation event for event-driven communication
+      this.emitNavigationEvent(oldUrl, newUrl);
+
+      // Notify background script about navigation (legacy support)
       this.notifyNavigationDetected(oldUrl, newUrl);
+    }
+  }
+
+  /**
+   * Emit navigation event through the event bus
+   */
+  private emitNavigationEvent(fromUrl: string, toUrl: string): void {
+    try {
+      const navigationEvent: NavigationEvent = {
+        type: EventTypes.NAVIGATION_CHANGED,
+        timestamp: Date.now(),
+        source: 'NavigationDetector',
+        from: fromUrl,
+        to: toUrl,
+      };
+
+      this.eventBus.emit(navigationEvent);
+      this.logger.debug(
+        `Navigation event emitted: ${fromUrl} -> ${toUrl}`,
+        'NavigationDetector'
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit navigation event: ${error}`,
+        'NavigationDetector'
+      );
     }
   }
 

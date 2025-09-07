@@ -13,6 +13,7 @@ import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 import { ComponentService } from '@/services/ComponentService';
 import { JotformAgentDisabler } from '@/services/JotformAgentDisabler';
 import { NavigationDetector } from '@/entrypoints/content/NavigationDetector';
+import { EventBus } from '@/events';
 
 /**
  * Factory for creating and configuring services with proper dependency injection
@@ -131,6 +132,13 @@ export class ServiceFactory {
    */
   createNavigationDetector(): NavigationDetector {
     return this.container.get<NavigationDetector>('NavigationDetector');
+  }
+
+  /**
+   * Create an EventBus instance
+   */
+  createEventBus(): EventBus {
+    return EventBus.getInstance(this.logger);
   }
 
   /**

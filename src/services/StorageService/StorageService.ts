@@ -6,6 +6,12 @@ import {
   InvalidStorageKeyError,
   StorageOperationError,
 } from './StorageServiceErrors';
+import {
+  EventBus,
+  EventTypes,
+  StorageChangedEvent,
+  AutomationErrorEvent,
+} from '@/events';
 
 /**
  * Centralized storage service for managing extension data
@@ -27,10 +33,12 @@ export class StorageService {
   private static instance: StorageService;
   private memoryCache: Map<string, unknown> = new Map();
   private logger: LoggingService;
+  private eventBus: EventBus;
 
   private constructor() {
     const serviceFactory = ServiceFactory.getInstance();
     this.logger = serviceFactory.createLoggingService();
+    this.eventBus = serviceFactory.createEventBus();
   }
 
   static getInstance(): StorageService {
@@ -61,12 +69,20 @@ export class StorageService {
 
     this.validateKey(key);
 
+    // Get old value for event emission
+    const oldValue = useCache
+      ? this.memoryCache.get(key)
+      : await this.get(key, { area, useCache: false });
+
     try {
       await browser.storage[area].set({ [key]: value });
 
       if (useCache) {
         this.memoryCache.set(key, value);
       }
+
+      // Emit storage change event
+      this.emitStorageChangeEvent(key, oldValue, value);
     } catch (error) {
       this.logger.error(
         `Failed to store data for key: ${key}`,
@@ -76,11 +92,75 @@ export class StorageService {
         }
       );
 
+      // Emit error event
+      this.emitErrorEvent(error as Error, { operation: 'store', key, value });
+
       if ((error as Error).message.includes('QUOTA_EXCEEDED')) {
         throw new StorageQuotaExceededError();
       }
 
       throw new StorageOperationError('store', key, (error as Error).message);
+    }
+  }
+
+  /**
+   * Emit storage change event through the event bus
+   */
+  private emitStorageChangeEvent(
+    key: string,
+    oldValue: unknown,
+    newValue: unknown
+  ): void {
+    try {
+      const storageEvent: StorageChangedEvent = {
+        type: EventTypes.STORAGE_CHANGED,
+        timestamp: Date.now(),
+        source: 'StorageService',
+        key,
+        oldValue,
+        newValue,
+      };
+
+      this.eventBus.emit(storageEvent);
+      this.logger.debug(
+        `Storage change event emitted for key: ${key}`,
+        'StorageService'
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit storage change event: ${error}`,
+        'StorageService'
+      );
+    }
+  }
+
+  /**
+   * Emit error event through the event bus
+   */
+  private emitErrorEvent(
+    error: Error,
+    context?: Record<string, unknown>
+  ): void {
+    try {
+      const errorEvent: AutomationErrorEvent = {
+        type: EventTypes.AUTOMATION_ERROR,
+        timestamp: Date.now(),
+        source: 'StorageService',
+        sessionId: `storage_error_${Date.now()}`,
+        error,
+        context,
+      };
+
+      this.eventBus.emit(errorEvent);
+      this.logger.debug(
+        `Error event emitted: ${error.message}`,
+        'StorageService'
+      );
+    } catch (emitError) {
+      this.logger.error(
+        `Failed to emit error event: ${emitError}`,
+        'StorageService'
+      );
     }
   }
 

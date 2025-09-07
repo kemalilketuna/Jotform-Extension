@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ComponentStrings } from './ComponentStrings';
 import { MessageItem } from './MessageItem';
 import { ServiceFactory } from '@/services/DIContainer';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
+import { EventTypes, ExtensionEvent } from '@/events';
 
 export interface ChatMessage {
   id: string;
@@ -22,32 +23,112 @@ export interface ChatboxComponentProps {
  * Users cannot input messages - this is read-only for AI agent communication
  */
 export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
-  messages = [],
+  messages: externalMessages = [],
   isVisible = true,
   className = '',
   maxHeight = '300px',
 }) => {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const [internalMessages, setInternalMessages] = useState<ChatMessage[]>([]);
   const serviceFactory = ServiceFactory.getInstance();
   const logger = serviceFactory.createLoggingService();
+  const eventBus = serviceFactory.createEventBus();
+
+  // Combine external and internal messages
+  const allMessages = useMemo(
+    () => [...externalMessages, ...internalMessages],
+    [externalMessages, internalMessages]
+  );
+
+  // Subscribe to automation events for real-time messages
+  useEffect(() => {
+    const addMessage = (content: string) => {
+      const newMessage: ChatMessage = {
+        id: `auto_${Date.now()}_${Math.random()}`,
+        message: content,
+        timestamp: new Date(),
+      };
+      setInternalMessages((prev) => [...prev, newMessage]);
+    };
+
+    const handleEvent = (event: ExtensionEvent) => {
+      switch (event.type) {
+        case EventTypes.AUTOMATION_STARTED:
+          addMessage('🤖 Automation started - AI agent is now active');
+          break;
+        case EventTypes.AUTOMATION_STOPPED:
+          addMessage(
+            `✅ Automation ${event.reason === 'completed' ? 'completed successfully' : 'stopped'}`
+          );
+          break;
+        case EventTypes.AUTOMATION_STEP_COMPLETED:
+          addMessage(`📋 Step ${event.stepIndex + 1} completed`);
+          break;
+        case EventTypes.AUTOMATION_ERROR:
+          addMessage(`❌ Error: ${event.error.message}`);
+          break;
+        case EventTypes.ELEMENT_DETECTED:
+          addMessage(`🎯 Element detected: ${event.selector}`);
+          break;
+        case EventTypes.NAVIGATION_CHANGED:
+          addMessage(`🧭 Navigation: ${event.to}`);
+          break;
+      }
+    };
+
+    // Subscribe to relevant events
+    const subIdAutomationStarted = eventBus.on(
+      EventTypes.AUTOMATION_STARTED,
+      handleEvent
+    );
+    const subIdAutomationStopped = eventBus.on(
+      EventTypes.AUTOMATION_STOPPED,
+      handleEvent
+    );
+    const subIdAutomationStep = eventBus.on(
+      EventTypes.AUTOMATION_STEP_COMPLETED,
+      handleEvent
+    );
+    const subIdAutomationError = eventBus.on(
+      EventTypes.AUTOMATION_ERROR,
+      handleEvent
+    );
+    const subIdElementDetected = eventBus.on(
+      EventTypes.ELEMENT_DETECTED,
+      handleEvent
+    );
+    const subIdNavigation = eventBus.on(
+      EventTypes.NAVIGATION_CHANGED,
+      handleEvent
+    );
+
+    return () => {
+      eventBus.off(subIdAutomationStarted);
+      eventBus.off(subIdAutomationStopped);
+      eventBus.off(subIdAutomationStep);
+      eventBus.off(subIdAutomationError);
+      eventBus.off(subIdElementDetected);
+      eventBus.off(subIdNavigation);
+    };
+  }, [eventBus]);
 
   // Auto-scroll to bottom when new messages arrive
   React.useEffect(() => {
-    if (messagesEndRef.current && messages.length > 0) {
+    if (messagesEndRef.current && allMessages.length > 0) {
       messagesEndRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'end',
       });
     }
-  }, [messages]);
+  }, [allMessages]);
 
   // Log message updates for debugging
   React.useEffect(() => {
     logger.info(
-      `ChatboxComponent updated with ${messages.length} messages`,
+      `ChatboxComponent updated with ${allMessages.length} messages`,
       'ChatboxComponent'
     );
-  }, [messages.length, logger]);
+  }, [allMessages.length, logger]);
 
   if (!isVisible) {
     return null;
@@ -71,7 +152,7 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
           aria-label={ComponentStrings.ACCESSIBILITY.SCROLL_AREA}
           aria-live="polite"
         >
-          {messages.length === 0 ? (
+          {allMessages.length === 0 ? (
             <div
               className={`${ComponentStrings.CSS_CLASSES.EMPTY_STATE} text-center py-8`}
             >
@@ -84,7 +165,7 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
             </div>
           ) : (
             <div role="list">
-              {messages.map((msg) => (
+              {allMessages.map((msg) => (
                 <MessageItem
                   key={msg.id}
                   message={msg.message}

@@ -10,6 +10,13 @@ import { CursorDOMManager } from './CursorDOMManager';
 import { CursorAnimationManager } from './CursorAnimationManager';
 import { VisualCursorConfig } from './VisualCursorConfig';
 import { CursorInitializationError } from './VisualCursorErrors';
+import {
+  EventBus,
+  EventTypes,
+  AutomationStartedEvent,
+  AutomationStoppedEvent,
+  ElementDetectedEvent,
+} from '@/events';
 
 /**
  * Visual cursor service for showing automation actions to users
@@ -17,6 +24,7 @@ import { CursorInitializationError } from './VisualCursorErrors';
 export class VisualCursorService {
   private static instance: VisualCursorService;
   private readonly logger: LoggingService;
+  private readonly eventBus: EventBus;
   private readonly audioService: AudioService;
   private readonly domManager: CursorDOMManager;
   private readonly animationManager: CursorAnimationManager;
@@ -27,6 +35,7 @@ export class VisualCursorService {
   private constructor(logger?: LoggingService) {
     const serviceFactory = ServiceFactory.getInstance();
     this.logger = logger || serviceFactory.createLoggingService();
+    this.eventBus = serviceFactory.createEventBus();
     this.audioService = AudioService.getInstance(this.logger);
     this.domManager = new CursorDOMManager(this.logger);
     this.animationManager = new CursorAnimationManager(
@@ -44,6 +53,62 @@ export class VisualCursorService {
     };
 
     this.config = { ...VisualCursorConfig.DEFAULT_ANIMATION_CONFIG };
+
+    this.setupEventSubscriptions();
+  }
+
+  /**
+   * Setup event subscriptions to listen for automation events
+   */
+  private setupEventSubscriptions(): void {
+    // Listen for automation start to show cursor
+    this.eventBus.on<AutomationStartedEvent>(
+      EventTypes.AUTOMATION_STARTED,
+      (event) => {
+        this.logger.info(
+          `Automation started for session ${event.sessionId}, showing cursor`,
+          'VisualCursorService'
+        );
+        if (this.isInitialized && this.config.enabled) {
+          this.show({ x: 100, y: 100 });
+        }
+      }
+    );
+
+    // Listen for automation stop to hide cursor
+    this.eventBus.on<AutomationStoppedEvent>(
+      EventTypes.AUTOMATION_STOPPED,
+      (event) => {
+        this.logger.info(
+          `Automation stopped for session ${event.sessionId}, hiding cursor`,
+          'VisualCursorService'
+        );
+        this.hide();
+      }
+    );
+
+    // Listen for element detection to move cursor
+    this.eventBus.on<ElementDetectedEvent>(
+      EventTypes.ELEMENT_DETECTED,
+      (event) => {
+        this.logger.debug(
+          'Element detected, moving cursor to element',
+          'VisualCursorService'
+        );
+        if (this.state.isVisible && event.element) {
+          const rect = event.element.getBoundingClientRect();
+          this.moveToPosition({
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          }).catch((error) => {
+            this.logger.error(
+              `Failed to move cursor to element: ${error}`,
+              'VisualCursorService'
+            );
+          });
+        }
+      }
+    );
   }
 
   static getInstance(logger?: LoggingService): VisualCursorService {
@@ -147,6 +212,16 @@ export class VisualCursorService {
         element,
         this.config
       );
+
+      // Emit cursor move event
+      await this.eventBus.emit({
+        type: EventTypes.CURSOR_MOVE,
+        timestamp: Date.now(),
+        x: this.state.position.x,
+        y: this.state.position.y,
+        element,
+        source: 'VisualCursorService',
+      });
     } finally {
       this.state.isAnimating = false;
     }
@@ -175,7 +250,7 @@ export class VisualCursorService {
   /**
    * Perform visual click animation with hover effect
    */
-  async performClick(): Promise<void> {
+  async performClick(element?: Element): Promise<void> {
     if (!this.config.enabled || !this.isInitialized) {
       return;
     }
@@ -185,6 +260,18 @@ export class VisualCursorService {
 
     try {
       await this.animationManager.performClickSequence(this.config);
+
+      // Emit cursor click event if element is provided
+      if (element) {
+        await this.eventBus.emit({
+          type: EventTypes.CURSOR_CLICK,
+          timestamp: Date.now(),
+          x: this.state.position.x,
+          y: this.state.position.y,
+          element,
+          source: 'VisualCursorService',
+        });
+      }
     } finally {
       this.state.isHovering = false;
       this.state.isClicking = false;

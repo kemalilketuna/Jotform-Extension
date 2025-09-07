@@ -5,6 +5,13 @@ import { AudioElementManager } from './AudioElementManager';
 import { AudioCacheManager } from './AudioCacheManager';
 import { AudioStateManager } from './AudioStateManager';
 import { AudioPlaybackEngine } from './AudioPlaybackEngine';
+import {
+  EventBus,
+  EventTypes,
+  AudioPlayEvent,
+  AutomationErrorEvent,
+} from '@/events';
+import { ExtensionUtils } from '@/utils/ExtensionUtils';
 
 /**
  * Service for managing audio playback in the browser extension
@@ -12,6 +19,7 @@ import { AudioPlaybackEngine } from './AudioPlaybackEngine';
 export class AudioService {
   private static instance: AudioService;
   private readonly logger: LoggingService;
+  private readonly eventBus: EventBus;
   private readonly elementManager: AudioElementManager;
   private readonly cacheManager: AudioCacheManager;
   private readonly stateManager: AudioStateManager;
@@ -20,6 +28,7 @@ export class AudioService {
   private constructor(logger?: LoggingService) {
     const serviceFactory = ServiceFactory.getInstance();
     this.logger = logger || serviceFactory.createLoggingService();
+    this.eventBus = serviceFactory.createEventBus();
     this.elementManager = new AudioElementManager(this.logger);
     this.cacheManager = new AudioCacheManager(this.logger, this.elementManager);
     this.stateManager = new AudioStateManager(this.logger);
@@ -78,6 +87,10 @@ export class AudioService {
       this.logger.error('Failed to initialize AudioService', 'AudioService', {
         error,
       });
+
+      // Emit error event
+      this.emitErrorEvent(error as Error, { operation: 'initialize' });
+
       throw new AudioError(
         'AudioService initialization failed',
         error as Error
@@ -90,6 +103,7 @@ export class AudioService {
    */
   async playClickSound(): Promise<void> {
     await this.playbackEngine.playClickSound();
+    this.emitAudioEvent('click');
   }
 
   /**
@@ -97,6 +111,7 @@ export class AudioService {
    */
   async playKeystrokeSound(): Promise<void> {
     await this.playbackEngine.playKeystrokeSound();
+    this.emitAudioEvent('keystroke');
   }
 
   /**
@@ -104,6 +119,7 @@ export class AudioService {
    */
   async playVariedKeystrokeSound(): Promise<void> {
     await this.playbackEngine.playVariedKeystrokeSound();
+    this.emitAudioEvent('keystroke', { variant: 'varied' });
   }
 
   /**
@@ -111,6 +127,9 @@ export class AudioService {
    */
   async playEnhancedKeystrokeSound(rapidFire: boolean = false): Promise<void> {
     await this.playbackEngine.playEnhancedKeystrokeSound(rapidFire);
+    this.emitAudioEvent('keystroke', {
+      variant: rapidFire ? 'rapid' : 'enhanced',
+    });
   }
 
   /**
@@ -118,6 +137,61 @@ export class AudioService {
    */
   async playMultipleKeystrokeSounds(count: number = 2): Promise<void> {
     await this.playbackEngine.playMultipleKeystrokeSounds(count);
+    this.emitAudioEvent('keystroke', { variant: 'multiple', count });
+  }
+
+  /**
+   * Emit audio play event through the event bus
+   */
+  private emitAudioEvent(
+    soundType: 'keystroke' | 'click' | 'error' | 'success',
+    metadata?: Record<string, unknown>
+  ): void {
+    try {
+      const audioEvent: AudioPlayEvent = {
+        type: EventTypes.AUDIO_PLAY,
+        timestamp: Date.now(),
+        source: 'AudioService',
+        soundType,
+        enabled: this.stateManager.isAudioEnabled(),
+        metadata,
+      };
+
+      this.eventBus.emit(audioEvent);
+      this.logger.debug(`Audio event emitted: ${soundType}`, 'AudioService');
+    } catch (error) {
+      this.logger.error(`Failed to emit audio event: ${error}`, 'AudioService');
+    }
+  }
+
+  /**
+   * Emit error event through the event bus
+   */
+  private emitErrorEvent(
+    error: Error,
+    context?: Record<string, unknown>
+  ): void {
+    try {
+      const errorEvent: AutomationErrorEvent = {
+        type: EventTypes.AUTOMATION_ERROR,
+        timestamp: Date.now(),
+        source: 'AudioService',
+        sessionId: `audio_error_${Date.now()}`,
+        error,
+        context,
+      };
+
+      this.eventBus.emit(errorEvent);
+      this.logger.debug(
+        `Error event emitted: ${error.message}`,
+        'AudioService'
+      );
+    } catch (emitError) {
+      this.logger.error(
+        `Failed to emit error event: ${emitError}`,
+        'AudioService'
+      );
+    }
   }
 
   /**

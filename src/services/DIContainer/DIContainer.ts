@@ -11,6 +11,7 @@ import { ComponentService } from '@/services/ComponentService';
 import { AutomationEngine } from '@/services/AutomationEngine';
 import { JotformAgentDisabler } from '@/services/JotformAgentDisabler';
 import { NavigationDetector } from '@/entrypoints/content/NavigationDetector';
+import { EventBus } from '@/events';
 import { ServiceType, ServiceFactory, ServiceInstance } from './DITypes';
 import { DIError } from './DIErrors';
 
@@ -46,6 +47,10 @@ export class DIContainer {
     this.registerSingleton('LoggingService', () =>
       LoggingService.getInstance()
     );
+    this.registerSingleton('EventBus', () => {
+      const logger = this.get<LoggingService>('LoggingService');
+      return EventBus.getInstance(logger);
+    });
     this.registerSingleton('APIService', () => APIService.getInstance());
     this.registerSingleton('StorageService', () =>
       StorageService.getInstance()

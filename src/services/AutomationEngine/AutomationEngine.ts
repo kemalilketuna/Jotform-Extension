@@ -13,6 +13,14 @@ import { SequenceAutomationOrchestrator } from './SequenceAutomationOrchestrator
 import { AutomationSessionManager } from './AutomationSessionManager';
 import { AutomationLifecycleManager } from './AutomationLifecycleManager';
 import { ElementActionExecutor } from './ElementActionExecutor';
+import {
+  EventBus,
+  EventTypes,
+  NavigationEvent,
+  StorageChangedEvent,
+  AutomationErrorEvent,
+  AudioPlayEvent,
+} from '@/events';
 
 /**
  * Engine for executing automation sequences with proper error handling and logging
@@ -23,6 +31,7 @@ export class AutomationEngine {
   private isExecuting = false;
   private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
+  private readonly eventBus: EventBus;
   private readonly stepByStepOrchestrator: StepByStepAutomationOrchestrator;
   private readonly sequenceOrchestrator: SequenceAutomationOrchestrator;
   private readonly sessionManager: AutomationSessionManager;
@@ -32,6 +41,7 @@ export class AutomationEngine {
   private constructor() {
     this.serviceFactory = ServiceFactory.getInstance();
     this.logger = this.serviceFactory.createLoggingService();
+    this.eventBus = this.serviceFactory.createEventBus();
 
     const visualCursor = this.serviceFactory.createVisualCursorService();
     const userInteractionBlocker =
@@ -69,6 +79,77 @@ export class AutomationEngine {
       this.messageHandler,
       this.lifecycleManager
     );
+
+    this.setupEventSubscriptions();
+  }
+
+  /**
+   * Setup event subscriptions to listen for events from other services
+   */
+  private setupEventSubscriptions(): void {
+    // Listen for navigation events to handle automation state
+    this.eventBus.on<NavigationEvent>(
+      EventTypes.NAVIGATION_CHANGED,
+      (event) => {
+        this.logger.info(
+          `Navigation detected from ${event.from} to ${event.to}`,
+          'AutomationEngine'
+        );
+        if (this.isExecuting) {
+          this.logger.info(
+            'Stopping automation due to navigation',
+            'AutomationEngine'
+          );
+          this.isExecuting = false;
+          this.lifecycleManager.teardown().catch((error) => {
+            this.logger.error(
+              `Failed to teardown on navigation: ${error}`,
+              'AutomationEngine'
+            );
+          });
+        }
+      }
+    );
+
+    // Listen for storage events to react to configuration changes
+    this.eventBus.on<StorageChangedEvent>(
+      EventTypes.STORAGE_CHANGED,
+      (event) => {
+        this.logger.info(
+          `Storage changed for key: ${event.key}`,
+          'AutomationEngine'
+        );
+        // Could reload configuration or adjust behavior based on storage changes
+      }
+    );
+
+    // Listen for automation errors to handle failures
+    this.eventBus.on<AutomationErrorEvent>(
+      EventTypes.AUTOMATION_ERROR,
+      (event) => {
+        this.logger.error(
+          `Automation error in session ${event.sessionId}: ${event.error.message}`,
+          'AutomationEngine'
+        );
+        if (this.isExecuting) {
+          this.isExecuting = false;
+          this.lifecycleManager.teardownOnError().catch((error) => {
+            this.logger.error(
+              `Failed to teardown on error: ${error}`,
+              'AutomationEngine'
+            );
+          });
+        }
+      }
+    );
+
+    // Listen for audio events to coordinate with sound feedback
+    this.eventBus.on<AudioPlayEvent>(EventTypes.AUDIO_PLAY, (event) => {
+      this.logger.debug(
+        `Audio feedback played: ${event.soundType}`,
+        'AutomationEngine'
+      );
+    });
   }
 
   static getInstance(): AutomationEngine {
@@ -124,8 +205,22 @@ export class AutomationEngine {
   private async handleExecuteSequence(
     message: ExecuteSequenceMessage
   ): Promise<void> {
+    const sessionId =
+      (message.payload as { sessionId?: string }).sessionId ||
+      `session_${Date.now()}`;
+
     try {
       this.isExecuting = true;
+
+      // Emit automation started event
+      await this.eventBus.emit({
+        type: EventTypes.AUTOMATION_STARTED,
+        timestamp: Date.now(),
+        sessionId,
+        objective: 'Execute sequence automation',
+        source: 'AutomationEngine',
+      });
+
       // Default visual animation configuration
       const visualConfig = {
         enabled: true,
@@ -133,9 +228,39 @@ export class AutomationEngine {
         hoverDuration: TimingConfig.CURSOR_HOVER_DURATION,
         clickDuration: TimingConfig.CURSOR_CLICK_DURATION,
       };
+
       await this.sequenceOrchestrator.execute(message.payload, visualConfig);
+
+      // Emit automation completed event
+      await this.eventBus.emit({
+        type: EventTypes.AUTOMATION_STOPPED,
+        timestamp: Date.now(),
+        sessionId,
+        reason: 'completed',
+        source: 'AutomationEngine',
+      });
     } catch (error) {
       this.logger.logError(error as Error, 'AutomationEngine');
+
+      // Emit automation error event
+      await this.eventBus.emit({
+        type: EventTypes.AUTOMATION_ERROR,
+        timestamp: Date.now(),
+        sessionId,
+        error: error as Error,
+        context: { message: message.payload },
+        source: 'AutomationEngine',
+      });
+
+      // Emit automation stopped event
+      await this.eventBus.emit({
+        type: EventTypes.AUTOMATION_STOPPED,
+        timestamp: Date.now(),
+        sessionId,
+        reason: 'error',
+        source: 'AutomationEngine',
+      });
+
       throw new AutomationError(
         `Failed to execute sequence: ${(error as Error).message}`
       );
@@ -164,6 +289,18 @@ export class AutomationEngine {
       await this.stepByStepOrchestrator.execute(message.payload.objective);
     } catch (error) {
       this.logger.logError(error as Error, 'AutomationEngine');
+
+      // Emit automation error event
+      const sessionId = `session_${Date.now()}`;
+      await this.eventBus.emit({
+        type: EventTypes.AUTOMATION_ERROR,
+        timestamp: Date.now(),
+        sessionId,
+        error: error as Error,
+        context: { objective: message.payload.objective },
+        source: 'AutomationEngine',
+      });
+
       // Send error message to background script
       try {
         await browser.runtime.sendMessage({

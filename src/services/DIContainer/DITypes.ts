@@ -21,7 +21,8 @@ export type ServiceType =
   | 'UserInteractionBlocker'
   | 'ElementActionExecutor'
   | 'AutomationLifecycleManager'
-  | 'MessageHandler';
+  | 'MessageHandler'
+  | 'EventBus';
 
 /**
  * Factory function type for creating service instances
