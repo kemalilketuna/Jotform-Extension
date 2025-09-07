@@ -1,39 +1,28 @@
-import { AutomationEngine } from '@/services/AutomationEngine';
-import { LoggingService } from '@/services/LoggingService';
-import { AudioService } from '@/services/AudioService';
-import { DOMDetectionService } from '@/services/DOMDetectionService';
 import {
   AutomationMessage,
   ExecuteSequenceMessage,
   SequenceCompleteMessage,
   SequenceErrorMessage,
-  AutomationStateRequestMessage,
-  AutomationStateResponseMessage,
 } from '@/services/AutomationEngine/MessageTypes';
 import { MessageResponse, MessageSender } from './ExtensionTypes';
-import { NavigationDetector } from './NavigationDetector';
+import { ServiceCoordinator } from './ServiceCoordinator';
+import { AutomationStateManager } from './AutomationStateManager';
 
 /**
  * Content script coordinator for persistent automation
  */
 export class ContentScriptCoordinator {
   private static instance: ContentScriptCoordinator;
-  private readonly logger: LoggingService;
-  private readonly automationEngine: AutomationEngine;
-  private readonly navigationDetector: NavigationDetector;
-  private readonly audioService: AudioService;
-  private readonly domDetectionService: DOMDetectionService;
-  private isReady = false;
+  private readonly serviceCoordinator: ServiceCoordinator;
+  private readonly automationStateManager: AutomationStateManager;
   private isProcessingMessage = false;
-  private readonly contentScriptId: string;
 
   private constructor(contentScriptId: string) {
-    this.contentScriptId = contentScriptId;
-    this.logger = LoggingService.getInstance();
-    this.automationEngine = AutomationEngine.getInstance();
-    this.navigationDetector = NavigationDetector.getInstance();
-    this.audioService = AudioService.getInstance();
-    this.domDetectionService = DOMDetectionService.getInstance();
+    this.serviceCoordinator = new ServiceCoordinator();
+    this.automationStateManager = new AutomationStateManager(
+      this.serviceCoordinator.getLogger(),
+      contentScriptId
+    );
   }
 
   static getInstance(contentScriptId?: string): ContentScriptCoordinator {
@@ -52,66 +41,33 @@ export class ContentScriptCoordinator {
    * Initialize the content script coordinator
    */
   async initialize(): Promise<void> {
-    if (this.isReady) return;
+    if (this.automationStateManager.isStateManagerReady()) return;
 
-    this.logger.info(
-      'Initializing content script coordinator',
-      'ContentScriptCoordinator'
-    );
-    this.logger.debug(
-      `Current URL: ${window?.location?.href || 'unknown'}`,
-      'ContentScriptCoordinator'
-    );
-
-    // AudioService is already initialized by ServiceInitializer
-    // No need to initialize it again here
-
-    // Initialize navigation detection
-    this.navigationDetector.initialize();
-
-    // JotformAgentDisabler is already initialized by ServiceInitializer
-    // No need to initialize it again here
-
-    // Check if there's an active automation to continue
-    await this.checkForActiveAutomation();
-
-    this.isReady = true;
-    this.logger.info(
-      'Content script coordinator initialization complete',
-      'ContentScriptCoordinator'
-    );
-  }
-
-  /**
-   * Check if there's an active automation that needs to continue
-   */
-  private async checkForActiveAutomation(): Promise<void> {
-    try {
-      const request: AutomationStateRequestMessage = {
-        type: 'AUTOMATION_STATE_REQUEST',
-        payload: { tabId: 0 }, // Will be filled by background script
-      };
-
-      const response = (await browser.runtime.sendMessage(
-        request
-      )) as AutomationStateResponseMessage;
-
-      if (
-        response?.payload?.hasActiveAutomation &&
-        response.payload.pendingActions?.length
-      ) {
-        this.logger.info(
-          'Found active automation to continue',
-          'ContentScriptCoordinator'
-        );
-        // The background script will send the continuation sequence
-      }
-    } catch (error) {
-      this.logger.error(
-        `Failed to check automation state: ${error}`,
+    this.serviceCoordinator
+      .getLogger()
+      .info(
+        'Initializing content script coordinator',
         'ContentScriptCoordinator'
       );
-    }
+    this.serviceCoordinator
+      .getLogger()
+      .debug(
+        `Current URL: ${window?.location?.href || 'unknown'}`,
+        'ContentScriptCoordinator'
+      );
+
+    // Initialize services
+    await this.serviceCoordinator.initialize();
+
+    // Initialize automation state management
+    await this.automationStateManager.initialize();
+
+    this.serviceCoordinator
+      .getLogger()
+      .info(
+        'Content script coordinator initialization complete',
+        'ContentScriptCoordinator'
+      );
   }
 
   /**
@@ -122,19 +78,22 @@ export class ContentScriptCoordinator {
     sender: MessageSender,
     sendResponse: MessageResponse
   ): Promise<void> {
-    this.logger.info(
-      `Content script received message: ${message.type} [${this.contentScriptId}]`,
+    const logger = this.serviceCoordinator.getLogger();
+    const contentScriptId = this.automationStateManager.getContentScriptId();
+
+    logger.info(
+      `Content script received message: ${message.type} [${contentScriptId}]`,
       'ContentScriptCoordinator'
     );
 
     try {
-      this.logger.debug('Message details:', 'ContentScriptCoordinator', {
+      logger.debug('Message details:', 'ContentScriptCoordinator', {
         messageType: message.type,
         payload: message.payload,
       });
 
-      if (!this.isReady) {
-        this.logger.warn(
+      if (!this.automationStateManager.isStateManagerReady()) {
+        logger.warn(
           'Content script not ready, ignoring message',
           'ContentScriptCoordinator'
         );
@@ -143,15 +102,15 @@ export class ContentScriptCoordinator {
 
       // Prevent concurrent message processing for EXECUTE_SEQUENCE
       if (message.type === 'EXECUTE_SEQUENCE' && this.isProcessingMessage) {
-        this.logger.warn(
+        logger.warn(
           'Already processing a message, ignoring duplicate EXECUTE_SEQUENCE',
           'ContentScriptCoordinator'
         );
         return;
       }
 
-      this.logger.info(
-        `Processing message in content script [${this.contentScriptId}]`,
+      logger.info(
+        `Processing message in content script [${contentScriptId}]`,
         'ContentScriptCoordinator'
       );
 
@@ -167,7 +126,9 @@ export class ContentScriptCoordinator {
       }
 
       // Delegate message handling to automation engine
-      await this.automationEngine.handleMessage(message);
+      await this.serviceCoordinator
+        .getAutomationEngine()
+        .handleMessage(message);
 
       // Send success response for EXECUTE_SEQUENCE messages
       if (message.type === 'EXECUTE_SEQUENCE') {
@@ -179,7 +140,7 @@ export class ContentScriptCoordinator {
         sendResponse(response);
       }
     } catch (error) {
-      this.logger.logError(error as Error, 'ContentScriptCoordinator');
+      logger.logError(error as Error, 'ContentScriptCoordinator');
 
       // Send error response back
       const errorResponse: SequenceErrorMessage = {
@@ -204,22 +165,26 @@ export class ContentScriptCoordinator {
    * Handle listing visible interactive elements
    */
   private async handleListInteractiveElements(): Promise<void> {
+    const logger = this.serviceCoordinator.getLogger();
+    const domDetectionService =
+      this.serviceCoordinator.getDOMDetectionService();
+
     try {
-      this.logger.info(
+      logger.info(
         'Listing visible interactive elements',
         'ContentScriptCoordinator'
       );
 
       const elements =
-        await this.domDetectionService.listVisibleInteractiveElements();
+        await domDetectionService.listVisibleInteractiveElements();
 
-      this.logger.info(
+      logger.info(
         `Found ${elements.length} visible interactive elements:`,
         'ContentScriptCoordinator'
       );
 
       // Log each element with details
-      elements.forEach((element, index) => {
+      elements.forEach((element: Element, index: number) => {
         const tagName = element.tagName.toLowerCase();
         const id = element.id ? `#${element.id}` : '';
         const className = element.className
@@ -227,7 +192,7 @@ export class ContentScriptCoordinator {
           : '';
         const text = element.textContent?.trim().substring(0, 50) || '';
 
-        this.logger.debug(
+        logger.debug(
           `${index + 1}. ${tagName}${id}${className}`,
           'ContentScriptCoordinator',
           {
@@ -243,9 +208,11 @@ export class ContentScriptCoordinator {
         );
       });
     } catch (error) {
-      this.logger.logError(error as Error, 'ContentScriptCoordinator');
-      this.logger.error(
-        `Failed to list interactive elements: ${error instanceof Error ? error.message : String(error)}`,
+      logger.logError(error as Error, 'ContentScriptCoordinator');
+      logger.error(
+        `Failed to list interactive elements: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
         'ContentScriptCoordinator'
       );
     }
@@ -255,13 +222,13 @@ export class ContentScriptCoordinator {
    * Get the content script ID
    */
   getContentScriptId(): string {
-    return this.contentScriptId;
+    return this.automationStateManager.getContentScriptId();
   }
 
   /**
    * Check if coordinator is ready
    */
   isCoordinatorReady(): boolean {
-    return this.isReady;
+    return this.automationStateManager.isStateManagerReady();
   }
 }
