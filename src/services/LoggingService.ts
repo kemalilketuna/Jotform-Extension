@@ -3,6 +3,7 @@
  */
 
 import { EnvironmentConfig, LogLevel } from '../utils/EnvironmentConfig';
+import { LoggingConfig } from '../config';
 
 export interface LogEntry {
   level: LogLevel;
@@ -15,7 +16,7 @@ export interface LogEntry {
 export class LoggingService {
   private static instance: LoggingService;
   private logs: LogEntry[] = [];
-  private readonly maxLogs = 1000;
+  private readonly maxLogs = LoggingConfig.LIMITS.MAX_LOGS;
   private readonly logLevel =
     EnvironmentConfig.getInstance().getDebugLogLevel();
 

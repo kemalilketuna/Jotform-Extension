@@ -3,6 +3,7 @@ import {
   ExecuteSequenceMessage,
   StartAutomationMessage,
 } from './MessageTypes';
+import { TimingConfig } from '../../config';
 import { LoggingService } from '@/services/LoggingService';
 import { AutomationError } from './AutomationErrors';
 import { ServiceFactory } from '@/services/DIContainer';
@@ -129,8 +130,8 @@ export class AutomationEngine {
       const visualConfig = {
         enabled: true,
         animationSpeed: 2,
-        hoverDuration: 800,
-        clickDuration: 300,
+        hoverDuration: TimingConfig.CURSOR_HOVER_DURATION,
+        clickDuration: TimingConfig.CURSOR_CLICK_DURATION,
       };
       await this.sequenceOrchestrator.execute(message.payload, visualConfig);
     } catch (error) {

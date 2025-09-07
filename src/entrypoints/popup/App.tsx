@@ -5,6 +5,7 @@ import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { PopupHeader } from '@/components/PopupHeader';
 import { StatusMessage } from '@/components/StatusMessage';
 import { ActionButtons } from '@/components/ActionButtons';
+import { TimingConfig } from '@/config';
 import { PopupFooter } from '@/components/PopupFooter';
 
 /**
@@ -52,7 +53,10 @@ function App() {
       setStatus('Interactive elements logged to console');
 
       // Clear status after 2 seconds
-      setTimeout(() => setStatus(''), 2000);
+      setTimeout(
+        () => setStatus(''),
+        TimingConfig.STATUS_MESSAGE_DISPLAY_DURATION
+      );
     } catch (error) {
       logger.logError(error as Error, 'PopupApp');
       setStatus(

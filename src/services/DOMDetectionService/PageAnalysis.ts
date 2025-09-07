@@ -8,6 +8,7 @@ import {
   ErrorHandlingUtils,
   ErrorHandlingConfig,
 } from '@/utils/ErrorHandlingUtils';
+import { TimingConfig } from '@/config';
 
 export class PageAnalysis {
   private static instance: PageAnalysis | null = null;
@@ -190,7 +191,10 @@ export class PageAnalysis {
             );
           } else {
             // DOM is already ready, perform analysis after a short delay to ensure all elements are rendered
-            setTimeout(() => performAnalysis().catch(reject), 100);
+            setTimeout(
+              () => performAnalysis().catch(reject),
+              TimingConfig.ELEMENT_WAIT_RETRY_DELAY
+            );
           }
         });
       },

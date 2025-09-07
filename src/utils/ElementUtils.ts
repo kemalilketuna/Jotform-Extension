@@ -1,4 +1,5 @@
-import { LoggingService } from '@/services/LoggingService';
+import { LoggingService } from '../services/LoggingService';
+import { TimingConfig } from '../config';
 import { AutomationConfig } from '@/services/AutomationEngine/AutomationConfig';
 
 /**
@@ -62,10 +63,7 @@ export class ElementUtils {
             );
           }
 
-          setTimeout(
-            checkElement,
-            AutomationConfig.INTERVALS.ELEMENT_CHECK_INTERVAL
-          );
+          setTimeout(checkElement, TimingConfig.ELEMENT_WAIT_RETRY_DELAY);
         } catch (error) {
           this.logger.error(
             `Error checking element: ${selector}`,
@@ -148,7 +146,7 @@ export class ElementUtils {
           };
 
           // Start stability monitoring after initial delay
-          setTimeout(checkStability, 1000);
+          setTimeout(checkStability, TimingConfig.MIN_STABILITY_DURATION);
         } else if (Date.now() - startTime > this.NAVIGATION_TIMEOUT) {
           this.logger.warn(
             'Document ready timeout reached, proceeding anyway',
@@ -205,7 +203,7 @@ export class ElementUtils {
       };
 
       // Initial check after a short delay
-      setTimeout(checkStability, 100);
+      setTimeout(checkStability, TimingConfig.ELEMENT_WAIT_RETRY_DELAY);
 
       // Safety timeout to prevent infinite waiting
       setTimeout(() => {

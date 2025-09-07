@@ -4,6 +4,7 @@ import { BackspaceCleaner } from './BackspaceCleaner';
 import { AudioService } from '@/services/AudioService';
 import { LoggingService } from '@/services/LoggingService';
 import { ServiceFactory } from '@/services/DIContainer';
+import { TimingConfig } from '../../config';
 import {
   TypingOperationConfig,
   TypingOptions,
@@ -224,7 +225,9 @@ export class TypingService {
    * Get a random typing delay that mimics human behavior
    */
   private getRandomDelay(speedMultiplier: number): number {
-    const baseDelay = TypingConfig.getRandomTypingDelay();
+    const minDelay = TimingConfig.MIN_TYPING_DELAY;
+    const maxDelay = TimingConfig.MAX_TYPING_DELAY;
+    const baseDelay = Math.random() * (maxDelay - minDelay) + minDelay;
     return baseDelay / speedMultiplier;
   }
 

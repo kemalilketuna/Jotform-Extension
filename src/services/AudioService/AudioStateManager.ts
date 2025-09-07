@@ -1,4 +1,5 @@
 import { LoggingService } from '@/services/LoggingService';
+import { AudioConfig } from '@/config';
 
 /**
  * Manages audio service state, configuration, and concurrent sound tracking
@@ -13,8 +14,9 @@ export class AudioStateManager {
   private cleanupTimeouts: Map<HTMLAudioElement, number> = new Map();
   private performanceStartTime: number = performance.now();
 
-  private readonly MAX_CONCURRENT_SOUNDS = 3;
-  private readonly DEBOUNCE_THRESHOLD = 10; // ms
+  private readonly MAX_CONCURRENT_SOUNDS =
+    AudioConfig.LIMITS.MAX_CONCURRENT_SOUNDS;
+  private readonly DEBOUNCE_THRESHOLD = AudioConfig.TIMING.DEBOUNCE_THRESHOLD;
 
   constructor(logger: LoggingService) {
     this.logger = logger;
@@ -118,7 +120,7 @@ export class AudioStateManager {
     // Add safety timeout to prevent stuck audio elements
     const timeoutId = window.setTimeout(() => {
       this.cleanupAudioElement(audio);
-    }, 10000); // 10 second safety timeout
+    }, AudioConfig.AUDIO_SAFETY_TIMEOUT);
 
     this.cleanupTimeouts.set(audio, timeoutId);
   }

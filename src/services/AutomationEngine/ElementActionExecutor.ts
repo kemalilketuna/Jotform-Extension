@@ -3,6 +3,7 @@ import { DOMDetectionService } from '@/services/DOMDetectionService';
 import { ActionsService } from '@/services/ActionsService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { Action } from '@/services/APIService/APITypes';
+import { TimingConfig } from '@/config';
 
 /**
  * Handles element-based action execution and selector generation
@@ -110,7 +111,9 @@ export class ElementActionExecutor {
       element.click();
 
       // Small delay to show the click effect
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) =>
+        setTimeout(resolve, TimingConfig.CLICK_EFFECT_DELAY)
+      );
     } catch (error) {
       this.logger.warn(
         `Visual cursor failed, falling back to direct click: ${error instanceof Error ? error.message : 'Unknown error'}`,

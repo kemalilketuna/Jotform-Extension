@@ -1,4 +1,5 @@
 import { APIConfig } from './APIConfig';
+import { TimingConfig } from '../../config';
 import { APIError, APIRetryError } from './APIErrors';
 import {
   APIResponse,
@@ -141,7 +142,7 @@ export class APIClient {
   async healthCheck(): Promise<boolean> {
     try {
       const controller = new AbortController();
-      setTimeout(() => controller.abort(), 5000);
+      setTimeout(() => controller.abort(), TimingConfig.API_TIMEOUT);
 
       const response = await fetch(`${this.config.getBaseUrl()}/health`, {
         method: 'GET',
