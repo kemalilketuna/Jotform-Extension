@@ -1,30 +1,22 @@
-import {
-  NavigationAction,
-  ClickAction,
-  TypeAction,
-  WaitAction,
-  AutomationAction,
-} from './ActionTypes';
+import { AutomationAction } from './ActionTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
+import { ElementUtils } from '@/utils/ElementUtils';
 import { ActionExecutionError } from '@/services/AutomationEngine/AutomationErrors';
-
 import {
-  NavigationActionHandler,
-  ClickActionHandler,
-  TypeActionHandler,
-  WaitActionHandler,
-} from './handlers';
+  ActionStrategyRegistry,
+  NavigationStrategy,
+  ClickStrategy,
+  TypeStrategy,
+  WaitStrategy,
+} from './strategies';
 
 /**
- * Handles execution of different automation action types using composition pattern
+ * Handles execution of different automation action types using Strategy Pattern
  */
 export class ActionHandlers {
-  private readonly navigationHandler: NavigationActionHandler;
-  private readonly clickHandler: ClickActionHandler;
-  private readonly typeHandler: TypeActionHandler;
-  private readonly waitHandler: WaitActionHandler;
+  private readonly strategyRegistry: ActionStrategyRegistry;
 
   constructor(
     logger: LoggingService,
@@ -32,63 +24,48 @@ export class ActionHandlers {
     typingService: TypingService,
     elementUtils: ElementUtils
   ) {
-    this.navigationHandler = new NavigationActionHandler(
-      logger,
-      visualCursor,
-      typingService,
-      elementUtils
+    this.strategyRegistry = new ActionStrategyRegistry();
+
+    // Register all action strategies
+    this.strategyRegistry.register(
+      'NAVIGATE',
+      new NavigationStrategy(logger, visualCursor, typingService, elementUtils)
     );
-    this.clickHandler = new ClickActionHandler(
-      logger,
-      visualCursor,
-      typingService,
-      elementUtils
+    this.strategyRegistry.register(
+      'CLICK',
+      new ClickStrategy(logger, visualCursor, typingService, elementUtils)
     );
-    this.typeHandler = new TypeActionHandler(
-      logger,
-      visualCursor,
-      typingService,
-      elementUtils
+    this.strategyRegistry.register(
+      'TYPE',
+      new TypeStrategy(logger, visualCursor, typingService, elementUtils)
     );
-    this.waitHandler = new WaitActionHandler(
-      logger,
-      visualCursor,
-      typingService,
-      elementUtils
+    this.strategyRegistry.register(
+      'WAIT',
+      new WaitStrategy(logger, visualCursor, typingService, elementUtils)
     );
   }
 
   /**
-   * Execute a single automation action with proper type checking
+   * Execute a single automation action using Strategy Pattern
    */
   async executeAction(
     action: AutomationAction,
     stepIndex?: number
   ): Promise<void> {
     const actionType = action.type;
+
     try {
-      switch (actionType) {
-        case 'NAVIGATE':
-          await this.navigationHandler.handleNavigation(
-            action as NavigationAction
-          );
-          break;
-        case 'CLICK':
-          await this.clickHandler.handleClick(action as ClickAction);
-          break;
-        case 'TYPE':
-          await this.typeHandler.handleType(action as TypeAction);
-          break;
-        case 'WAIT':
-          await this.waitHandler.handleWait(action as WaitAction);
-          break;
-        default:
-          throw new ActionExecutionError(
-            'UNKNOWN',
-            `Unknown action type: ${actionType}`,
-            stepIndex
-          );
+      const strategy = this.strategyRegistry.getStrategy(actionType);
+
+      if (!strategy) {
+        throw new ActionExecutionError(
+          'UNKNOWN',
+          `Unknown action type: ${actionType}`,
+          stepIndex
+        );
       }
+
+      await strategy.execute(action, stepIndex);
     } catch (error) {
       if (error instanceof ActionExecutionError) {
         throw error;

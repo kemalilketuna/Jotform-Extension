@@ -7,6 +7,14 @@ import {
 } from '@/services/APIService/APITypes';
 import { ElementActionExecutor } from './ElementActionExecutor';
 import { AutomationError } from './AutomationErrors';
+import {
+  AutomationActionStrategyRegistry,
+  FinishActionStrategy,
+  FailActionStrategy,
+  AskUserActionStrategy,
+  ClickElementActionStrategy,
+  TypeElementActionStrategy,
+} from './strategies';
 
 /**
  * Processes and executes automation actions
@@ -15,6 +23,7 @@ export class ActionProcessor {
   private readonly logger: LoggingService;
   private readonly apiService: APIService;
   private readonly elementActionExecutor: ElementActionExecutor;
+  private readonly strategyRegistry: AutomationActionStrategyRegistry;
 
   constructor(
     logger: LoggingService,
@@ -24,6 +33,34 @@ export class ActionProcessor {
     this.logger = logger;
     this.apiService = apiService;
     this.elementActionExecutor = elementActionExecutor;
+    this.strategyRegistry = new AutomationActionStrategyRegistry();
+    this.initializeStrategies();
+  }
+
+  /**
+   * Initialize all action strategies
+   */
+  private initializeStrategies(): void {
+    this.strategyRegistry.register(
+      'FINISH',
+      new FinishActionStrategy(this.logger, this.elementActionExecutor)
+    );
+    this.strategyRegistry.register(
+      'FAIL',
+      new FailActionStrategy(this.logger, this.elementActionExecutor)
+    );
+    this.strategyRegistry.register(
+      'ASK_USER',
+      new AskUserActionStrategy(this.logger, this.elementActionExecutor)
+    );
+    this.strategyRegistry.register(
+      'CLICK',
+      new ClickElementActionStrategy(this.logger, this.elementActionExecutor)
+    );
+    this.strategyRegistry.register(
+      'TYPE',
+      new TypeElementActionStrategy(this.logger, this.elementActionExecutor)
+    );
   }
 
   /**
@@ -96,86 +133,22 @@ export class ActionProcessor {
   }
 
   /**
-   * Execute a single action
+   * Execute a single action using Strategy Pattern
    */
   private async executeAction(
     action: Action,
     visibleElements: HTMLElement[],
     stepCount: number
   ): Promise<{ outcome: ExecutedAction; shouldContinue: boolean }> {
-    // Handle FINISH action
-    if (action.type === 'FINISH') {
-      this.logger.info(
-        'Received FINISH action, completing automation',
-        'ActionProcessor'
-      );
-      return {
-        outcome: { status: 'SUCCESS' },
-        shouldContinue: false,
-      };
-    }
+    const strategy = this.strategyRegistry.getStrategy(action.type);
 
-    // Handle FAIL action
-    if (action.type === 'FAIL') {
-      const errorMsg =
-        action.message || 'Automation failed as directed by backend';
+    if (!strategy) {
+      const errorMsg = `Unknown action type: ${action.type}`;
       this.logger.error(errorMsg, 'ActionProcessor');
       throw new AutomationError(errorMsg);
     }
 
-    // Skip ASK_USER actions
-    if (action.type === 'ASK_USER') {
-      this.logger.info(
-        'Skipping ASK_USER action as requested',
-        'ActionProcessor'
-      );
-      return {
-        outcome: {
-          status: 'FAIL',
-          errorMessage: 'ASK_USER actions are not supported in this mode',
-        },
-        shouldContinue: true,
-      };
-    }
-
-    // Execute CLICK and TYPE actions
-    if (action.type === 'CLICK' || action.type === 'TYPE') {
-      try {
-        await this.elementActionExecutor.executeActionWithElementIndex(
-          action,
-          visibleElements,
-          stepCount
-        );
-        return {
-          outcome: { status: 'SUCCESS' },
-          shouldContinue: true,
-        };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Unknown error';
-        this.logger.error(
-          `Action execution failed: ${errorMessage}`,
-          'ActionProcessor'
-        );
-        return {
-          outcome: {
-            status: 'FAIL',
-            errorMessage,
-          },
-          shouldContinue: true,
-        };
-      }
-    }
-
-    // Unknown action type
-    this.logger.warn(`Unknown action type: ${action.type}`, 'ActionProcessor');
-    return {
-      outcome: {
-        status: 'FAIL',
-        errorMessage: `Unknown action type: ${action.type}`,
-      },
-      shouldContinue: true,
-    };
+    return await strategy.execute(action, visibleElements, stepCount);
   }
 
   /**
