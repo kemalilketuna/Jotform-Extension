@@ -1,4 +1,6 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
+import { StorageService } from '@/services/StorageService';
 import { AutomationSequence } from '@/services/ActionsService/ActionTypes';
 import {
   AutomationMessage,
@@ -12,13 +14,17 @@ import { SessionManager } from './SessionManager';
  */
 export class AutomationCoordinator {
   private static instance: AutomationCoordinator;
+  private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
+  private readonly storageService: StorageService;
   private readonly stateManager: AutomationStateManager;
   private readonly sessionManager: SessionManager;
   private readonly CONTENT_SCRIPT_INJECTION_DELAY = 1000;
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    this.serviceFactory = ServiceFactory.getInstance();
+    this.logger = this.serviceFactory.createLoggingService();
+    this.storageService = this.serviceFactory.createStorageService();
     this.stateManager = new AutomationStateManager();
     this.sessionManager = new SessionManager();
   }

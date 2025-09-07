@@ -5,14 +5,8 @@ import {
 } from './MessageTypes';
 import { LoggingService } from '@/services/LoggingService';
 import { AutomationError } from './AutomationErrors';
-import { VisualCursorService } from '@/services/VisualCursorService';
-import { TypingService } from '@/services/TypingService';
-import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
-import { ActionsService } from '@/services/ActionsService';
+import { ServiceFactory } from '@/services/DIContainer';
 import { MessageHandler } from './MessageHandler';
-import { APIService } from '@/services/APIService';
-import { DOMDetectionService } from '@/services/DOMDetectionService';
-import { StorageService } from '@/services/StorageService';
 import { StepByStepAutomationOrchestrator } from './StepByStepAutomationOrchestrator';
 import { SequenceAutomationOrchestrator } from './SequenceAutomationOrchestrator';
 import { AutomationSessionManager } from './AutomationSessionManager';
@@ -26,6 +20,7 @@ import { ElementActionExecutor } from './ElementActionExecutor';
 export class AutomationEngine {
   private static instance: AutomationEngine;
   private isExecuting = false;
+  private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
   private readonly stepByStepOrchestrator: StepByStepAutomationOrchestrator;
   private readonly sequenceOrchestrator: SequenceAutomationOrchestrator;
@@ -33,36 +28,33 @@ export class AutomationEngine {
   private readonly lifecycleManager: AutomationLifecycleManager;
   private readonly messageHandler: MessageHandler;
 
-  private constructor(
-    logger: LoggingService = LoggingService.getInstance(),
-    visualCursor: VisualCursorService = VisualCursorService.getInstance(),
-    typingService: TypingService = TypingService.getInstance()
-  ) {
-    this.logger = logger;
-    const userInteractionBlocker = UserInteractionBlocker.getInstance();
-    const actionsService = ActionsService.getInstance(
-      logger,
-      visualCursor,
-      typingService
-    );
-    const apiService = APIService.getInstance();
-    const domDetectionService = DOMDetectionService.getInstance();
-    const storageService = StorageService.getInstance();
+  private constructor() {
+    this.serviceFactory = ServiceFactory.getInstance();
+    this.logger = this.serviceFactory.createLoggingService();
+
+    const visualCursor = this.serviceFactory.createVisualCursorService();
+    const userInteractionBlocker =
+      this.serviceFactory.createUserInteractionBlocker();
+    const actionsService = this.serviceFactory.createActionsService();
+    const apiService = this.serviceFactory.createAPIService();
+    const domDetectionService = this.serviceFactory.createDOMDetectionService();
+    const storageService = this.serviceFactory.createStorageService();
+
     const elementActionExecutor = new ElementActionExecutor(
-      logger,
+      this.logger,
       domDetectionService,
       actionsService
     );
 
-    this.messageHandler = new MessageHandler(logger);
+    this.messageHandler = new MessageHandler(this.logger);
     this.lifecycleManager = new AutomationLifecycleManager(
-      logger,
+      this.logger,
       visualCursor,
       userInteractionBlocker
     );
-    this.sessionManager = new AutomationSessionManager(logger, apiService);
+    this.sessionManager = new AutomationSessionManager(this.logger, apiService);
     this.stepByStepOrchestrator = new StepByStepAutomationOrchestrator(
-      logger,
+      this.logger,
       apiService,
       domDetectionService,
       storageService,
@@ -71,24 +63,16 @@ export class AutomationEngine {
       this.lifecycleManager
     );
     this.sequenceOrchestrator = new SequenceAutomationOrchestrator(
-      logger,
+      this.logger,
       actionsService,
       this.messageHandler,
       this.lifecycleManager
     );
   }
 
-  static getInstance(
-    logger?: LoggingService,
-    visualCursor?: VisualCursorService,
-    typingService?: TypingService
-  ): AutomationEngine {
+  static getInstance(): AutomationEngine {
     if (!AutomationEngine.instance) {
-      AutomationEngine.instance = new AutomationEngine(
-        logger,
-        visualCursor,
-        typingService
-      );
+      AutomationEngine.instance = new AutomationEngine();
     }
     return AutomationEngine.instance;
   }
@@ -96,12 +80,8 @@ export class AutomationEngine {
   /**
    * Create a new instance for testing purposes
    */
-  static createInstance(
-    logger: LoggingService,
-    visualCursor: VisualCursorService,
-    typingService: TypingService
-  ): AutomationEngine {
-    return new AutomationEngine(logger, visualCursor, typingService);
+  static createInstance(): AutomationEngine {
+    return new AutomationEngine();
   }
 
   /**

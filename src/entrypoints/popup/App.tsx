@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LoggingService } from '@/services/LoggingService';
+import { ServiceFactory } from '@/services/DIContainer';
 import { ErrorMessages, PromptMessages } from '@/services/MessagesService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { PopupHeader } from '@/components/PopupHeader';
@@ -12,7 +12,8 @@ import { PopupFooter } from '@/components/PopupFooter';
  */
 function App() {
   const [status, setStatus] = useState<string>('');
-  const logger = LoggingService.getInstance();
+  const serviceFactory = ServiceFactory.getInstance();
+  const logger = serviceFactory.createLoggingService();
 
   /**
    * Get the current active tab

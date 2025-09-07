@@ -1,3 +1,4 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { APIService } from '@/services/APIService';
 import { StorageService } from '@/services/StorageService';
@@ -6,15 +7,17 @@ import { StorageService } from '@/services/StorageService';
  * Session manager for handling automation sessions and API communication
  */
 export class SessionManager {
+  private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
   private readonly apiService: APIService;
   private readonly storageService: StorageService;
   private currentSessionId: string | null = null;
 
   constructor() {
-    this.logger = LoggingService.getInstance();
-    this.apiService = APIService.getInstance();
-    this.storageService = StorageService.getInstance();
+    this.serviceFactory = ServiceFactory.getInstance();
+    this.logger = this.serviceFactory.createLoggingService();
+    this.apiService = this.serviceFactory.createAPIService();
+    this.storageService = this.serviceFactory.createStorageService();
   }
 
   /**

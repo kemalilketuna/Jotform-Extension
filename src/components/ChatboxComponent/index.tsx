@@ -1,7 +1,7 @@
 import React from 'react';
 import { ComponentStrings } from './ComponentStrings';
 import { MessageItem } from './MessageItem';
-import { LoggingService } from '@/services/LoggingService';
+import { ServiceFactory } from '@/services/DIContainer';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 
 export interface ChatMessage {
@@ -28,7 +28,8 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
   maxHeight = '300px',
 }) => {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const logger = LoggingService.getInstance();
+  const serviceFactory = ServiceFactory.getInstance();
+  const logger = serviceFactory.createLoggingService();
 
   // Auto-scroll to bottom when new messages arrive
   React.useEffect(() => {

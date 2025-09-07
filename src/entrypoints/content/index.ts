@@ -1,5 +1,6 @@
 import '@/styles/globals.css';
 import '@/styles/cursor.css';
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { ContentScriptCoordinator } from './ContentScriptCoordinator';
 import { ServiceInitializer } from './ServiceInitializer';
@@ -19,7 +20,8 @@ class ContentScriptMain {
   private isInitialized = false;
 
   constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   /**
@@ -141,7 +143,8 @@ let isContentScriptInitialized = false;
  * Initialize the content script main instance
  */
 async function initializeContentScript(): Promise<void> {
-  const logger = LoggingService.getInstance();
+  const serviceFactory = ServiceFactory.getInstance();
+  const logger = serviceFactory.createLoggingService();
 
   logger.info(
     `JotForm Extension content script loaded [${CONTENT_SCRIPT_ID}]`,

@@ -1,18 +1,18 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
-import { AudioService } from '@/services/AudioService';
-import { JotformAgentDisabler } from '@/services/JotformAgentDisabler';
-import { ComponentService } from '@/services/ComponentService';
 
 /**
  * Service initialization and setup for content script
  */
 export class ServiceInitializer {
   private static instance: ServiceInitializer;
+  private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
   private isInitialized = false;
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    this.serviceFactory = ServiceFactory.getInstance();
+    this.logger = this.serviceFactory.createLoggingService();
   }
 
   static getInstance(): ServiceInitializer {
@@ -60,7 +60,7 @@ export class ServiceInitializer {
    */
   private async initializeAudioService(): Promise<void> {
     try {
-      const audioService = AudioService.getInstance();
+      const audioService = this.serviceFactory.createAudioService();
       await audioService.initialize();
       this.logger.debug(
         'AudioService initialized successfully',
@@ -80,7 +80,8 @@ export class ServiceInitializer {
    */
   private async initializeJotformAgentDisabler(): Promise<void> {
     try {
-      const jotformAgentDisabler = JotformAgentDisabler.getInstance();
+      const jotformAgentDisabler =
+        this.serviceFactory.createJotformAgentDisabler();
       jotformAgentDisabler.initialize();
       this.logger.debug(
         'JotformAgentDisabler initialized successfully',
@@ -100,7 +101,7 @@ export class ServiceInitializer {
    */
   private async initializeComponentService(): Promise<void> {
     try {
-      const componentService = ComponentService.getInstance();
+      const componentService = this.serviceFactory.createComponentService();
       componentService.initialize();
       this.logger.debug(
         'ComponentService initialized successfully',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LoggingService } from '@/services/LoggingService';
+import { ServiceFactory } from '@/services/DIContainer';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { ComponentStrings } from './ComponentStrings';
 import { AiTextInput } from './AiTextInput';
@@ -51,11 +51,11 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
         setStatus(null);
       }, 3000);
     } catch (error) {
-      LoggingService.getInstance().error(
-        'Failed to submit prompt',
-        'AiTextFieldComponent',
-        { error: (error as Error).message }
-      );
+      ServiceFactory.getInstance()
+        .createLoggingService()
+        .error('Failed to submit prompt', 'AiTextFieldComponent', {
+          error: (error as Error).message,
+        });
 
       const errorMessage =
         ComponentStrings.USER_MESSAGES.PROMPT_SUBMISSION_FAILED;

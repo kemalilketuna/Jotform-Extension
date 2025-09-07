@@ -7,17 +7,20 @@ import {
 import { MessageResponse, MessageSender } from './ExtensionTypes';
 import { ServiceCoordinator } from './ServiceCoordinator';
 import { AutomationStateManager } from './AutomationStateManager';
+import { ServiceFactory } from '@/services/DIContainer';
 
 /**
  * Content script coordinator for persistent automation
  */
 export class ContentScriptCoordinator {
   private static instance: ContentScriptCoordinator;
+  private readonly serviceFactory: ServiceFactory;
   private readonly serviceCoordinator: ServiceCoordinator;
   private readonly automationStateManager: AutomationStateManager;
   private isProcessingMessage = false;
 
   private constructor(contentScriptId: string) {
+    this.serviceFactory = ServiceFactory.getInstance();
     this.serviceCoordinator = new ServiceCoordinator();
     this.automationStateManager = new AutomationStateManager(
       this.serviceCoordinator.getLogger(),

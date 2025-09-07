@@ -1,6 +1,6 @@
 import React from 'react';
 import { ComponentStrings, ChatboxStringError } from './ComponentStrings';
-import { LoggingService } from '@/services/LoggingService';
+import { ServiceFactory } from '@/services/DIContainer';
 
 export interface MessageItemProps {
   message: string;
@@ -21,11 +21,11 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     try {
       return ChatboxStringError.validateMessage(message);
     } catch (error) {
-      LoggingService.getInstance().error(
-        'Invalid message in MessageItem',
-        'MessageItem',
-        { error: String(error) }
-      );
+      ServiceFactory.getInstance()
+        .createLoggingService()
+        .error('Invalid message in MessageItem', 'MessageItem', {
+          error: String(error),
+        });
       return ComponentStrings.CHATBOX_LABELS.EMPTY_STATE;
     }
   }, [message]);

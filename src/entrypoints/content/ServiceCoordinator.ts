@@ -1,3 +1,4 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { AutomationEngine } from '@/services/AutomationEngine';
 import { AudioService } from '@/services/AudioService';
@@ -8,6 +9,7 @@ import { NavigationDetector } from './NavigationDetector';
  * Manages service dependencies and initialization for content script
  */
 export class ServiceCoordinator {
+  private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
   private readonly automationEngine: AutomationEngine;
   private readonly navigationDetector: NavigationDetector;
@@ -16,11 +18,12 @@ export class ServiceCoordinator {
   private isInitialized = false;
 
   constructor() {
-    this.logger = LoggingService.getInstance();
-    this.automationEngine = AutomationEngine.getInstance();
-    this.navigationDetector = NavigationDetector.getInstance();
-    this.audioService = AudioService.getInstance();
-    this.domDetectionService = DOMDetectionService.getInstance();
+    this.serviceFactory = ServiceFactory.getInstance();
+    this.logger = this.serviceFactory.createLoggingService();
+    this.automationEngine = this.serviceFactory.createAutomationEngine();
+    this.navigationDetector = this.serviceFactory.createNavigationDetector();
+    this.audioService = this.serviceFactory.createAudioService();
+    this.domDetectionService = this.serviceFactory.createDOMDetectionService();
   }
 
   /**

@@ -1,3 +1,4 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import {
   AutomationMessage,
@@ -20,11 +21,13 @@ import { browser } from 'wxt/browser';
  * Message handler for processing all background script messages
  */
 export class MessageHandler {
+  private readonly serviceFactory: ServiceFactory;
   private readonly logger: LoggingService;
   private readonly coordinator: AutomationCoordinator;
 
   constructor(coordinator: AutomationCoordinator) {
-    this.logger = LoggingService.getInstance();
+    this.serviceFactory = ServiceFactory.getInstance();
+    this.logger = this.serviceFactory.createLoggingService();
     this.coordinator = coordinator;
   }
 

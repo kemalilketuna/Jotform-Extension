@@ -1,4 +1,4 @@
-import { LoggingService } from '@/services/LoggingService';
+import { ServiceFactory } from '@/services/DIContainer';
 import { AutomationCoordinator } from './AutomationCoordinator';
 import { MessageHandler } from './MessageHandler';
 import { AutomationMessage } from '@/services/AutomationEngine/MessageTypes';
@@ -8,7 +8,9 @@ import { browser } from 'wxt/browser';
  * Background script entry point for JotForm extension
  */
 export default defineBackground(() => {
-  const logger = LoggingService.getInstance();
+  // Initialize services
+  const serviceFactory = ServiceFactory.getInstance();
+  const logger = serviceFactory.createLoggingService();
   const coordinator = AutomationCoordinator.getInstance();
   const messageHandler = new MessageHandler(coordinator);
 
