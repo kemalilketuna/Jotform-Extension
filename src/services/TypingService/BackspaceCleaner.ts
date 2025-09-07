@@ -1,5 +1,6 @@
 import { TypingConfig } from './TypingConfig';
 import { EventDispatcher } from './EventDispatcher';
+import { ServiceFactory } from '@/services/DIContainer';
 import { AudioService } from '@/services/AudioService';
 
 /**
@@ -7,7 +8,15 @@ import { AudioService } from '@/services/AudioService';
  * Static utility class for backspace operations
  */
 export class BackspaceCleaner {
-  private static readonly audioService = AudioService.getInstance();
+  private static _audioService: AudioService | undefined;
+
+  private static get audioService() {
+    if (!this._audioService) {
+      const serviceFactory = ServiceFactory.getInstance();
+      this._audioService = serviceFactory.createAudioService();
+    }
+    return this._audioService;
+  }
 
   /**
    * Simulate human-like backspace clearing of existing text

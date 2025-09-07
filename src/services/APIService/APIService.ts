@@ -9,6 +9,7 @@ import {
   NextActionResponse,
 } from './APITypes';
 
+import { ServiceFactory } from '@/services/DIContainer';
 import { StorageService } from '@/services/StorageService';
 import { LoggingService } from '@/services/LoggingService';
 
@@ -16,11 +17,14 @@ export class APIService {
   private static instance: APIService | null = null;
   private readonly apiClient: APIClient;
 
-  private readonly storageService = StorageService.getInstance();
-  private readonly logger = LoggingService.getInstance();
+  private readonly storageService: StorageService;
+  private readonly logger: LoggingService;
   private currentSessionId: string | null = null;
 
   private constructor(config?: APIConfig) {
+    const serviceFactory = ServiceFactory.getInstance();
+    this.storageService = serviceFactory.createStorageService();
+    this.logger = serviceFactory.createLoggingService();
     const apiConfig = config ?? APIConfig.getDefaultConfig();
     this.apiClient = new APIClient(apiConfig);
   }

@@ -26,7 +26,7 @@ export class DIContainer {
   private readonly logger: LoggingService;
 
   private constructor() {
-    // Bootstrap logger first as it's needed by other services
+    // Note: DIContainer bootstraps LoggingService, so it must use direct instantiation
     this.logger = LoggingService.getInstance();
     this.registerCoreServices();
   }

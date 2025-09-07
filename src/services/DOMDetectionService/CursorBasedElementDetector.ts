@@ -1,4 +1,5 @@
 import { DOMDetectionError } from './DOMDetectionErrors.js';
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
@@ -8,7 +9,8 @@ export class CursorBasedElementDetector {
   private readonly logger: LoggingService;
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   /**

@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
+import { ServiceFactory } from './DIContainer';
 import { LoggingService } from './LoggingService';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
 
@@ -18,7 +19,8 @@ export class ComponentService {
   private chatMessages: ChatMessage[] = [];
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   static getInstance(): ComponentService {

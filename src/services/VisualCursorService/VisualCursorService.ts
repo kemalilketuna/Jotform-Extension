@@ -3,6 +3,7 @@ import {
   VisualAnimationConfig,
   VisualCursorState,
 } from './VisualTypes';
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { AudioService } from '@/services/AudioService';
 import { CursorDOMManager } from './CursorDOMManager';
@@ -23,14 +24,15 @@ export class VisualCursorService {
   private config: VisualAnimationConfig;
   private isInitialized = false;
 
-  private constructor(logger: LoggingService = LoggingService.getInstance()) {
-    this.logger = logger;
-    this.audioService = AudioService.getInstance(logger);
-    this.domManager = new CursorDOMManager(logger);
+  private constructor(logger?: LoggingService) {
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = logger || serviceFactory.createLoggingService();
+    this.audioService = AudioService.getInstance(this.logger);
+    this.domManager = new CursorDOMManager(this.logger);
     this.animationManager = new CursorAnimationManager(
       this.domManager,
       this.audioService,
-      logger
+      this.logger
     );
 
     this.state = {

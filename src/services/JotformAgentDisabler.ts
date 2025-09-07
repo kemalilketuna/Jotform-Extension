@@ -1,3 +1,4 @@
+import { ServiceFactory } from './DIContainer';
 import { LoggingService } from './LoggingService';
 
 /**
@@ -24,7 +25,8 @@ export class JotformAgentDisabler {
   private pendingMutations: Element[] = [];
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   static getInstance(): JotformAgentDisabler {

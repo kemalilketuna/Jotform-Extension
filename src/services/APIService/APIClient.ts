@@ -8,15 +8,18 @@ import {
   NextActionRequest,
   NextActionResponse,
 } from './APITypes';
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 
 export class APIClient {
   private readonly config: APIConfig;
-  private readonly logger = LoggingService.getInstance();
+  private readonly logger: LoggingService;
   private readonly defaultHeaders: Record<string, string>;
 
   constructor(config: APIConfig) {
     this.config = config;
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       Accept: 'application/json',

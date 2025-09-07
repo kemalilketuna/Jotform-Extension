@@ -1,3 +1,4 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import {
   ContentScriptReadyMessage,
@@ -14,7 +15,8 @@ export class NavigationDetector {
   private isInitialized = false;
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
     this.currentUrl = window?.location?.href || '';
   }
 

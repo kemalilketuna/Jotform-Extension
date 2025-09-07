@@ -1,3 +1,4 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { AudioError } from './AudioErrors';
 import { AudioElementManager } from './AudioElementManager';
@@ -16,13 +17,14 @@ export class AudioService {
   private readonly stateManager: AudioStateManager;
   private readonly playbackEngine: AudioPlaybackEngine;
 
-  private constructor(logger: LoggingService = LoggingService.getInstance()) {
-    this.logger = logger;
-    this.elementManager = new AudioElementManager(logger);
-    this.cacheManager = new AudioCacheManager(logger, this.elementManager);
-    this.stateManager = new AudioStateManager(logger);
+  private constructor(logger?: LoggingService) {
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = logger || serviceFactory.createLoggingService();
+    this.elementManager = new AudioElementManager(this.logger);
+    this.cacheManager = new AudioCacheManager(this.logger, this.elementManager);
+    this.stateManager = new AudioStateManager(this.logger);
     this.playbackEngine = new AudioPlaybackEngine(
-      logger,
+      this.logger,
       this.elementManager,
       this.cacheManager,
       this.stateManager

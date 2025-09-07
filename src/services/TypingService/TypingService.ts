@@ -3,6 +3,7 @@ import { EventDispatcher } from './EventDispatcher';
 import { BackspaceCleaner } from './BackspaceCleaner';
 import { AudioService } from '@/services/AudioService';
 import { LoggingService } from '@/services/LoggingService';
+import { ServiceFactory } from '@/services/DIContainer';
 import {
   TypingOperationConfig,
   TypingOptions,
@@ -21,10 +22,11 @@ export class TypingService {
   private readonly audioService: AudioService;
   private readonly errorHandler: TypingErrorHandler;
 
-  private constructor(logger: LoggingService = LoggingService.getInstance()) {
-    this.logger = logger;
-    this.audioService = AudioService.getInstance();
-    this.errorHandler = new TypingErrorHandler(logger);
+  private constructor(logger?: LoggingService) {
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = logger || serviceFactory.createLoggingService();
+    this.audioService = serviceFactory.createAudioService();
+    this.errorHandler = new TypingErrorHandler(this.logger);
   }
 
   static getInstance(logger?: LoggingService): TypingService {

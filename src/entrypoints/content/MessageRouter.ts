@@ -1,3 +1,4 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { AutomationMessage } from '@/services/AutomationEngine/MessageTypes';
 import { MessageResponse, MessageSender } from './ExtensionTypes';
@@ -13,7 +14,8 @@ export class MessageRouter {
   private coordinator: ContentScriptCoordinator | null = null;
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   static getInstance(): MessageRouter {

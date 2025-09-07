@@ -3,6 +3,7 @@ import { DOMDetectionError } from './DOMDetectionErrors.js';
 import { JSPathGenerator } from './JSPathGenerator.js';
 import { ElementVisibility } from './ElementVisibility.js';
 import { PageAnalysis } from './PageAnalysis.js';
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 
 export class DOMDetection {
@@ -14,7 +15,8 @@ export class DOMDetection {
 
   private constructor(config?: Partial<DOMDetectionConfig>) {
     this.config = this.mergeDefaultConfig(config);
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
     this.pageAnalysisService = PageAnalysis.getInstance(config);
     this.elementVisibilityService = ElementVisibility.getInstance();
   }

@@ -1,3 +1,4 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '../LoggingService';
 import { StorageStrings } from './StorageStrings';
 import {
@@ -28,7 +29,8 @@ export class StorageService {
   private logger: LoggingService;
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   static getInstance(): StorageService {

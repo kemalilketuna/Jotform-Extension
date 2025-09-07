@@ -2,6 +2,7 @@ import { ScrollableArea, DOMDetectionConfig } from './DOMDetectionTypes.js';
 import { DOMDetectionError } from './DOMDetectionErrors.js';
 import { ScrollableAreaDetector } from './ScrollableAreaDetector.js';
 import { CursorBasedElementDetector } from './CursorBasedElementDetector.js';
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 
 export class PageAnalysis {
@@ -15,7 +16,8 @@ export class PageAnalysis {
     this.config = this.mergeDefaultConfig(config);
     this.scrollableDetector = new ScrollableAreaDetector();
     this.cursorDetector = CursorBasedElementDetector.getInstance();
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   /**

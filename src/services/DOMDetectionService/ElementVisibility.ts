@@ -1,4 +1,5 @@
 import { VisibilityDetectionError } from './DOMDetectionErrors.js';
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 
 export class ElementVisibility {
@@ -6,7 +7,8 @@ export class ElementVisibility {
   private readonly logger: LoggingService;
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   /**

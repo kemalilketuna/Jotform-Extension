@@ -1,4 +1,5 @@
 import { AutomationAction, ExecutedAction } from './ActionTypes';
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
@@ -19,17 +20,18 @@ export class ActionsService {
   private readonly storageService: StorageService;
 
   private constructor(
-    logger: LoggingService = LoggingService.getInstance(),
-    visualCursor: VisualCursorService = VisualCursorService.getInstance(),
-    typingService: TypingService = TypingService.getInstance()
+    logger?: LoggingService,
+    visualCursor?: VisualCursorService,
+    typingService?: TypingService
   ) {
-    this.logger = logger;
-    this.storageService = StorageService.getInstance();
-    this.elementUtils = new ElementUtils(logger);
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = logger || serviceFactory.createLoggingService();
+    this.storageService = serviceFactory.createStorageService();
+    this.elementUtils = new ElementUtils(this.logger);
     this.actionHandlers = new ActionHandlers(
-      logger,
-      visualCursor,
-      typingService,
+      this.logger,
+      visualCursor || serviceFactory.createVisualCursorService(),
+      typingService || serviceFactory.createTypingService(),
       this.elementUtils
     );
   }

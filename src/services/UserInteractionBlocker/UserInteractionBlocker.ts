@@ -1,3 +1,4 @@
+import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { ErrorMessages } from '@/services/MessagesService';
 import { EXTENSION_COMPONENTS } from './extensionComponents';
@@ -16,7 +17,8 @@ export class UserInteractionBlocker {
   }> = [];
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   static getInstance(): UserInteractionBlocker {
