@@ -9,7 +9,9 @@ export class EnvironmentVariableNames {
 }
 
 export class EnvironmentDefaults {
-  static readonly BACKEND_BASE_URL = 'http://localhost:8000' as const;
+  static readonly DEFAULT_PORT = 8000 as const;
+  static readonly BACKEND_BASE_URL =
+    `http://localhost:${EnvironmentDefaults.DEFAULT_PORT}` as const;
   static readonly DEBUG_LOG_LEVEL = '0' as const;
 }
 
@@ -17,6 +19,10 @@ export class EnvironmentErrors {
   static readonly INVALID_LOG_LEVEL =
     'Invalid log level value. Must be 0-3.' as const;
   static readonly INVALID_URL = 'Invalid backend base URL format.' as const;
+}
+
+export class ParsingConstants {
+  static readonly DECIMAL_BASE = 10 as const;
 }
 
 export enum LogLevel {
@@ -79,7 +85,7 @@ export class EnvironmentConfig {
     const levelStr =
       this.config.get(EnvironmentVariableNames.DEBUG_LOG_LEVEL) ||
       EnvironmentDefaults.DEBUG_LOG_LEVEL;
-    const level = parseInt(levelStr, 10);
+    const level = parseInt(levelStr, ParsingConstants.DECIMAL_BASE);
     this.validateLogLevel(level);
     return level as LogLevel;
   }

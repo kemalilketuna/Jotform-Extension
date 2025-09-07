@@ -202,7 +202,9 @@ export class TypingService {
         : this.getRandomDelay(speedMultiplier);
 
       // Play moderate overlapping keystroke sounds for balanced typing effect
-      const isRapidTyping = shouldPause ? false : delay < 100; // Rapid fire if delay is less than 100ms and not pausing
+      const isRapidTyping = shouldPause
+        ? false
+        : delay < TypingConfig.TYPING_SPEEDS.RAPID_TYPING_THRESHOLD; // Rapid fire if delay is less than threshold and not pausing
       if (isRapidTyping) {
         this.audioService.playMultipleKeystrokeSounds(2).catch(() => {
           // Ignore audio errors to avoid breaking typing flow

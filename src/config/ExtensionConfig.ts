@@ -86,6 +86,12 @@ export class ExtensionConfig {
     LOG_ENTRIES_PER_SECOND: 10,
   } as const;
 
+  // Text and content limits
+  static readonly CONTENT_LIMITS = {
+    ELEMENT_TEXT_PREVIEW_LENGTH: 50,
+    RANDOM_STRING_LENGTH: 9,
+  } as const;
+
   /**
    * Generate unique content script ID
    */

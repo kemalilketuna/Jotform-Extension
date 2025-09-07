@@ -11,6 +11,7 @@ export class TypingConfig {
     MAX_DELAY: 154,
     PAUSE_DELAY: 420,
     BACKSPACE_DELAY: 80,
+    RAPID_TYPING_THRESHOLD: 100,
   } as const;
 
   /**

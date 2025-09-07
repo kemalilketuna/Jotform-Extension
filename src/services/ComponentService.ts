@@ -3,6 +3,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { ServiceFactory } from './DIContainer';
 import { LoggingService } from './LoggingService';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
+import { UIConfig } from '@/config/UIConfig';
 
 import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
 import { ChatboxComponent, ChatMessage } from '@/components/ChatboxComponent';
@@ -90,7 +91,8 @@ export class ComponentService {
       this.containerElement.style.width = '100%';
       this.containerElement.style.height = '100%';
       this.containerElement.style.pointerEvents = 'none';
-      this.containerElement.style.zIndex = '999998';
+      this.containerElement.style.zIndex =
+        UIConfig.Z_INDEX.EXTENSION_BASE.toString();
 
       // Add to document body
       document.body.appendChild(this.containerElement);

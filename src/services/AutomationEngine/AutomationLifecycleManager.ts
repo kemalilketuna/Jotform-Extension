@@ -2,6 +2,7 @@ import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 import { VisualAnimationConfig } from '@/services/VisualCursorService';
+import { AutomationConfig } from '@/config/AutomationConfig';
 
 /**
  * Manages the lifecycle of automation components including visual cursor, interaction blocking, and state management
@@ -48,7 +49,7 @@ export class AutomationLifecycleManager {
         this.visualCursor.updateConfig(visualConfig);
       }
       await this.visualCursor.initialize();
-      this.visualCursor.show({ x: 100, y: 100 });
+      this.visualCursor.show(AutomationConfig.CURSOR.SHOW_POSITION);
 
       this.isSetup = true;
       this.logger.info(
@@ -87,7 +88,7 @@ export class AutomationLifecycleManager {
       this.visualCursor.hide();
       setTimeout(() => {
         this.visualCursor.destroy();
-      }, 1000);
+      }, AutomationConfig.DELAYS.AUTOMATION_CLEANUP);
 
       this.isSetup = false;
       this.logger.info(
@@ -141,7 +142,7 @@ export class AutomationLifecycleManager {
       this.visualCursor.hide();
       setTimeout(() => {
         this.visualCursor.destroy();
-      }, 1000);
+      }, AutomationConfig.DELAYS.AUTOMATION_CLEANUP);
     } catch (error) {
       this.logger.warn(
         `Failed to cleanup visual cursor: ${error instanceof Error ? error.message : 'Unknown error'}`,

@@ -176,7 +176,9 @@ export class LoggingService {
   /**
    * Get recent logs
    */
-  getRecentLogs(count: number = 50): LogEntry[] {
+  getRecentLogs(
+    count: number = LoggingConfig.LIMITS.RECENT_LOGS_COUNT
+  ): LogEntry[] {
     return this.logs.slice(-count);
   }
 

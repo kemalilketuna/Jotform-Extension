@@ -1,6 +1,7 @@
 import { LoggingService } from '@/services/LoggingService';
 import { ErrorHandlingUtils, ErrorHandlingConfig } from './ErrorHandlingUtils';
 import { ElementNotFoundError } from '@/services/AutomationEngine/AutomationErrors';
+import { TimingConfig } from '@/config/TimingConfig';
 
 /**
  * Configuration for DOM operation error handling
@@ -15,10 +16,6 @@ export interface DOMErrorConfig extends ErrorHandlingConfig {
  * Specialized error handler for DOM operations
  */
 export class DOMErrorHandler {
-  private static readonly DOM_OPERATION_TIMEOUT = 5000;
-  private static readonly ELEMENT_WAIT_RETRY_DELAY = 100;
-  private static readonly MAX_ELEMENT_WAIT_ATTEMPTS = 50;
-
   /**
    * Safely query for an element with error handling
    */
@@ -108,7 +105,7 @@ export class DOMErrorHandler {
     config: DOMErrorConfig,
     logger: LoggingService,
     container: Document | Element = document,
-    timeout: number = this.DOM_OPERATION_TIMEOUT
+    timeout: number = TimingConfig.DOM_OPERATION_TIMEOUT
   ): Promise<T | null> {
     const startTime = Date.now();
 
@@ -137,8 +134,8 @@ export class DOMErrorHandler {
       },
       {
         ...config,
-        retryAttempts: this.MAX_ELEMENT_WAIT_ATTEMPTS,
-        retryDelay: this.ELEMENT_WAIT_RETRY_DELAY,
+        retryAttempts: TimingConfig.MAX_ELEMENT_WAIT_ATTEMPTS,
+        retryDelay: TimingConfig.ELEMENT_WAIT_RETRY_DELAY,
         logLevel: 'debug',
       },
       logger

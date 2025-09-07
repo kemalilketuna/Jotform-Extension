@@ -6,6 +6,7 @@ import { DOMAnalyzer } from './DOMAnalyzer';
 import { ActionProcessor } from './ActionProcessor';
 import { AutomationError } from './AutomationErrors';
 import { ExecutedAction } from '@/services/APIService/APITypes';
+import { AutomationConfig } from '@/config/AutomationConfig';
 
 /**
  * Controls the overall execution flow of step-by-step automation
@@ -17,7 +18,7 @@ export class ExecutionController {
   private readonly sessionCoordinator: SessionCoordinator;
   private readonly domAnalyzer: DOMAnalyzer;
   private readonly actionProcessor: ActionProcessor;
-  private readonly maxSteps = 50; // Safety limit
+  private readonly maxSteps = AutomationConfig.LIMITS.MAX_STEPS; // Safety limit
 
   constructor(
     logger: LoggingService,

@@ -1,5 +1,6 @@
 import { LoggingService } from '@/services/LoggingService';
 import { ErrorHandlingUtils, ErrorHandlingConfig } from './ErrorHandlingUtils';
+import { APIConfig } from '@/config/APIConfig';
 
 /**
  * Configuration for API operation error handling
@@ -15,19 +16,21 @@ export interface APIErrorConfig extends ErrorHandlingConfig {
  * HTTP status code ranges
  */
 export enum HTTPStatusRange {
-  SUCCESS = 200,
-  REDIRECT = 300,
-  CLIENT_ERROR = 400,
-  SERVER_ERROR = 500,
+  SUCCESS = APIConfig.STATUS_CODES.SUCCESS,
+  REDIRECT = APIConfig.STATUS_CODES.REDIRECT,
+  CLIENT_ERROR = APIConfig.STATUS_CODES.CLIENT_ERROR,
+  SERVER_ERROR = APIConfig.STATUS_CODES.SERVER_ERROR,
 }
 
 /**
  * Specialized error handler for API operations
  */
 export class APIErrorHandler {
-  private static readonly DEFAULT_TIMEOUT = 30000;
-  private static readonly DEFAULT_RETRY_ATTEMPTS = 3;
-  private static readonly RETRY_STATUS_CODES = [408, 429, 500, 502, 503, 504];
+  private static readonly DEFAULT_TIMEOUT = APIConfig.DEFAULT_TIMEOUT;
+  private static readonly DEFAULT_RETRY_ATTEMPTS = APIConfig.MAX_RETRY_ATTEMPTS;
+  private static readonly RETRY_STATUS_CODES = [
+    ...APIConfig.RETRY_STATUS_CODES,
+  ];
 
   /**
    * Execute API request with comprehensive error handling
@@ -228,7 +231,7 @@ export class APIErrorHandler {
     }
 
     // Exponential backoff: 1s, 2s, 4s, etc.
-    return 1000;
+    return APIConfig.RETRY_DELAY;
   }
 
   /**
@@ -247,7 +250,7 @@ export class APIErrorHandler {
    */
   static validateStatusCode(
     statusCode: number,
-    expectedCodes: number[] = [200],
+    expectedCodes: number[] = [APIConfig.STATUS_CODES.SUCCESS],
     config: APIErrorConfig,
     logger: LoggingService
   ): void {

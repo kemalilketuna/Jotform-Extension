@@ -1,6 +1,7 @@
 import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { ErrorMessages } from '@/services/MessagesService';
+import { UIConfig } from '@/config/UIConfig';
 import { EXTENSION_COMPONENTS } from './extensionComponents';
 
 /**
@@ -97,7 +98,7 @@ export class UserInteractionBlocker {
       width: '100vw',
       height: '100vh',
       backgroundColor: 'transparent',
-      zIndex: '999998', // Just below extension components (999999)
+      zIndex: UIConfig.Z_INDEX.USER_INTERACTION_BLOCKER.toString(), // Just below extension components
       pointerEvents: 'auto',
       userSelect: 'none',
       cursor: 'not-allowed',

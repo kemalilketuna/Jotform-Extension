@@ -8,6 +8,7 @@ import { MessageResponse, MessageSender } from './ExtensionTypes';
 import { ServiceCoordinator } from './ServiceCoordinator';
 import { AutomationStateManager } from './AutomationStateManager';
 import { ServiceFactory } from '@/services/DIContainer';
+import { ExtensionConfig } from '@/config/ExtensionConfig';
 
 /**
  * Content script coordinator for persistent automation
@@ -31,7 +32,7 @@ export class ContentScriptCoordinator {
   static getInstance(contentScriptId?: string): ContentScriptCoordinator {
     if (!ContentScriptCoordinator.instance) {
       if (!contentScriptId) {
-        contentScriptId = `content-script-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        contentScriptId = ExtensionConfig.generateContentScriptId();
       }
       ContentScriptCoordinator.instance = new ContentScriptCoordinator(
         contentScriptId
@@ -193,7 +194,13 @@ export class ContentScriptCoordinator {
         const className = element.className
           ? `.${element.className.split(' ').join('.')}`
           : '';
-        const text = element.textContent?.trim().substring(0, 50) || '';
+        const text =
+          element.textContent
+            ?.trim()
+            .substring(
+              0,
+              ExtensionConfig.CONTENT_LIMITS.ELEMENT_TEXT_PREVIEW_LENGTH
+            ) || '';
 
         logger.debug(
           `${index + 1}. ${tagName}${id}${className}`,
