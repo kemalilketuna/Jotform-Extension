@@ -4,6 +4,10 @@ import { ActionsService } from '@/services/ActionsService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { Action } from '@/services/APIService/APITypes';
 import { TimingConfig } from '@/config';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Handles element-based action execution and selector generation
@@ -96,29 +100,39 @@ export class ElementActionExecutor {
 
     this.logger.info(logMessage, 'ElementActionExecutor');
 
-    try {
-      // Initialize visual cursor if not already done
-      await this.visualCursorService.initialize();
+    const visualCursorConfig: ErrorHandlingConfig = {
+      context: 'ElementActionExecutor',
+      operation: 'executeVisualClick',
+      logLevel: 'warn',
+    };
 
-      // Show cursor and move to element
-      this.visualCursorService.show();
-      await this.visualCursorService.moveToElement(element);
+    const visualClickSuccess = await ErrorHandlingUtils.safeExecute(
+      async () => {
+        // Initialize visual cursor if not already done
+        await this.visualCursorService.initialize();
 
-      // Perform visual click animation
-      await this.visualCursorService.performClick();
+        // Show cursor and move to element
+        this.visualCursorService.show();
+        await this.visualCursorService.moveToElement(element);
 
-      // Actually click the element
-      element.click();
+        // Perform visual click animation
+        await this.visualCursorService.performClick();
 
-      // Small delay to show the click effect
-      await new Promise((resolve) =>
-        setTimeout(resolve, TimingConfig.CLICK_EFFECT_DELAY)
-      );
-    } catch (error) {
-      this.logger.warn(
-        `Visual cursor failed, falling back to direct click: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'ElementActionExecutor'
-      );
+        // Actually click the element
+        element.click();
+
+        // Small delay to show the click effect
+        await new Promise((resolve) =>
+          setTimeout(resolve, TimingConfig.CLICK_EFFECT_DELAY)
+        );
+        return true;
+      },
+      false,
+      visualCursorConfig,
+      this.logger
+    );
+
+    if (!visualClickSuccess) {
       // Fallback to direct click if visual cursor fails
       element.click();
     }
@@ -144,22 +158,29 @@ export class ElementActionExecutor {
 
     this.logger.info(logMessage, 'ElementActionExecutor');
 
-    try {
-      // Initialize visual cursor if not already done
-      await this.visualCursorService.initialize();
+    const visualCursorConfig: ErrorHandlingConfig = {
+      context: 'ElementActionExecutor',
+      operation: 'executeVisualType',
+      logLevel: 'warn',
+    };
 
-      // Show cursor and move to element
-      this.visualCursorService.show();
-      await this.visualCursorService.moveToElement(element);
+    await ErrorHandlingUtils.safeExecute(
+      async () => {
+        // Initialize visual cursor if not already done
+        await this.visualCursorService.initialize();
 
-      // Perform visual click to focus
-      await this.visualCursorService.performClick();
-    } catch (error) {
-      this.logger.warn(
-        `Visual cursor failed for type action: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'ElementActionExecutor'
-      );
-    }
+        // Show cursor and move to element
+        this.visualCursorService.show();
+        await this.visualCursorService.moveToElement(element);
+
+        // Perform visual click to focus
+        await this.visualCursorService.performClick();
+        return true;
+      },
+      false,
+      visualCursorConfig,
+      this.logger
+    );
 
     // Focus the element first
     element.focus();

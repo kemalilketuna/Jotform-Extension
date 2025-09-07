@@ -4,6 +4,7 @@ import { LoggingService } from '@/services/LoggingService';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 import { SingletonManager } from '@/utils/SingletonService';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 export class CursorBasedElementDetector {
   private readonly logger: LoggingService;
@@ -104,10 +105,12 @@ export class CursorBasedElementDetector {
 
       return visibleElements;
     } catch (error) {
-      this.logger.error(
-        `Failed to list visible interactive elements: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'CursorBasedElementDetector'
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'CursorBasedElementDetector.listVisibleInteractiveElements',
+        operation: 'listing visible interactive elements',
+      };
+      const errorMessage = `Failed to list visible interactive elements: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      this.logger.error(errorMessage, config.context);
       throw new DOMDetectionError(
         error instanceof Error ? error.message : String(error)
       );

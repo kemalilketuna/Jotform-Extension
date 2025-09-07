@@ -1,6 +1,11 @@
 import { BaseActionHandler } from './BaseActionHandler';
 import { NavigationAction } from '../ActionTypes';
 import { NavigationError } from '@/services/AutomationEngine/AutomationErrors';
+import { NavigationUtils } from '@/utils/NavigationUtils';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Handles navigation-related automation actions
@@ -30,13 +35,25 @@ export class NavigationActionHandler extends BaseActionHandler {
       'NavigationActionHandler'
     );
 
-    try {
-      window.location.href = validatedUrl;
-      await this.elementUtils.waitForNavigationComplete();
-    } catch (error) {
+    const config: ErrorHandlingConfig = {
+      context: 'NavigationActionHandler',
+      operation: 'handleNavigation',
+      retryAttempts: 1,
+    };
+
+    const result = await ErrorHandlingUtils.executeWithRetry(
+      async () => {
+        window.location.href = validatedUrl;
+        await this.elementUtils.waitForNavigationComplete();
+      },
+      config,
+      this.logger
+    );
+
+    if (!result.success) {
       throw new NavigationError(
         validatedUrl,
-        error instanceof Error ? error.message : 'Navigation failed'
+        result.error?.message || 'Navigation failed'
       );
     }
   }

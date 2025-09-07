@@ -4,6 +4,7 @@ import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
 import { ElementUtils } from '@/utils/ElementUtils';
 import { ActionExecutionError } from '@/services/AutomationEngine/AutomationErrors';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 import {
   ActionStrategyRegistry,
   NavigationStrategy,
@@ -17,6 +18,7 @@ import {
  */
 export class ActionHandlers {
   private readonly strategyRegistry: ActionStrategyRegistry;
+  private readonly logger: LoggingService;
 
   constructor(
     logger: LoggingService,
@@ -24,6 +26,7 @@ export class ActionHandlers {
     typingService: TypingService,
     elementUtils: ElementUtils
   ) {
+    this.logger = logger;
     this.strategyRegistry = new ActionStrategyRegistry();
 
     // Register all action strategies
@@ -53,26 +56,36 @@ export class ActionHandlers {
     stepIndex?: number
   ): Promise<void> {
     const actionType = action.type;
+    const strategy = this.strategyRegistry.getStrategy(actionType);
 
-    try {
-      const strategy = this.strategyRegistry.getStrategy(actionType);
+    if (!strategy) {
+      throw new ActionExecutionError(
+        'UNKNOWN',
+        `Unknown action type: ${actionType}`,
+        stepIndex
+      );
+    }
 
-      if (!strategy) {
-        throw new ActionExecutionError(
-          'UNKNOWN',
-          `Unknown action type: ${actionType}`,
-          stepIndex
-        );
-      }
+    const config: ErrorHandlingConfig = {
+      context: 'ActionHandlers',
+      operation: 'executeAction',
+      retryAttempts: 1,
+    };
 
-      await strategy.execute(action, stepIndex);
-    } catch (error) {
+    const result = await ErrorHandlingUtils.executeWithRetry(
+      () => strategy.execute(action, stepIndex),
+      config,
+      this.logger
+    );
+
+    if (!result.success) {
+      const error = result.error;
       if (error instanceof ActionExecutionError) {
         throw error;
       }
       throw new ActionExecutionError(
         action.type,
-        error instanceof Error ? error.message : 'Unknown error',
+        error?.message || 'Unknown error',
         stepIndex
       );
     }

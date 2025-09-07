@@ -6,6 +6,7 @@ import {
 } from '@/services/AutomationEngine/MessageTypes';
 import { EventBus, EventTypes, NavigationEvent } from '@/events';
 import { SingletonManager } from '@/utils/SingletonService';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 /**
  * Navigation detection and content script coordination
@@ -134,10 +135,12 @@ export class NavigationDetector {
       };
       await browser.runtime.sendMessage(message);
     } catch (error) {
-      this.logger.error(
-        `Failed to notify background script: ${error}`,
-        'NavigationDetector'
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'NavigationDetector.notifyBackgroundScriptReady',
+        operation: 'notifying background script ready',
+      };
+      const errorMessage = `Failed to notify background script: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
     }
   }
 
@@ -159,10 +162,12 @@ export class NavigationDetector {
       };
       await browser.runtime.sendMessage(message);
     } catch (error) {
-      this.logger.error(
-        `Failed to notify navigation: ${error}`,
-        'NavigationDetector'
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'NavigationDetector.notifyNavigationDetected',
+        operation: 'notifying navigation detected',
+      };
+      const errorMessage = `Failed to notify navigation: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
     }
   }
 

@@ -2,6 +2,7 @@ import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { APIService } from '@/services/APIService';
 import { StorageService } from '@/services/StorageService';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 /**
  * Session manager for handling automation sessions and API communication
@@ -41,7 +42,12 @@ export class SessionManager {
 
       return sessionId;
     } catch (error) {
-      this.logger.logError(error as Error, 'SessionManager');
+      const config: ErrorHandlingConfig = {
+        context: 'SessionManager.initializeSession',
+        operation: 'initializing automation session',
+      };
+      const errorMessage = `Failed to initialize session: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
       throw error;
     }
   }
@@ -61,7 +67,12 @@ export class SessionManager {
       }
       return this.currentSessionId;
     } catch (error) {
-      this.logger.logError(error as Error, 'SessionManager');
+      const config: ErrorHandlingConfig = {
+        context: 'SessionManager.getCurrentSessionId',
+        operation: 'retrieving session ID from storage',
+      };
+      const errorMessage = `Failed to get session ID: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
       return null;
     }
   }

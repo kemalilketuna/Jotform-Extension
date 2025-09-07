@@ -1,4 +1,6 @@
 import { JSPathGenerationError } from './DOMDetectionErrors.js';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
+import { LoggingService } from '@/services/LoggingService';
 
 export class JSPathGenerator {
   private static readonly MAX_DEPTH = 50;
@@ -9,15 +11,37 @@ export class JSPathGenerator {
   /**
    * Generates a JavaScript path to access the given element
    */
-  static generatePath(element: HTMLElement): string {
+  static generatePath(element: HTMLElement, logger?: LoggingService): string {
+    if (!element || !element.ownerDocument) {
+      throw new JSPathGenerationError(
+        element,
+        'Invalid element or no owner document'
+      );
+    }
+
     try {
-      if (!element || !element.ownerDocument) {
-        throw new JSPathGenerationError(
-          element,
-          'Invalid element or no owner document'
+      return this.generatePathInternal(element);
+    } catch (error) {
+      if (logger) {
+        const config: ErrorHandlingConfig = {
+          context: 'JSPathGenerator',
+          operation: 'generatePath',
+        };
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        logger.error(
+          `JSPath generation failed for ${element.tagName}: ${errorMessage}`,
+          config.context
         );
       }
 
+      // Return fallback path on error
+      return this.generateFallbackPath(element);
+    }
+  }
+
+  private static generatePathInternal(element: HTMLElement): string {
+    try {
       // Try ID-based path first (most reliable)
       const idPath = this.generateIdPath(element);
       if (idPath) {
@@ -43,7 +67,10 @@ export class JSPathGenerator {
   /**
    * Generates multiple possible paths for redundancy
    */
-  static generateMultiplePaths(element: HTMLElement): string[] {
+  static generateMultiplePaths(
+    element: HTMLElement,
+    logger?: LoggingService
+  ): string[] {
     const paths: string[] = [];
 
     try {
@@ -59,7 +86,20 @@ export class JSPathGenerator {
 
       const xpathPath = this.generateXPathLikePath(element);
       if (xpathPath) paths.push(xpathPath);
-    } catch {
+    } catch (error) {
+      if (logger) {
+        const config: ErrorHandlingConfig = {
+          context: 'JSPathGenerator',
+          operation: 'generateMultiplePaths',
+        };
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        logger.error(
+          `Multiple path generation failed for ${element.tagName}: ${errorMessage}`,
+          config.context
+        );
+      }
+
       // Return at least one path even if others fail
       if (paths.length === 0) {
         paths.push(this.generateFallbackPath(element));

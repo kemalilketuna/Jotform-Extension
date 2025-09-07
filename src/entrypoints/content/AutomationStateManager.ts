@@ -3,6 +3,7 @@ import {
   AutomationStateRequestMessage,
   AutomationStateResponseMessage,
 } from '@/services/AutomationEngine/MessageTypes';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 /**
  * Manages automation state and lifecycle for content script
@@ -70,11 +71,12 @@ export class AutomationStateManager {
         );
       }
     } catch (error) {
-      this.logger.error(
-        `Failed to check automation state: ${error}`,
-        'AutomationStateManager'
-      );
-      this.logger.logError(error as Error, 'AutomationStateManager');
+      const config: ErrorHandlingConfig = {
+        context: 'AutomationStateManager.checkForActiveAutomation',
+        operation: 'checking for active automation',
+      };
+      const errorMessage = `Failed to check automation state: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
     }
   }
 

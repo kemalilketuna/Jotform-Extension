@@ -10,6 +10,7 @@ import { AutomationStateManager } from './AutomationStateManager';
 import { ServiceFactory } from '@/services/DIContainer';
 import { ExtensionConfig } from '@/config/ExtensionConfig';
 import { SingletonManager } from '@/utils/SingletonService';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 /**
  * Content script coordinator for persistent automation
@@ -140,7 +141,12 @@ export class ContentScriptCoordinator {
         sendResponse(response);
       }
     } catch (error) {
-      logger.logError(error as Error, 'ContentScriptCoordinator');
+      const config: ErrorHandlingConfig = {
+        context: 'ContentScriptCoordinator.handleMessage',
+        operation: `handling ${message.type} message`,
+      };
+      const errorMessage = `Failed to handle message ${message.type}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      logger.error(errorMessage, config.context);
 
       // Send error response back
       const errorResponse: SequenceErrorMessage = {
@@ -214,13 +220,12 @@ export class ContentScriptCoordinator {
         );
       });
     } catch (error) {
-      logger.logError(error as Error, 'ContentScriptCoordinator');
-      logger.error(
-        `Failed to list interactive elements: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-        'ContentScriptCoordinator'
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'ContentScriptCoordinator.handleListInteractiveElements',
+        operation: 'listing visible interactive elements',
+      };
+      const errorMessage = `Failed to list interactive elements: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error(errorMessage, config.context);
     }
   }
 

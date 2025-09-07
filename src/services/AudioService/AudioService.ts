@@ -13,6 +13,10 @@ import {
   AutomationErrorEvent,
 } from '@/events';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Service for managing audio playback in the browser extension
@@ -76,24 +80,34 @@ export class AudioService {
       return;
     }
 
-    try {
-      await this.cacheManager.preloadAllSounds();
-      this.stateManager.setInitialized(true);
-      this.logger.debug(
-        'AudioService initialized successfully',
-        'AudioService'
-      );
-    } catch (error) {
-      this.logger.error('Failed to initialize AudioService', 'AudioService', {
-        error,
-      });
+    const config: ErrorHandlingConfig = {
+      context: 'AudioService',
+      operation: 'initialize',
+      retryAttempts: 2,
+      logLevel: 'error',
+      sanitizeData: true,
+    };
 
+    const result = await ErrorHandlingUtils.executeWithRetry(
+      async () => {
+        await this.cacheManager.preloadAllSounds();
+        this.stateManager.setInitialized(true);
+        this.logger.debug(
+          'AudioService initialized successfully',
+          'AudioService'
+        );
+      },
+      config,
+      this.logger
+    );
+
+    if (!result.success) {
       // Emit error event
-      this.emitErrorEvent(error as Error, { operation: 'initialize' });
+      this.emitErrorEvent(result.error as Error, { operation: 'initialize' });
 
       throw new AudioError(
         'AudioService initialization failed',
-        error as Error
+        result.error as Error
       );
     }
   }
@@ -147,21 +161,31 @@ export class AudioService {
     soundType: 'keystroke' | 'click' | 'error' | 'success',
     metadata?: Record<string, unknown>
   ): void {
-    try {
-      const audioEvent: AudioPlayEvent = {
-        type: EventTypes.AUDIO_PLAY,
-        timestamp: Date.now(),
-        source: 'AudioService',
-        soundType,
-        enabled: this.stateManager.isAudioEnabled(),
-        metadata,
-      };
+    const config: ErrorHandlingConfig = {
+      context: 'AudioService',
+      operation: 'emitAudioEvent',
+      logLevel: 'warn',
+      sanitizeData: true,
+    };
 
-      this.eventBus.emit(audioEvent);
-      this.logger.debug(`Audio event emitted: ${soundType}`, 'AudioService');
-    } catch (error) {
-      this.logger.error(`Failed to emit audio event: ${error}`, 'AudioService');
-    }
+    ErrorHandlingUtils.safeExecute(
+      async () => {
+        const audioEvent: AudioPlayEvent = {
+          type: EventTypes.AUDIO_PLAY,
+          timestamp: Date.now(),
+          source: 'AudioService',
+          soundType,
+          enabled: this.stateManager.isAudioEnabled(),
+          metadata,
+        };
+
+        this.eventBus.emit(audioEvent);
+        this.logger.debug(`Audio event emitted: ${soundType}`, 'AudioService');
+      },
+      undefined,
+      config,
+      this.logger
+    );
   }
 
   /**
@@ -171,27 +195,34 @@ export class AudioService {
     error: Error,
     context?: Record<string, unknown>
   ): void {
-    try {
-      const errorEvent: AutomationErrorEvent = {
-        type: EventTypes.AUTOMATION_ERROR,
-        timestamp: Date.now(),
-        source: 'AudioService',
-        sessionId: `audio_error_${Date.now()}`,
-        error,
-        context,
-      };
+    const config: ErrorHandlingConfig = {
+      context: 'AudioService',
+      operation: 'emitErrorEvent',
+      logLevel: 'warn',
+      sanitizeData: true,
+    };
 
-      this.eventBus.emit(errorEvent);
-      this.logger.debug(
-        `Error event emitted: ${error.message}`,
-        'AudioService'
-      );
-    } catch (emitError) {
-      this.logger.error(
-        `Failed to emit error event: ${emitError}`,
-        'AudioService'
-      );
-    }
+    ErrorHandlingUtils.safeExecute(
+      async () => {
+        const errorEvent: AutomationErrorEvent = {
+          type: EventTypes.AUTOMATION_ERROR,
+          timestamp: Date.now(),
+          source: 'AudioService',
+          sessionId: `audio_error_${Date.now()}`,
+          error,
+          context,
+        };
+
+        this.eventBus.emit(errorEvent);
+        this.logger.debug(
+          `Error event emitted: ${error.message}`,
+          'AudioService'
+        );
+      },
+      undefined,
+      config,
+      this.logger
+    );
   }
 
   /**

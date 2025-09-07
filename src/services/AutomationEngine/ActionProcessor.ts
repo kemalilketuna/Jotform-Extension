@@ -8,6 +8,10 @@ import {
 import { ElementActionExecutor } from './ElementActionExecutor';
 import { AutomationError } from './AutomationErrors';
 import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
+import {
   AutomationActionStrategyRegistry,
   FinishActionStrategy,
   FailActionStrategy,
@@ -71,21 +75,31 @@ export class ActionProcessor {
     visibleElementsHtml: string[],
     lastTurnOutcome: ExecutedAction[]
   ): Promise<NextActionResponse> {
-    try {
-      return await this.apiService.getNextAction(
-        sessionId,
-        visibleElementsHtml,
-        lastTurnOutcome
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to get next action from backend: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'ActionProcessor'
-      );
+    const config: ErrorHandlingConfig = {
+      context: 'ActionProcessor',
+      operation: 'getNextAction',
+      retryAttempts: 2,
+      retryDelay: 1000,
+    };
+
+    const result = await ErrorHandlingUtils.executeWithRetry(
+      () =>
+        this.apiService.getNextAction(
+          sessionId,
+          visibleElementsHtml,
+          lastTurnOutcome
+        ),
+      config,
+      this.logger
+    );
+
+    if (!result.success) {
       throw new AutomationError(
-        `Backend communication failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Backend communication failed: ${result.error?.message || 'Unknown error'}`
       );
     }
+
+    return result.data!;
   }
 
   /**

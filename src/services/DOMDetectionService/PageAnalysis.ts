@@ -19,10 +19,10 @@ export class PageAnalysis {
 
   private constructor(config?: Partial<DOMDetectionConfig>) {
     this.config = this.mergeDefaultConfig(config);
-    this.scrollableDetector = new ScrollableAreaDetector();
-    this.cursorDetector = CursorBasedElementDetector.getInstance();
     const serviceFactory = ServiceFactory.getInstance();
     this.logger = serviceFactory.createLoggingService();
+    this.scrollableDetector = new ScrollableAreaDetector(this.logger);
+    this.cursorDetector = CursorBasedElementDetector.getInstance();
   }
 
   /**

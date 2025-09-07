@@ -1,6 +1,11 @@
 import { BaseActionHandler } from './BaseActionHandler';
 import { TypeAction } from '../ActionTypes';
 import { ElementNotFoundError } from '@/services/AutomationEngine/AutomationErrors';
+import { SelectorUtils } from '@/utils/SelectorUtils';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Handles typing-related automation actions
@@ -10,24 +15,41 @@ export class TypeActionHandler extends BaseActionHandler {
    * Handle typing actions with input validation and visual feedback
    */
   async handleType(action: TypeAction): Promise<void> {
-    const validatedSelector = SelectorUtils.validateSelector(action.target);
+    const config: ErrorHandlingConfig = {
+      context: 'TypeActionHandler',
+      operation: 'handleType',
+      retryAttempts: 2,
+    };
 
-    this.logger.debug(
-      `Typing into element: ${validatedSelector}`,
-      'TypeActionHandler'
+    const result = await ErrorHandlingUtils.executeWithRetry(
+      async () => {
+        const validatedSelector = SelectorUtils.validateSelector(action.target);
+
+        this.logger.debug(
+          `Typing into element: ${validatedSelector}`,
+          'TypeActionHandler'
+        );
+        const element =
+          await this.elementUtils.waitForElement(validatedSelector);
+
+        if (!element) {
+          throw new ElementNotFoundError(validatedSelector);
+        }
+
+        // Move cursor to element before typing
+        await this.visualCursor.moveToElement(element);
+
+        // Perform visual click to focus the element
+        await this.visualCursor.performClick();
+
+        await this.simulateHumanTyping(element, action.value);
+      },
+      config,
+      this.logger
     );
-    const element = await this.elementUtils.waitForElement(validatedSelector);
 
-    if (!element) {
-      throw new ElementNotFoundError(validatedSelector);
+    if (!result.success) {
+      throw result.error || new Error('Type action failed');
     }
-
-    // Move cursor to element before typing
-    await this.visualCursor.moveToElement(element);
-
-    // Perform visual click to focus the element
-    await this.visualCursor.performClick();
-
-    await this.simulateHumanTyping(element, action.value);
   }
 }

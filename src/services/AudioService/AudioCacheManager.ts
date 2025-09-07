@@ -2,6 +2,10 @@ import { LoggingService } from '@/services/LoggingService';
 import { AudioPaths } from './AudioConfig';
 import { AudioError } from './AudioErrors';
 import { AudioElementManager } from './AudioElementManager';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Manages audio caching, preloading, and resource cleanup
@@ -44,32 +48,44 @@ export class AudioCacheManager {
    * Preload a specific sound
    */
   async preloadSound(audioPath: string, soundType: string): Promise<void> {
-    try {
-      const audio = this.getOrCreateAudio(audioPath);
+    const config: ErrorHandlingConfig = {
+      operation: `preload ${soundType}`,
+      context: 'AudioCacheManager',
+      logLevel: 'error',
+    };
 
-      return new Promise<void>((resolve, reject) => {
-        const handleLoad = () => {
-          audio.removeEventListener('canplaythrough', handleLoad);
-          audio.removeEventListener('error', handleError);
-          resolve();
-        };
+    const result = await ErrorHandlingUtils.executeWithRetry(
+      async () => {
+        const audio = this.getOrCreateAudio(audioPath);
 
-        const handleError = (_event: Event) => {
-          audio.removeEventListener('canplaythrough', handleLoad);
-          audio.removeEventListener('error', handleError);
-          reject(new AudioError(`Failed to preload ${soundType}`));
-        };
+        return new Promise<void>((resolve, reject) => {
+          const handleLoad = () => {
+            audio.removeEventListener('canplaythrough', handleLoad);
+            audio.removeEventListener('error', handleError);
+            resolve();
+          };
 
-        audio.addEventListener('canplaythrough', handleLoad);
-        audio.addEventListener('error', handleError);
+          const handleError = (_event: Event) => {
+            audio.removeEventListener('canplaythrough', handleLoad);
+            audio.removeEventListener('error', handleError);
+            reject(new AudioError(`Failed to preload ${soundType}`));
+          };
 
-        // If already loaded, resolve immediately
-        if (audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
-          handleLoad();
-        }
-      });
-    } catch (error) {
-      throw new AudioError(`Failed to preload ${soundType}`, error as Error);
+          audio.addEventListener('canplaythrough', handleLoad);
+          audio.addEventListener('error', handleError);
+
+          // If already loaded, resolve immediately
+          if (audio.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+            handleLoad();
+          }
+        });
+      },
+      config,
+      this.logger
+    );
+
+    if (!result.success) {
+      throw new AudioError(`Failed to preload ${soundType}`, result.error);
     }
   }
 

@@ -6,6 +6,7 @@ import { PageAnalysis } from './PageAnalysis.js';
 import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
 import { SingletonManager } from '@/utils/SingletonService';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 export class DOMDetection {
   private config: DOMDetectionConfig;
@@ -58,15 +59,21 @@ export class DOMDetection {
    */
   generateElementPath(element: HTMLElement): string {
     try {
-      return JSPathGenerator.generatePath(element);
+      return JSPathGenerator.generatePath(element, this.logger);
     } catch (error) {
+      const config: ErrorHandlingConfig = {
+        context: 'DOMDetection',
+        operation: 'generateElementPath',
+      };
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
-        `Failed to generate path for element: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'generateElementPath',
-        { elementTag: element.tagName.toLowerCase() }
+        `Failed to generate path for element ${element.tagName}: ${errorMessage}`,
+        config.context
       );
+
       throw new DOMDetectionError(
-        `Failed to generate path for element: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to generate path for element: ${errorMessage}`
       );
     }
   }
@@ -76,15 +83,21 @@ export class DOMDetection {
    */
   generateMultiplePaths(element: HTMLElement): string[] {
     try {
-      return JSPathGenerator.generateMultiplePaths(element);
+      return JSPathGenerator.generateMultiplePaths(element, this.logger);
     } catch (error) {
+      const config: ErrorHandlingConfig = {
+        context: 'DOMDetection',
+        operation: 'generateMultiplePaths',
+      };
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
-        `Failed to generate multiple paths for element: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'generateMultiplePaths',
-        { elementTag: element.tagName.toLowerCase() }
+        `Failed to generate multiple paths for element ${element.tagName}: ${errorMessage}`,
+        config.context
       );
+
       throw new DOMDetectionError(
-        `Failed to generate multiple paths for element: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to generate multiple paths for element: ${errorMessage}`
       );
     }
   }

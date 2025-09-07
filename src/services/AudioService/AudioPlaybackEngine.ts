@@ -3,6 +3,11 @@ import { AudioPaths } from './AudioConfig';
 import { AudioElementManager } from './AudioElementManager';
 import { AudioCacheManager } from './AudioCacheManager';
 import { AudioStateManager } from './AudioStateManager';
+import { ExtensionUtils } from '@/utils/ExtensionUtils';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Handles all audio playback logic including keystroke variations and overlapping sounds
@@ -72,41 +77,45 @@ export class AudioPlaybackEngine {
       return;
     }
 
-    try {
-      // Get pooled audio instance for overlapping playback to reduce GC pressure
-      const audio = this.elementManager.getPooledAudioElement(
-        AudioPaths.KEYSTROKE_SOUND
-      );
-      const readyPromise = this.elementManager.ensureAudioReady(
-        audio,
-        this.cacheManager.getCache()
-      );
-      if (readyPromise) {
-        await readyPromise;
-      }
+    const config: ErrorHandlingConfig = {
+      context: 'AudioPlaybackEngine',
+      operation: 'playVariedKeystrokeSound',
+      logLevel: 'warn',
+      sanitizeData: true,
+    };
 
-      // Add volume variation using config constants for more realistic typing
-      this.elementManager.applyVolumeVariation(audio);
-
-      // Track and cleanup audio element
-      this.stateManager.trackAudioElement(audio);
-      await audio.play();
-
-      // Add slight echo effect by playing a second overlapping sound
-      setTimeout(() => {
-        this.playOverlappingKeystrokeSound(0).catch(() => {
-          // Ignore audio errors
-        });
-      }, 50);
-    } catch (error) {
-      this.logger.warn(
-        'Failed to play varied keystroke sound',
-        'AudioPlaybackEngine',
-        {
-          error,
+    await ErrorHandlingUtils.safeExecute(
+      async () => {
+        // Get pooled audio instance for overlapping playback to reduce GC pressure
+        const audio = this.elementManager.getPooledAudioElement(
+          AudioPaths.KEYSTROKE_SOUND
+        );
+        const readyPromise = this.elementManager.ensureAudioReady(
+          audio,
+          this.cacheManager.getCache()
+        );
+        if (readyPromise) {
+          await readyPromise;
         }
-      );
-    }
+
+        // Add volume variation using config constants for more realistic typing
+        this.elementManager.applyVolumeVariation(audio);
+
+        // Track and cleanup audio element
+        this.stateManager.trackAudioElement(audio);
+        await audio.play();
+
+        // Add slight echo effect by playing a second overlapping sound
+        setTimeout(() => {
+          this.playOverlappingKeystrokeSound(0).catch(() => {
+            // Ignore audio errors
+          });
+        }, 50);
+      },
+      undefined,
+      config,
+      this.logger
+    );
   }
 
   /**
@@ -129,29 +138,33 @@ export class AudioPlaybackEngine {
       return;
     }
 
-    try {
-      if (rapidFire) {
-        // Play multiple overlapping sounds for rapid typing effect
-        const promises = [];
-        for (let i = 0; i < 3; i++) {
-          promises.push(this.playOverlappingKeystrokeSound(i * 30)); // Start each sound 30ms apart
+    const config: ErrorHandlingConfig = {
+      context: 'AudioPlaybackEngine',
+      operation: 'playEnhancedKeystrokeSound',
+      logLevel: 'warn',
+      sanitizeData: true,
+    };
+
+    await ErrorHandlingUtils.safeExecute(
+      async () => {
+        if (rapidFire) {
+          // Play multiple overlapping sounds for rapid typing effect
+          const promises = [];
+          for (let i = 0; i < 3; i++) {
+            promises.push(this.playOverlappingKeystrokeSound(i * 30)); // Start each sound 30ms apart
+          }
+          // Don't await - let them play concurrently
+          Promise.all(promises).catch(() => {
+            // Ignore audio errors to avoid breaking typing flow
+          });
+        } else {
+          await this.playVariedKeystrokeSound();
         }
-        // Don't await - let them play concurrently
-        Promise.all(promises).catch(() => {
-          // Ignore audio errors to avoid breaking typing flow
-        });
-      } else {
-        await this.playVariedKeystrokeSound();
-      }
-    } catch (error) {
-      this.logger.warn(
-        'Failed to play enhanced keystroke sound',
-        'AudioPlaybackEngine',
-        {
-          error,
-        }
-      );
-    }
+      },
+      undefined,
+      config,
+      this.logger
+    );
   }
 
   /**
@@ -269,27 +282,34 @@ export class AudioPlaybackEngine {
       return;
     }
 
-    try {
-      const audio = this.cacheManager.getOrCreateAudio(audioPath);
+    const config: ErrorHandlingConfig = {
+      context: 'AudioPlaybackEngine',
+      operation: `playSound_${soundType}`,
+      logLevel: 'warn',
+      sanitizeData: true,
+    };
 
-      // Wait for audio to be ready before playing to prevent corruption
-      const readyPromise = this.elementManager.ensureAudioReady(
-        audio,
-        this.cacheManager.getCache()
-      );
-      if (readyPromise) {
-        await readyPromise;
-      }
+    await ErrorHandlingUtils.safeExecute(
+      async () => {
+        const audio = this.cacheManager.getOrCreateAudio(audioPath);
 
-      // Only reset if audio is not at the beginning to prevent corruption
-      this.elementManager.resetAudioIfNeeded(audio);
+        // Wait for audio to be ready before playing to prevent corruption
+        const readyPromise = this.elementManager.ensureAudioReady(
+          audio,
+          this.cacheManager.getCache()
+        );
+        if (readyPromise) {
+          await readyPromise;
+        }
 
-      await audio.play();
-    } catch (error) {
-      this.logger.warn(`Failed to play ${soundType}`, 'AudioPlaybackEngine', {
-        error,
-      });
-      // Don't throw error for audio playback failures to avoid breaking automation
-    }
+        // Only reset if audio is not at the beginning to prevent corruption
+        this.elementManager.resetAudioIfNeeded(audio);
+
+        await audio.play();
+      },
+      undefined,
+      config,
+      this.logger
+    );
   }
 }

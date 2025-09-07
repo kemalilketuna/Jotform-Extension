@@ -10,6 +10,7 @@ import { AutomationState, AutomationStateManager } from './AutomationState';
 import { SessionManager } from './SessionManager';
 import { SingletonManager } from '@/utils/SingletonService';
 import { TimingConfig } from '@/config/TimingConfig';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 /**
  * Background script automation coordinator for cross-page persistence
@@ -148,10 +149,12 @@ export class AutomationCoordinator {
 
       await browser.tabs.sendMessage(tabId, message);
     } catch (error) {
-      this.logger.error(
-        `Failed to send message to content script: ${error}`,
-        'AutomationCoordinator'
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'AutomationCoordinator.sendToContentScript',
+        operation: 'sending message to content script',
+      };
+      const errorMessage = `Failed to send message to content script: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
       throw error;
     }
   }

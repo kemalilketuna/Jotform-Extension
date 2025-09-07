@@ -5,6 +5,7 @@ import { LoggingService } from './LoggingService';
 import { ExtensionUtils } from '@/utils/ExtensionUtils';
 import { UIConfig } from '@/config/UIConfig';
 import { SingletonManager } from '@/utils/SingletonService';
+import { ErrorHandlingConfig } from '../utils/ErrorHandlingUtils';
 
 import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
 import { ChatboxComponent, ChatMessage } from '@/components/ChatboxComponent';
@@ -64,11 +65,14 @@ export class ComponentService {
         'ComponentService'
       );
     } catch (error) {
-      this.logger.error(
-        'Failed to initialize ComponentService',
-        'ComponentService',
-        { error: String(error) }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.initialize',
+        operation: 'initialize component service',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
     }
   }
 
@@ -102,11 +106,14 @@ export class ComponentService {
         'ComponentService'
       );
     } catch (error) {
-      this.logger.error(
-        'Failed to create component container',
-        'ComponentService',
-        { error: String(error) }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.createComponentContainer',
+        operation: 'create component container',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
     }
   }
 
@@ -144,7 +151,12 @@ export class ComponentService {
         'ComponentService'
       );
     } catch (error) {
-      this.logger.error('Failed to render components', 'ComponentService', {
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.renderAiTextFieldComponent',
+        operation: 'render React components',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
         error: String(error),
       });
     }
@@ -179,11 +191,14 @@ export class ComponentService {
         existingContainer.parentNode.removeChild(existingContainer);
       }
     } catch (error) {
-      this.logger.error(
-        'Failed to remove component container',
-        'ComponentService',
-        { error: String(error) }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.removeComponentContainer',
+        operation: 'remove component container',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
     }
   }
 
@@ -197,11 +212,14 @@ export class ComponentService {
 
       this.logger.info('ComponentService destroyed', 'ComponentService');
     } catch (error) {
-      this.logger.error(
-        'Error destroying ComponentService',
-        'ComponentService',
-        { error: String(error) }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.destroy',
+        operation: 'destroy component service',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
     }
   }
 
@@ -226,11 +244,14 @@ export class ComponentService {
         payload: { objective },
       });
     } catch (error) {
-      this.logger.error(
-        'Failed to send START_AUTOMATION message',
-        'ComponentService',
-        { error: String(error) }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.handleAutomationStart',
+        operation: 'send START_AUTOMATION message',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
     }
   }
 
@@ -267,7 +288,12 @@ export class ComponentService {
         messageId: chatMessage.id,
       });
     } catch (error) {
-      this.logger.error('Failed to add chat message', 'ComponentService', {
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.addChatMessage',
+        operation: 'add chat message',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
         error: String(error),
       });
     }
@@ -290,7 +316,12 @@ export class ComponentService {
         'ComponentService'
       );
     } catch (error) {
-      this.logger.error('Failed to clear chat messages', 'ComponentService', {
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.clearChatMessages',
+        operation: 'clear chat messages',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
         error: String(error),
       });
     }

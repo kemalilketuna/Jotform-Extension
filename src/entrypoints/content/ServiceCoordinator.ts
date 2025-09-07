@@ -4,6 +4,7 @@ import { AutomationEngine } from '@/services/AutomationEngine';
 import { AudioService } from '@/services/AudioService';
 import { DOMDetectionService } from '@/services/DOMDetectionService';
 import { NavigationDetector } from './NavigationDetector';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 /**
  * Manages service dependencies and initialization for content script
@@ -63,12 +64,13 @@ export class ServiceCoordinator {
         'ServiceCoordinator'
       );
     } catch (error) {
-      this.logger.logError(error as Error, 'ServiceCoordinator');
-      throw new Error(
-        `Failed to initialize services: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'ServiceCoordinator.initialize',
+        operation: 'initializing content script services',
+      };
+      const errorMessage = `Failed to initialize services: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
+      throw new Error(errorMessage);
     }
   }
 

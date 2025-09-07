@@ -8,6 +8,10 @@ import { StorageService } from '@/services/StorageService';
 import { ActionsStrings } from './ActionsStrings';
 import { ElementUtils } from '@/utils/ElementUtils';
 import { SingletonManager } from '@/utils/SingletonService';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Service responsible for executing individual automation actions
@@ -70,20 +74,28 @@ export class ActionsService {
       'ActionsService'
     );
 
-    try {
-      await this.actionHandlers.executeAction(action, stepIndex);
+    const config: ErrorHandlingConfig = {
+      context: 'ActionsService',
+      operation: 'executeAction',
+      retryAttempts: 1,
+    };
 
-      this.logger.debug(
-        `Successfully executed action: ${action.type}`,
-        'ActionsService'
+    const result = await ErrorHandlingUtils.executeWithRetry(
+      () => this.actionHandlers.executeAction(action, stepIndex),
+      config,
+      this.logger
+    );
+
+    if (!result.success) {
+      throw (
+        result.error || new Error(`Failed to execute action: ${action.type}`)
       );
-    } catch (error) {
-      this.logger.error(
-        `Failed to execute action: ${action.type} - ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'ActionsService'
-      );
-      throw error;
     }
+
+    this.logger.debug(
+      `Successfully executed action: ${action.type}`,
+      'ActionsService'
+    );
   }
 
   /**
@@ -104,53 +116,79 @@ export class ActionsService {
    * Store action execution results
    */
   async storeActionResults(results: ExecutedAction[]): Promise<void> {
-    try {
-      await this.storageService.set(
-        ActionsStrings.STORAGE_KEYS.LAST_ACTION_RESULTS,
-        results,
-        { area: 'local' }
-      );
+    const config: ErrorHandlingConfig = {
+      context: 'ActionsService',
+      operation: 'storeActionResults',
+      retryAttempts: 2,
+    };
 
-      this.logger.debug(
-        `Stored ${results.length} action results`,
-        'ActionsService'
-      );
-    } catch (error) {
-      this.logger.logError(error as Error, 'ActionsService');
+    const result = await ErrorHandlingUtils.executeWithRetry(
+      () =>
+        this.storageService.set(
+          ActionsStrings.STORAGE_KEYS.LAST_ACTION_RESULTS,
+          results,
+          { area: 'local' }
+        ),
+      config,
+      this.logger
+    );
+
+    if (!result.success) {
       throw new Error(
-        `Failed to store action results: ${(error as Error).message}`
+        `Failed to store action results: ${result.error?.message || 'Unknown error'}`
       );
     }
+
+    this.logger.debug(
+      `Stored ${results.length} action results`,
+      'ActionsService'
+    );
   }
 
   /**
    * Get last action execution results
    */
   async getLastActionResults(): Promise<ExecutedAction[]> {
-    try {
-      const results = await this.storageService.get<ExecutedAction[]>(
-        ActionsStrings.STORAGE_KEYS.LAST_ACTION_RESULTS,
-        { area: 'local' }
-      );
-      return results || [];
-    } catch (error) {
-      this.logger.logError(error as Error, 'ActionsService');
-      return [];
-    }
+    const config: ErrorHandlingConfig = {
+      context: 'ActionsService',
+      operation: 'getLastActionResults',
+    };
+
+    const results = await ErrorHandlingUtils.safeExecute(
+      async () => {
+        const data = await this.storageService.get<ExecutedAction[]>(
+          ActionsStrings.STORAGE_KEYS.LAST_ACTION_RESULTS,
+          { area: 'local' }
+        );
+        return data || [];
+      },
+      [],
+      config,
+      this.logger
+    );
+
+    return results;
   }
 
   /**
    * Clear stored action results
    */
   async clearLastActionResults(): Promise<void> {
-    try {
-      await this.storageService.set(
-        ActionsStrings.STORAGE_KEYS.LAST_ACTION_RESULTS,
-        [],
-        { area: 'local' }
-      );
-    } catch (error) {
-      this.logger.logError(error as Error, 'ActionsService');
-    }
+    const config: ErrorHandlingConfig = {
+      context: 'ActionsService',
+      operation: 'clearLastActionResults',
+    };
+
+    await ErrorHandlingUtils.safeExecute(
+      () =>
+        this.storageService.set(
+          ActionsStrings.STORAGE_KEYS.LAST_ACTION_RESULTS,
+          [],
+          { area: 'local' }
+        ),
+      undefined,
+      config,
+      this.logger
+    );
   }
 }

@@ -1,6 +1,7 @@
 import { ServiceFactory } from './DIContainer';
 import { LoggingService } from './LoggingService';
 import { SingletonManager } from '@/utils/SingletonService';
+import { ErrorHandlingConfig } from '../utils/ErrorHandlingUtils';
 
 /**
  * Service to disable Jotform agent components using mutation observer
@@ -75,11 +76,14 @@ export class JotformAgentDisabler {
         'JotformAgentDisabler'
       );
     } catch (error) {
-      this.logger.error(
-        'Failed to initialize JotformAgentDisabler',
-        'JotformAgentDisabler',
-        { error: String(error) }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'JotformAgentDisabler.initialize',
+        operation: 'initialize Jotform agent disabler',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
     }
   }
 
@@ -102,11 +106,14 @@ export class JotformAgentDisabler {
         );
       }
     } catch (error) {
-      this.logger.error(
-        'Error checking for existing agent components',
-        'JotformAgentDisabler',
-        { error: String(error) }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'JotformAgentDisabler.disableExistingAgentComponents',
+        operation: 'check for existing agent components',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
     }
   }
 
@@ -281,7 +288,12 @@ export class JotformAgentDisabler {
       // Add a marker class for identification
       element.classList.add('jotform-extension-disabled');
     } catch (error) {
-      this.logger.warn('Failed to disable element', 'JotformAgentDisabler', {
+      const config: ErrorHandlingConfig = {
+        context: 'JotformAgentDisabler.applyRemovalStrategies',
+        operation: 'disable element',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.warn(errorMessage, config.context, {
         error: String(error),
       });
     }
@@ -311,11 +323,14 @@ export class JotformAgentDisabler {
         'JotformAgentDisabler'
       );
     } catch (error) {
-      this.logger.error(
-        'Error destroying JotformAgentDisabler',
-        'JotformAgentDisabler',
-        { error: String(error) }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'JotformAgentDisabler.destroy',
+        operation: 'destroy Jotform agent disabler',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
     }
   }
 

@@ -13,6 +13,7 @@ import {
   AutomationErrorEvent,
 } from '@/events';
 import { SingletonManager } from '../../utils/SingletonService';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 /**
  * Centralized storage service for managing extension data
@@ -84,13 +85,12 @@ export class StorageService {
       // Emit storage change event
       this.emitStorageChangeEvent(key, oldValue, value);
     } catch (error) {
-      this.logger.error(
-        `Failed to store data for key: ${key}`,
-        'StorageService',
-        {
-          error: (error as Error).message,
-        }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'StorageService.set',
+        operation: 'storing data',
+      };
+      const errorMessage = `Failed to store data for key: ${key} - ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
 
       // Emit error event
       this.emitErrorEvent(error as Error, { operation: 'store', key, value });
@@ -187,13 +187,12 @@ export class StorageService {
 
       return value ?? null;
     } catch (error) {
-      this.logger.error(
-        `Failed to retrieve data for key: ${key}`,
-        'StorageService',
-        {
-          error: (error as Error).message,
-        }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'StorageService.get',
+        operation: 'retrieving data',
+      };
+      const errorMessage = `Failed to retrieve data for key: ${key} - ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
 
       throw new StorageOperationError(
         'retrieve',
@@ -212,9 +211,12 @@ export class StorageService {
     try {
       await this.set('userPreferences', preferences, { area: 'sync' });
     } catch (error) {
-      this.logger.error('Failed to store user preferences', 'StorageService', {
-        error: (error as Error).message,
-      });
+      const config: ErrorHandlingConfig = {
+        context: 'StorageService.setUserPreferences',
+        operation: 'storing user preferences',
+      };
+      const errorMessage = `Failed to store user preferences: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
       throw error;
     }
   }
@@ -230,13 +232,12 @@ export class StorageService {
       );
       return preferences || {};
     } catch (error) {
-      this.logger.error(
-        'Failed to retrieve user preferences',
-        'StorageService',
-        {
-          error: (error as Error).message,
-        }
-      );
+      const config: ErrorHandlingConfig = {
+        context: 'StorageService.getUserPreferences',
+        operation: 'retrieving user preferences',
+      };
+      const errorMessage = `Failed to retrieve user preferences: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
       return {};
     }
   }
@@ -253,7 +254,12 @@ export class StorageService {
 
       this.clearCache();
     } catch (error) {
-      this.logger.error('Failed to clear storage', 'StorageService', {
+      const config: ErrorHandlingConfig = {
+        context: 'StorageService.clearAll',
+        operation: 'clear all storage data',
+      };
+      const errorMessage = `${config.operation} failed: ${(error as Error).message}`;
+      this.logger.error(errorMessage, config.context, {
         error: (error as Error).message,
       });
 
@@ -277,7 +283,12 @@ export class StorageService {
         area: 'local',
       });
     } catch (error) {
-      this.logger.error('Failed to store session ID', 'StorageService', {
+      const config: ErrorHandlingConfig = {
+        context: 'StorageService.setSessionId',
+        operation: 'store session ID',
+      };
+      const errorMessage = `${config.operation} failed: ${(error as Error).message}`;
+      this.logger.error(errorMessage, config.context, {
         error: (error as Error).message,
       });
       throw error;
@@ -295,7 +306,12 @@ export class StorageService {
       );
       return sessionId;
     } catch (error) {
-      this.logger.error('Failed to retrieve session ID', 'StorageService', {
+      const config: ErrorHandlingConfig = {
+        context: 'StorageService.getSessionId',
+        operation: 'retrieve session ID',
+      };
+      const errorMessage = `${config.operation} failed: ${(error as Error).message}`;
+      this.logger.error(errorMessage, config.context, {
         error: (error as Error).message,
       });
       return null;

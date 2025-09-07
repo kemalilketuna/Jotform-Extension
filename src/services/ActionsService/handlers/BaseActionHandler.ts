@@ -1,8 +1,12 @@
 import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { TypingService } from '@/services/TypingService';
-
+import { ElementUtils } from '@/utils/ElementUtils';
 import { ActionExecutionError } from '@/services/AutomationEngine/AutomationErrors';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Abstract base class for all action handlers
@@ -29,18 +33,30 @@ export abstract class BaseActionHandler {
   /**
    * Simulate a mouse click on an element
    */
-  protected simulateClick(element: Element): void {
-    try {
-      const event = new MouseEvent('click', {
-        view: window,
-        bubbles: true,
-        cancelable: true,
-      });
+  protected async simulateClick(element: Element): Promise<void> {
+    const config: ErrorHandlingConfig = {
+      context: 'BaseActionHandler',
+      operation: 'simulateClick',
+    };
 
-      element.dispatchEvent(event);
-      this.logger.debug(
-        'Click event dispatched successfully',
-        this.constructor.name
+    try {
+      await ErrorHandlingUtils.safeExecute(
+        async () => {
+          const event = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+          });
+
+          element.dispatchEvent(event);
+          this.logger.debug(
+            'Click event dispatched successfully',
+            this.constructor.name
+          );
+        },
+        undefined,
+        config,
+        this.logger
       );
     } catch (error) {
       throw new ActionExecutionError(
@@ -69,25 +85,37 @@ export abstract class BaseActionHandler {
       );
     }
 
-    try {
-      this.logger.debug(
-        `Starting human-like typing: ${text}`,
-        this.constructor.name
-      );
+    const config: ErrorHandlingConfig = {
+      context: 'BaseActionHandler',
+      operation: 'simulateHumanTyping',
+      retryAttempts: 2,
+    };
 
-      await this.typingService.simulateTyping(element, text, {
-        speedMultiplier: 1.2, // Slightly faster than default
-        onComplete: () => {
-          this.logger.debug(
-            `Human-like typing completed: ${text}`,
-            this.constructor.name
-          );
-        },
-      });
-    } catch (error) {
+    const result = await ErrorHandlingUtils.executeWithRetry(
+      async () => {
+        this.logger.debug(
+          `Starting human-like typing: ${text}`,
+          this.constructor.name
+        );
+
+        await this.typingService.simulateTyping(element, text, {
+          speedMultiplier: 1.2, // Slightly faster than default
+          onComplete: () => {
+            this.logger.debug(
+              `Human-like typing completed: ${text}`,
+              this.constructor.name
+            );
+          },
+        });
+      },
+      config,
+      this.logger
+    );
+
+    if (!result.success) {
       throw new ActionExecutionError(
         'TYPE',
-        `Failed to simulate human typing: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to simulate human typing: ${result.error?.message || 'Unknown error'}`
       );
     }
   }

@@ -1,12 +1,16 @@
 import { ScrollableArea } from './DOMDetectionTypes.js';
 import { JSPathGenerator } from './JSPathGenerator.js';
 import { ScrollDetectionError } from './DOMDetectionErrors.js';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
+import { LoggingService } from '@/services/LoggingService';
 
 export class ScrollableAreaDetector {
   private pathGenerator: JSPathGenerator;
+  private logger?: LoggingService;
 
-  constructor() {
+  constructor(logger?: LoggingService) {
     this.pathGenerator = new JSPathGenerator();
+    this.logger = logger;
   }
 
   /**
@@ -31,6 +35,19 @@ export class ScrollableAreaDetector {
         this.createScrollableArea(element)
       );
     } catch (error) {
+      if (this.logger) {
+        const config: ErrorHandlingConfig = {
+          context: 'ScrollableAreaDetector',
+          operation: 'findScrollableAreas',
+        };
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `Scrollable area detection failed: ${errorMessage}`,
+          config.context
+        );
+      }
+
       throw new ScrollDetectionError(
         document.body,
         error instanceof Error ? error.message : String(error)
@@ -51,7 +68,19 @@ export class ScrollableAreaDetector {
         element.scrollWidth > element.clientWidth &&
         /(auto|scroll)/.test(style.overflowX);
       return canScrollX || canScrollY;
-    } catch {
+    } catch (error) {
+      if (this.logger) {
+        const config: ErrorHandlingConfig = {
+          context: 'ScrollableAreaDetector',
+          operation: 'isElementScrollable',
+        };
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `Element scrollability check failed for ${element.tagName}: ${errorMessage}`,
+          config.context
+        );
+      }
       return false;
     }
   }
@@ -67,6 +96,19 @@ export class ScrollableAreaDetector {
     try {
       return this.createScrollableArea(element);
     } catch (error) {
+      if (this.logger) {
+        const config: ErrorHandlingConfig = {
+          context: 'ScrollableAreaDetector',
+          operation: 'getScrollInfo',
+        };
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error(
+          `Scroll info retrieval failed for ${element.tagName}: ${errorMessage}`,
+          config.context
+        );
+      }
+
       throw new ScrollDetectionError(
         element,
         error instanceof Error ? error.message : String(error)
@@ -89,7 +131,7 @@ export class ScrollableAreaDetector {
 
     return {
       element,
-      jsPath: JSPathGenerator.generatePath(element),
+      jsPath: JSPathGenerator.generatePath(element, this.logger),
       scrollHeight: element.scrollHeight,
       clientHeight: element.clientHeight,
       scrollWidth: element.scrollWidth,

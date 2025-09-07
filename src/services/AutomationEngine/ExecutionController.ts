@@ -7,6 +7,10 @@ import { ActionProcessor } from './ActionProcessor';
 import { AutomationError } from './AutomationErrors';
 import { ExecutedAction } from '@/services/APIService/APITypes';
 import { AutomationConfig } from '@/config/AutomationConfig';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Controls the overall execution flow of step-by-step automation
@@ -45,35 +49,47 @@ export class ExecutionController {
       'ExecutionController'
     );
 
+    const config: ErrorHandlingConfig = {
+      operation: 'execute step-by-step automation',
+      context: 'ExecutionController',
+      logLevel: 'error',
+    };
+
     try {
-      // Get or initialize session
-      const sessionId =
-        await this.sessionCoordinator.getOrInitializeSession(objective);
+      const result = await ErrorHandlingUtils.executeWithRetry(
+        async () => {
+          // Get or initialize session
+          const sessionId =
+            await this.sessionCoordinator.getOrInitializeSession(objective);
 
-      // Setup automation environment
-      await this.lifecycleManager.setup();
+          // Setup automation environment
+          await this.lifecycleManager.setup();
 
-      // Execute automation steps
-      await this.executeAutomationSteps(sessionId);
+          // Execute automation steps
+          await this.executeAutomationSteps(sessionId);
 
-      this.logger.info(
-        'Automation completed successfully',
-        'ExecutionController'
+          this.logger.info(
+            'Automation completed successfully',
+            'ExecutionController'
+          );
+
+          // Send completion message
+          await this.messageHandler.sendSequenceComplete(sessionId);
+        },
+        config,
+        this.logger
       );
 
-      // Send completion message
-      await this.messageHandler.sendSequenceComplete(sessionId);
-    } catch (error) {
-      // Ensure cleanup on error
-      await this.lifecycleManager.teardownOnError();
+      if (!result.success) {
+        // Ensure cleanup on error
+        await this.lifecycleManager.teardownOnError();
 
-      const automationError = new AutomationError(
-        error instanceof Error
-          ? error.message
-          : 'Unknown error during step-by-step automation'
-      );
-      this.logger.logError(automationError, 'ExecutionController');
-      throw automationError;
+        const automationError = new AutomationError(
+          result.error!.message ||
+            'Unknown error during step-by-step automation'
+        );
+        throw automationError;
+      }
     } finally {
       // Normal cleanup
       await this.lifecycleManager.teardown();

@@ -16,6 +16,7 @@ import {
 } from '@/services/AutomationEngine/MessageTypes';
 import { AutomationCoordinator } from './AutomationCoordinator.js';
 import { browser } from 'wxt/browser';
+import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
 
 /**
  * Message handler for processing all background script messages
@@ -105,7 +106,12 @@ export class MessageHandler {
           break;
       }
     } catch (error) {
-      this.logger.logError(error as Error, 'MessageHandler');
+      const config: ErrorHandlingConfig = {
+        context: 'MessageHandler.handleMessage',
+        operation: 'processing background message',
+      };
+      const errorMessage = `Failed to handle message: ${error instanceof Error ? error.message : String(error)}`;
+      this.logger.error(errorMessage, config.context);
     }
   }
 
@@ -140,10 +146,12 @@ export class MessageHandler {
             return;
           }
         } catch (error) {
-          this.logger.error(
-            `Failed to get active tab: ${error}`,
-            'MessageHandler'
-          );
+          const config: ErrorHandlingConfig = {
+            context: 'MessageHandler.handleExecuteSequence',
+            operation: 'getting active tab',
+          };
+          const errorMessage = `Failed to get active tab: ${error instanceof Error ? error.message : String(error)}`;
+          this.logger.error(errorMessage, config.context);
           return;
         }
       }

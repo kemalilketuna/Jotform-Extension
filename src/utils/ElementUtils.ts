@@ -1,6 +1,7 @@
 import { LoggingService } from '../services/LoggingService';
 import { TimingConfig } from '../config';
 import { AutomationConfig } from '@/services/AutomationEngine/AutomationConfig';
+import { ErrorHandlingConfig } from './ErrorHandlingUtils';
 
 /**
  * Utilities for element waiting, DOM manipulation, and page state management
@@ -65,11 +66,12 @@ export class ElementUtils {
 
           setTimeout(checkElement, TimingConfig.ELEMENT_WAIT_RETRY_DELAY);
         } catch (error) {
-          this.logger.error(
-            `Error checking element: ${selector}`,
-            'ElementUtils',
-            { error }
-          );
+          const config: ErrorHandlingConfig = {
+            context: 'ElementUtils',
+            operation: 'waitForElement',
+          };
+          const errorMessage = `${config.operation} failed: Error checking element: ${selector}`;
+          this.logger.error(errorMessage, config.context, { error });
           resolve(null);
         }
       };

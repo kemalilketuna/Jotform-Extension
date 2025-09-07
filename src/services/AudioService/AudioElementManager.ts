@@ -1,5 +1,9 @@
 import { LoggingService } from '@/services/LoggingService';
 import { AudioPaths, AudioConfig } from './AudioConfig';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 /**
  * Manages audio element creation, configuration, and lifecycle
@@ -169,44 +173,61 @@ export class AudioElementManager {
    * Safely reset audio currentTime to prevent corruption
    */
   private safeResetAudio(audio: HTMLAudioElement): void {
-    try {
-      // Check if audio is in a valid state for manipulation
-      if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
-        return;
-      }
+    const config: ErrorHandlingConfig = {
+      context: 'AudioElementManager',
+      operation: 'safeResetAudio',
+      logLevel: 'debug',
+      sanitizeData: true,
+    };
 
-      // Only reset if audio is not at the beginning and not currently seeking
-      if (audio.currentTime > 0.1 && !audio.seeking) {
-        // Use a flag to prevent concurrent resets
-        if (!audio.dataset.resetting) {
-          audio.dataset.resetting = 'true';
-          audio.currentTime = 0;
-
-          // Clear the flag after a short delay
-          setTimeout(() => {
-            delete audio.dataset.resetting;
-          }, 50);
+    ErrorHandlingUtils.safeExecute(
+      async () => {
+        // Check if audio is in a valid state for manipulation
+        if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
+          return;
         }
-      }
-    } catch (error) {
-      // Ignore reset errors to prevent audio corruption
-      this.logger.debug('Audio reset failed, ignoring', 'AudioElementManager', {
-        error,
-      });
-    }
+
+        // Only reset if audio is not at the beginning and not currently seeking
+        if (audio.currentTime > 0.1 && !audio.seeking) {
+          // Use a flag to prevent concurrent resets
+          if (!audio.dataset.resetting) {
+            audio.dataset.resetting = 'true';
+            audio.currentTime = 0;
+
+            // Clear the flag after a short delay
+            setTimeout(() => {
+              delete audio.dataset.resetting;
+            }, 50);
+          }
+        }
+      },
+      undefined,
+      config,
+      this.logger
+    );
   }
 
   /**
    * Cleanup audio element resources
    */
   cleanupAudioElement(audio: HTMLAudioElement): void {
-    try {
-      audio.pause();
-      audio.currentTime = 0;
-      // Don't set src to empty or call load() as it triggers error events
-    } catch {
-      // Ignore cleanup errors to prevent console spam
-    }
+    const config: ErrorHandlingConfig = {
+      context: 'AudioElementManager',
+      operation: 'cleanupAudioElement',
+      logLevel: 'debug',
+      sanitizeData: true,
+    };
+
+    ErrorHandlingUtils.safeExecute(
+      async () => {
+        audio.pause();
+        audio.currentTime = 0;
+        // Don't set src to empty or call load() as it triggers error events
+      },
+      undefined,
+      config,
+      this.logger
+    );
   }
 
   /**
