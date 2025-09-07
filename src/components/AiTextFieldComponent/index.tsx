@@ -19,7 +19,6 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
   className = '',
 }) => {
   const [inputText, setInputText] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
   const [status, setStatus] = useState<{
     message: string;
     type: 'info' | 'success' | 'error' | 'loading';
@@ -81,8 +80,6 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
           <AiTextInput
             value={inputText}
             onChange={setInputText}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
             onKeyDown={handleKeyDown}
           />
           <SubmitButton disabled={!inputText.trim()} />

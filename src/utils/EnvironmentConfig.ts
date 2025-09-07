@@ -27,7 +27,7 @@ export enum LogLevel {
 }
 
 export class EnvironmentConfig {
-  private static instance: EnvironmentConfig;
+  private static instance: EnvironmentConfig | undefined;
   private readonly config: Map<string, string> = new Map();
 
   private constructor() {
@@ -105,6 +105,6 @@ export class EnvironmentConfig {
 
   // Reset singleton for testing
   static resetInstance(): void {
-    EnvironmentConfig.instance = undefined as any;
+    EnvironmentConfig.instance = undefined;
   }
 }

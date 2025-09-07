@@ -89,10 +89,11 @@ export class ElementActionExecutor {
     description: string | undefined,
     stepIndex: number
   ): Promise<void> {
-    this.logger.info(
-      `Executing direct click on element: ${element.tagName}`,
-      'ElementActionExecutor'
-    );
+    const logMessage = description
+      ? `Step ${stepIndex}: ${description} - Executing click on ${element.tagName}`
+      : `Step ${stepIndex}: Executing direct click on element: ${element.tagName}`;
+
+    this.logger.info(logMessage, 'ElementActionExecutor');
 
     try {
       // Initialize visual cursor if not already done
@@ -134,10 +135,11 @@ export class ElementActionExecutor {
     description: string | undefined,
     stepIndex: number
   ): Promise<void> {
-    this.logger.info(
-      `Executing direct type on element: ${element.tagName}`,
-      'ElementActionExecutor'
-    );
+    const logMessage = description
+      ? `Step ${stepIndex}: ${description} - Typing "${value}" on ${element.tagName}`
+      : `Step ${stepIndex}: Executing direct type on element: ${element.tagName}`;
+
+    this.logger.info(logMessage, 'ElementActionExecutor');
 
     try {
       // Initialize visual cursor if not already done
