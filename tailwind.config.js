@@ -9,7 +9,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'inter': ['Inter', 'sans-serif'],
+        inter: ['Inter', 'sans-serif'],
       },
       letterSpacing: {
         'tight-custom': '-0.176px',

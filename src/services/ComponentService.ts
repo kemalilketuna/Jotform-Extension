@@ -140,11 +140,9 @@ export class ComponentService {
         'ComponentService'
       );
     } catch (error) {
-      this.logger.error(
-        'Failed to render components',
-        'ComponentService',
-        { error: String(error) }
-      );
+      this.logger.error('Failed to render components', 'ComponentService', {
+        error: String(error),
+      });
     }
   }
 
@@ -261,17 +259,13 @@ export class ComponentService {
         this.renderAiTextFieldComponent();
       }
 
-      this.logger.info(
-        'Chat message added successfully',
-        'ComponentService',
-        { messageId: chatMessage.id }
-      );
+      this.logger.info('Chat message added successfully', 'ComponentService', {
+        messageId: chatMessage.id,
+      });
     } catch (error) {
-      this.logger.error(
-        'Failed to add chat message',
-        'ComponentService',
-        { error: String(error) }
-      );
+      this.logger.error('Failed to add chat message', 'ComponentService', {
+        error: String(error),
+      });
     }
   }
 
@@ -292,11 +286,9 @@ export class ComponentService {
         'ComponentService'
       );
     } catch (error) {
-      this.logger.error(
-        'Failed to clear chat messages',
-        'ComponentService',
-        { error: String(error) }
-      );
+      this.logger.error('Failed to clear chat messages', 'ComponentService', {
+        error: String(error),
+      });
     }
   }
 

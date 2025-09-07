@@ -81,7 +81,10 @@ export class CursorBasedElementDetector {
         }
       });
 
-      this.logger.warn(`Found ${count} interactive elements`, 'CursorBasedElementDetector');
+      this.logger.warn(
+        `Found ${count} interactive elements`,
+        'CursorBasedElementDetector'
+      );
 
       this.logger.info(
         `Found ${visibleElements.length} visible interactive elements`,
@@ -157,7 +160,7 @@ export class CursorBasedElementDetector {
       rect.top >= 0 &&
       rect.left >= 0 &&
       rect.bottom <=
-      (window.innerHeight || document.documentElement.clientHeight) &&
+        (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     );
   }
@@ -170,16 +173,21 @@ export class CursorBasedElementDetector {
     const rect = element.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
-    
+
     // Get all elements at the point to handle overlays safely
     const elementsAtPoint = document.elementsFromPoint(x, y);
-    
+
     // Filter out the UserInteractionBlocker overlay if present
     const userBlocker = UserInteractionBlocker.getInstance();
-    const filteredElements = elementsAtPoint.filter(el => 
-      !(el.classList.contains(EXTENSION_COMPONENTS.INTERACTION_BLOCKER_CLASS) && userBlocker.isActive)
+    const filteredElements = elementsAtPoint.filter(
+      (el) =>
+        !(
+          el.classList.contains(
+            EXTENSION_COMPONENTS.INTERACTION_BLOCKER_CLASS
+          ) && userBlocker.isActive
+        )
     );
-    
+
     // Get the topmost non-blocker element
     const topElement = filteredElements.length > 0 ? filteredElements[0] : null;
 

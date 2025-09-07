@@ -14,7 +14,8 @@ export class EnvironmentDefaults {
 }
 
 export class EnvironmentErrors {
-  static readonly INVALID_LOG_LEVEL = 'Invalid log level value. Must be 0-3.' as const;
+  static readonly INVALID_LOG_LEVEL =
+    'Invalid log level value. Must be 0-3.' as const;
   static readonly INVALID_URL = 'Invalid backend base URL format.' as const;
 }
 
@@ -45,27 +46,39 @@ export class EnvironmentConfig {
     if (typeof process !== 'undefined' && process.env) {
       this.config.set(
         EnvironmentVariableNames.BACKEND_BASE_URL,
-        process.env[EnvironmentVariableNames.BACKEND_BASE_URL] || EnvironmentDefaults.BACKEND_BASE_URL
+        process.env[EnvironmentVariableNames.BACKEND_BASE_URL] ||
+          EnvironmentDefaults.BACKEND_BASE_URL
       );
       this.config.set(
         EnvironmentVariableNames.DEBUG_LOG_LEVEL,
-        process.env[EnvironmentVariableNames.DEBUG_LOG_LEVEL] || EnvironmentDefaults.DEBUG_LOG_LEVEL
+        process.env[EnvironmentVariableNames.DEBUG_LOG_LEVEL] ||
+          EnvironmentDefaults.DEBUG_LOG_LEVEL
       );
     } else {
       // Fallback to defaults in browser environment
-      this.config.set(EnvironmentVariableNames.BACKEND_BASE_URL, EnvironmentDefaults.BACKEND_BASE_URL);
-      this.config.set(EnvironmentVariableNames.DEBUG_LOG_LEVEL, EnvironmentDefaults.DEBUG_LOG_LEVEL);
+      this.config.set(
+        EnvironmentVariableNames.BACKEND_BASE_URL,
+        EnvironmentDefaults.BACKEND_BASE_URL
+      );
+      this.config.set(
+        EnvironmentVariableNames.DEBUG_LOG_LEVEL,
+        EnvironmentDefaults.DEBUG_LOG_LEVEL
+      );
     }
   }
 
   getBackendBaseUrl(): string {
-    const url = this.config.get(EnvironmentVariableNames.BACKEND_BASE_URL) || EnvironmentDefaults.BACKEND_BASE_URL;
+    const url =
+      this.config.get(EnvironmentVariableNames.BACKEND_BASE_URL) ||
+      EnvironmentDefaults.BACKEND_BASE_URL;
     this.validateUrl(url);
     return url;
   }
 
   getDebugLogLevel(): LogLevel {
-    const levelStr = this.config.get(EnvironmentVariableNames.DEBUG_LOG_LEVEL) || EnvironmentDefaults.DEBUG_LOG_LEVEL;
+    const levelStr =
+      this.config.get(EnvironmentVariableNames.DEBUG_LOG_LEVEL) ||
+      EnvironmentDefaults.DEBUG_LOG_LEVEL;
     const level = parseInt(levelStr, 10);
     this.validateLogLevel(level);
     return level as LogLevel;

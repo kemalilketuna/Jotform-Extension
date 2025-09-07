@@ -113,7 +113,8 @@ export class StepByStepAutomationOrchestrator {
           this.domDetectionService.listVisibleInteractiveElements();
 
         if (visibleElements.length === 0) {
-          const errorMessage = 'No visible interactive elements found on the page';
+          const errorMessage =
+            'No visible interactive elements found on the page';
           this.logger.error(errorMessage, 'StepByStepAutomationOrchestrator');
           throw new AutomationError(errorMessage);
         }

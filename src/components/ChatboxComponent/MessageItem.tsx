@@ -26,9 +26,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   }, [message]);
 
   const formatTimestamp = (date: Date): string => {
-    return date.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -38,7 +38,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       role="listitem"
       aria-label={ComponentStrings.ACCESSIBILITY.MESSAGE_ITEM}
     >
-      <div className="bg-white border border-gray-100 p-3 shadow-sm" style={{borderRadius: '12px', border: '1px solid #f3f3f3'}}>
+      <div
+        className="bg-white border border-gray-100 p-3 shadow-sm"
+        style={{ borderRadius: '12px', border: '1px solid #f3f3f3' }}
+      >
         <div className="flex items-start space-x-2">
           {/* AI Agent Icon */}
           <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
@@ -55,7 +58,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
               />
             </svg>
           </div>
-          
+
           {/* Message Content */}
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-800 leading-relaxed break-words">

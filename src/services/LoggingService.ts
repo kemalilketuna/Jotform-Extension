@@ -16,7 +16,8 @@ export class LoggingService {
   private static instance: LoggingService;
   private logs: LogEntry[] = [];
   private readonly maxLogs = 1000;
-  private readonly logLevel = EnvironmentConfig.getInstance().getDebugLogLevel();
+  private readonly logLevel =
+    EnvironmentConfig.getInstance().getDebugLogLevel();
 
   private constructor() {
     // Private constructor for singleton

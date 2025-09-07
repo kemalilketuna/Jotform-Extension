@@ -58,7 +58,10 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
       role="region"
       aria-label={ComponentStrings.ACCESSIBILITY.CHATBOX_CONTAINER}
     >
-      <div className="bg-white border shadow-lg overflow-hidden" style={{ borderRadius: '12px', border: '1px solid #f3f3f3' }}>
+      <div
+        className="bg-white border shadow-lg overflow-hidden"
+        style={{ borderRadius: '12px', border: '1px solid #f3f3f3' }}
+      >
         {/* Messages Container */}
         <div
           className={`${ComponentStrings.CSS_CLASSES.MESSAGE_LIST} overflow-y-auto p-3 min-h-[200px]`}

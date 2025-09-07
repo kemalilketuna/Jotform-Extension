@@ -59,12 +59,21 @@ export class ElementActionExecutor {
     // Use element directly instead of generating selector path
     // This avoids CSS selector issues and is more reliable
     if (action.type === 'CLICK') {
-      await this.executeClickOnElement(targetElement, action.explanation, stepIndex);
+      await this.executeClickOnElement(
+        targetElement,
+        action.explanation,
+        stepIndex
+      );
     } else if (action.type === 'TYPE') {
       if (!action.value) {
         throw new Error('TYPE action missing value');
       }
-      await this.executeTypeOnElement(targetElement, action.value, action.explanation, stepIndex);
+      await this.executeTypeOnElement(
+        targetElement,
+        action.value,
+        action.explanation,
+        stepIndex
+      );
     } else {
       throw new Error(
         `Unsupported action type for element execution: ${action.type}`
@@ -100,8 +109,7 @@ export class ElementActionExecutor {
       element.click();
 
       // Small delay to show the click effect
-      await new Promise(resolve => setTimeout(resolve, 200));
-
+      await new Promise((resolve) => setTimeout(resolve, 200));
     } catch (error) {
       this.logger.warn(
         `Visual cursor failed, falling back to direct click: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -141,7 +149,6 @@ export class ElementActionExecutor {
 
       // Perform visual click to focus
       await this.visualCursorService.performClick();
-
     } catch (error) {
       this.logger.warn(
         `Visual cursor failed for type action: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -153,12 +160,18 @@ export class ElementActionExecutor {
     element.focus();
 
     // Clear existing value if it's an input element
-    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+    if (
+      element instanceof HTMLInputElement ||
+      element instanceof HTMLTextAreaElement
+    ) {
       element.value = '';
     }
 
     // Type the value
-    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+    if (
+      element instanceof HTMLInputElement ||
+      element instanceof HTMLTextAreaElement
+    ) {
       element.value = value;
       // Trigger input event to notify any listeners
       element.dispatchEvent(new Event('input', { bubbles: true }));
