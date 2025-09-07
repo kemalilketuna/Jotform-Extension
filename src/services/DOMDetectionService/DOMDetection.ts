@@ -49,7 +49,7 @@ export class DOMDetection {
   /**
    * Find all scrollable areas in the current page
    */
-  public findScrollableAreas(): ScrollableArea[] {
+  public async findScrollableAreas(): Promise<ScrollableArea[]> {
     return this.pageAnalysisService.findScrollableAreas();
   }
 
@@ -60,6 +60,11 @@ export class DOMDetection {
     try {
       return JSPathGenerator.generatePath(element);
     } catch (error) {
+      this.logger.error(
+        `Failed to generate path for element: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'generateElementPath',
+        { elementTag: element.tagName.toLowerCase() }
+      );
       throw new DOMDetectionError(
         `Failed to generate path for element: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
@@ -67,12 +72,17 @@ export class DOMDetection {
   }
 
   /**
-   * Generates multiple JavaScript paths for redundancy
+   * Generates multiple JavaScript paths for a specific element
    */
   generateMultiplePaths(element: HTMLElement): string[] {
     try {
       return JSPathGenerator.generateMultiplePaths(element);
     } catch (error) {
+      this.logger.error(
+        `Failed to generate multiple paths for element: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'generateMultiplePaths',
+        { elementTag: element.tagName.toLowerCase() }
+      );
       throw new DOMDetectionError(
         `Failed to generate multiple paths for element: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
@@ -113,12 +123,12 @@ export class DOMDetection {
   /**
    * Gets comprehensive information about the current page's DOM structure
    */
-  getPageAnalysis(): {
+  async getPageAnalysis(): Promise<{
     scrollableAreas: ScrollableArea[];
     summary: {
       totalScrollableAreas: number;
     };
-  } {
+  }> {
     return this.pageAnalysisService.getPageAnalysis();
   }
 
@@ -136,11 +146,11 @@ export class DOMDetection {
    * Lists all visible interactive elements on the page based on cursor styles
    * Uses cursor style detection to identify interactive elements
    */
-  public listVisibleInteractiveElements(): HTMLElement[] {
+  public async listVisibleInteractiveElements(): Promise<HTMLElement[]> {
     try {
       // This method is still using CursorBasedElementDetector through PageAnalysisService
       const { interactiveElements } =
-        this.pageAnalysisService.getInteractiveElements();
+        await this.pageAnalysisService.getInteractiveElements();
       return interactiveElements;
     } catch (error) {
       this.logger.error(

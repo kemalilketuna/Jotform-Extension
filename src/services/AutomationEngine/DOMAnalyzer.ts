@@ -42,9 +42,9 @@ export class DOMAnalyzer {
   /**
    * Get visible interactive elements from the page
    */
-  getVisibleInteractiveElements(): HTMLElement[] {
+  async getVisibleInteractiveElements(): Promise<HTMLElement[]> {
     const visibleElements =
-      this.domDetectionService.listVisibleInteractiveElements();
+      await this.domDetectionService.listVisibleInteractiveElements();
 
     if (visibleElements.length === 0) {
       const errorMessage = 'No visible interactive elements found on the page';

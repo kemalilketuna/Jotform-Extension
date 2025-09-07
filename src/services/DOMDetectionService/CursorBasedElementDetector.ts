@@ -59,7 +59,16 @@ export class CursorBasedElementDetector {
       );
 
       const loggedElements = new Set<HTMLElement>();
-      const allElements = document.querySelectorAll('*');
+      let allElements: NodeListOf<Element>;
+      try {
+        allElements = document.querySelectorAll('*');
+      } catch (error) {
+        this.logger.error(
+          `Failed to query all elements: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          'listVisibleInteractiveElements'
+        );
+        return [];
+      }
       const visibleElements: HTMLElement[] = [];
       let count = 0;
       allElements.forEach((element) => {
@@ -162,7 +171,7 @@ export class CursorBasedElementDetector {
       rect.top >= 0 &&
       rect.left >= 0 &&
       rect.bottom <=
-        (window.innerHeight || document.documentElement.clientHeight) &&
+      (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     );
   }

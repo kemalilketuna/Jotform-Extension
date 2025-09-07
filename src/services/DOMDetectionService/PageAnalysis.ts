@@ -4,6 +4,10 @@ import { ScrollableAreaDetector } from './ScrollableAreaDetector.js';
 import { CursorBasedElementDetector } from './CursorBasedElementDetector.js';
 import { ServiceFactory } from '@/services/DIContainer';
 import { LoggingService } from '@/services/LoggingService';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
 
 export class PageAnalysis {
   private static instance: PageAnalysis | null = null;
@@ -47,73 +51,100 @@ export class PageAnalysis {
   /**
    * Find all scrollable areas in the current page
    */
-  public findScrollableAreas(): ScrollableArea[] {
-    try {
-      return this.scrollableDetector.findScrollableAreas();
-    } catch (error) {
-      this.logger.error(
-        'Failed to find scrollable areas:',
-        error instanceof Error ? error.message : String(error)
-      );
-      return [];
-    }
+  public async findScrollableAreas(): Promise<ScrollableArea[]> {
+    const config: ErrorHandlingConfig = {
+      context: 'PageAnalysis',
+      operation: 'findScrollableAreas',
+      logLevel: 'warn',
+    };
+
+    return ErrorHandlingUtils.safeExecute(
+      async () => this.scrollableDetector.findScrollableAreas(),
+      [],
+      config,
+      this.logger
+    );
   }
 
   /**
    * Get scroll information for a specific element
    */
-  public getScrollInfo(element: HTMLElement): ScrollableArea | null {
-    try {
-      return this.scrollableDetector.getScrollInfo(element);
-    } catch (error) {
-      this.logger.warn(
-        'Failed to get scroll info:',
-        error instanceof Error ? error.message : String(error)
-      );
-      return null;
-    }
+  public async getScrollInfo(
+    element: HTMLElement
+  ): Promise<ScrollableArea | null> {
+    const config: ErrorHandlingConfig = {
+      context: 'PageAnalysis',
+      operation: 'getScrollInfo',
+      logLevel: 'warn',
+    };
+
+    ErrorHandlingUtils.validateRequired(
+      element,
+      'element',
+      'PageAnalysis',
+      this.logger
+    );
+
+    return ErrorHandlingUtils.safeExecute(
+      async () => this.scrollableDetector.getScrollInfo(element),
+      null,
+      config,
+      this.logger
+    );
   }
 
   /**
    * Gets all interactive elements on the page
    */
-  public getInteractiveElements(): { interactiveElements: HTMLElement[] } {
-    try {
-      const interactiveElements =
-        this.cursorDetector.listVisibleInteractiveElements();
-      return { interactiveElements };
-    } catch (error) {
-      this.logger.error(
-        'Failed to find interactive elements:',
-        error instanceof Error ? error.message : String(error)
-      );
-      return { interactiveElements: [] };
-    }
+  public async getInteractiveElements(): Promise<{
+    interactiveElements: HTMLElement[];
+  }> {
+    const config: ErrorHandlingConfig = {
+      context: 'PageAnalysis',
+      operation: 'getInteractiveElements',
+      logLevel: 'error',
+    };
+
+    const interactiveElements = await ErrorHandlingUtils.safeExecute(
+      async () => this.cursorDetector.listVisibleInteractiveElements(),
+      [],
+      config,
+      this.logger
+    );
+
+    return { interactiveElements };
   }
 
   /**
    * Gets comprehensive information about the current page's DOM structure
    */
-  getPageAnalysis(): {
+  async getPageAnalysis(): Promise<{
     scrollableAreas: ScrollableArea[];
     summary: {
       totalScrollableAreas: number;
     };
-  } {
-    try {
-      const scrollableAreas = this.findScrollableAreas();
+  }> {
+    const config: ErrorHandlingConfig = {
+      context: 'PageAnalysis',
+      operation: 'getPageAnalysis',
+    };
 
-      return {
-        scrollableAreas,
-        summary: {
-          totalScrollableAreas: scrollableAreas.length,
-        },
-      };
-    } catch (error) {
-      throw new DOMDetectionError(
-        `Failed to analyze page: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-    }
+    return ErrorHandlingUtils.executeWithTransform(
+      async () => {
+        const scrollableAreas = await this.findScrollableAreas();
+
+        return {
+          scrollableAreas,
+          summary: {
+            totalScrollableAreas: scrollableAreas.length,
+          },
+        };
+      },
+      config,
+      this.logger,
+      (error) =>
+        new DOMDetectionError(`Failed to analyze page: ${error.message}`)
+    );
   }
 
   /**
@@ -123,34 +154,51 @@ export class PageAnalysis {
     scrollableAreas: ScrollableArea[];
     interactiveElements: HTMLElement[];
   }> {
-    return new Promise((resolve, reject) => {
-      const performAnalysis = () => {
-        try {
-          const scrollableAreas = this.findScrollableAreas();
-          const { interactiveElements } = this.getInteractiveElements();
+    const config: ErrorHandlingConfig = {
+      context: 'PageAnalysis',
+      operation: 'waitForDOMAndAnalyze',
+    };
 
-          resolve({
-            scrollableAreas,
-            interactiveElements,
-          });
-        } catch (error) {
-          reject(
-            new DOMDetectionError(
-              `Failed to analyze DOM: ${error instanceof Error ? error.message : 'Unknown error'}`
-            )
-          );
-        }
-      };
+    return ErrorHandlingUtils.executeWithTransform(
+      async () => {
+        return new Promise<{
+          scrollableAreas: ScrollableArea[];
+          interactiveElements: HTMLElement[];
+        }>((resolve, reject) => {
+          const performAnalysis = async () => {
+            try {
+              const scrollableAreas = await this.findScrollableAreas();
+              const { interactiveElements } =
+                await this.getInteractiveElements();
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', performAnalysis, {
-          once: true,
+              resolve({
+                scrollableAreas,
+                interactiveElements,
+              });
+            } catch (error) {
+              reject(error);
+            }
+          };
+
+          if (document.readyState === 'loading') {
+            document.addEventListener(
+              'DOMContentLoaded',
+              () => performAnalysis().catch(reject),
+              {
+                once: true,
+              }
+            );
+          } else {
+            // DOM is already ready, perform analysis after a short delay to ensure all elements are rendered
+            setTimeout(() => performAnalysis().catch(reject), 100);
+          }
         });
-      } else {
-        // DOM is already ready, perform analysis after a short delay to ensure all elements are rendered
-        setTimeout(performAnalysis, 100);
-      }
-    });
+      },
+      config,
+      this.logger,
+      (error) =>
+        new DOMDetectionError(`Failed to analyze DOM: ${error.message}`)
+    );
   }
 
   private mergeDefaultConfig(

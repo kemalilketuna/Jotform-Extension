@@ -96,7 +96,8 @@ export class ExecutionController {
       await this.domAnalyzer.waitForDOMReady();
 
       // Get visible interactive elements
-      const visibleElements = this.domAnalyzer.getVisibleInteractiveElements();
+      const visibleElements =
+        await this.domAnalyzer.getVisibleInteractiveElements();
 
       // Convert elements to HTML for backend
       const visibleElementsHtml =

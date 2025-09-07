@@ -12,6 +12,7 @@ import {
 import { ServiceFactory } from '@/services/DIContainer';
 import { StorageService } from '@/services/StorageService';
 import { LoggingService } from '@/services/LoggingService';
+import { APIErrorHandler } from '@/utils/APIErrorHandler';
 
 export class APIService {
   private static instance: APIService | null = null;
@@ -40,46 +41,50 @@ export class APIService {
     objective: string,
     requestConfig?: APIRequestConfig
   ): Promise<string> {
-    try {
-      this.validateObjective(objective);
+    this.validateObjective(objective);
 
-      this.logger.info(
-        `Initializing session with objective: ${objective}`,
-        'APIService'
-      );
+    return APIErrorHandler.executeAPIRequest(
+      async () => {
+        this.logger.info(
+          `Initializing session with objective: ${objective}`,
+          'APIService'
+        );
 
-      const request: InitSessionRequest = { objective };
-      this.logger.info(`Making API call to initialize session`, 'APIService');
+        const request: InitSessionRequest = { objective };
+        this.logger.info(`Making API call to initialize session`, 'APIService');
 
-      const response = await this.apiClient.initSession(request, requestConfig);
+        const response = await this.apiClient.initSession(
+          request,
+          requestConfig
+        );
 
-      this.logger.info(
-        `Received response from API: ${JSON.stringify(response)}`,
-        'APIService'
-      );
+        this.logger.info(
+          `Received response from API: ${JSON.stringify(response)}`,
+          'APIService'
+        );
 
-      const sessionId = response.data.sessionId;
-      this.currentSessionId = sessionId;
+        const sessionId = response.data.sessionId;
+        this.currentSessionId = sessionId;
 
-      await this.storageService.setSessionId(sessionId);
+        await this.storageService.setSessionId(sessionId);
 
-      this.logger.debug(
-        `Session initialized successfully: ${sessionId}`,
-        'APIService'
-      );
+        this.logger.debug(
+          `Session initialized successfully: ${sessionId}`,
+          'APIService'
+        );
 
-      return sessionId;
-    } catch (error) {
-      this.logger.error(
-        `Session initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'APIService'
-      );
-      this.logger.logError(error as Error, 'APIService');
-      throw new APIError(
-        `Failed to initialize session: ${(error as Error).message}`,
-        'SESSION_INIT_ERROR'
-      );
-    }
+        return sessionId;
+      },
+      {
+        operation: 'initializeSession',
+        context: `objective: ${objective}`,
+        endpoint: '/init-session',
+        method: 'POST',
+        retryAttempts: 3,
+        retryDelay: 1000,
+      },
+      this.logger
+    );
   }
 
   async isHealthy(): Promise<boolean> {
