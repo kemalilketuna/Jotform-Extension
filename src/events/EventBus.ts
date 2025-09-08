@@ -197,6 +197,6 @@ export class EventBus {
    * Reset the EventBus instance (mainly for testing)
    */
   public static reset(): void {
-    SingletonManager.reset('EventBus');
+    SingletonManager.resetInstance('EventBus');
   }
 }

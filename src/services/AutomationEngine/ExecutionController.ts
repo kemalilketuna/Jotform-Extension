@@ -43,7 +43,7 @@ export class ExecutionController {
   /**
    * Execute the complete automation flow
    */
-  async execute(objective: string): Promise<void> {
+  async execute(objective: string, providedSessionId?: string): Promise<void> {
     this.logger.info(
       `Starting step-by-step automation for objective: ${objective}`,
       'ExecutionController'
@@ -58,9 +58,34 @@ export class ExecutionController {
     try {
       const result = await ErrorHandlingUtils.executeWithRetry(
         async () => {
-          // Get or initialize session
-          const sessionId =
-            await this.sessionCoordinator.getOrInitializeSession(objective);
+          // Use provided session ID if available, otherwise get from storage or initialize
+          let sessionId = providedSessionId;
+
+          if (sessionId) {
+            this.logger.info(
+              `Using provided session ID: ${sessionId}`,
+              'ExecutionController'
+            );
+          } else {
+            // Get existing session ID from storage first, then initialize if needed
+            sessionId =
+              (await this.sessionCoordinator.getSessionIdFromStorage()) ||
+              undefined;
+
+            if (!sessionId) {
+              this.logger.info(
+                'No existing session found, initializing new session',
+                'ExecutionController'
+              );
+              sessionId =
+                await this.sessionCoordinator.getOrInitializeSession(objective);
+            } else {
+              this.logger.info(
+                `Using existing session ID from storage: ${sessionId}`,
+                'ExecutionController'
+              );
+            }
+          }
 
           // Setup automation environment
           await this.lifecycleManager.setup();

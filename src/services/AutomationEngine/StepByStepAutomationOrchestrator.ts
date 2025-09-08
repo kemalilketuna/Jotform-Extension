@@ -53,7 +53,7 @@ export class StepByStepAutomationOrchestrator {
   /**
    * Execute step-by-step automation using AI guidance with proper DOM detection and error handling
    */
-  async execute(objective: string): Promise<void> {
-    return this.executionController.execute(objective);
+  async execute(objective: string, sessionId?: string): Promise<void> {
+    return this.executionController.execute(objective, sessionId);
   }
 }

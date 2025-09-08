@@ -31,19 +31,36 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
     if (!trimmedText) return;
 
     try {
-      setStatus({
-        message: ComponentStrings.USER_MESSAGES.SUBMITTING_PROMPT,
-        type: 'loading',
-      });
+      // Check if automation is currently running
+      const componentService =
+        ServiceFactory.getInstance().createComponentService();
+      const isAutomationRunning =
+        componentService.isAutomationCurrentlyRunning();
 
-      // ComponentService will handle the automation start via onSubmit callback
+      if (isAutomationRunning) {
+        setStatus({
+          message: ComponentStrings.USER_MESSAGES.AUTOMATION_RUNNING,
+          type: 'info',
+        });
+      } else {
+        setStatus({
+          message: ComponentStrings.USER_MESSAGES.NEW_SESSION_STARTING,
+          type: 'loading',
+        });
+      }
 
       // Call the onSubmit callback if provided
       onSubmit?.(trimmedText);
 
       setInputText('');
+
+      // Show appropriate success message based on automation status
+      const successMessage = isAutomationRunning
+        ? ComponentStrings.USER_MESSAGES.PROMPT_QUEUED
+        : ComponentStrings.USER_MESSAGES.PROMPT_SUBMITTED;
+
       setStatus({
-        message: ComponentStrings.USER_MESSAGES.PROMPT_SUBMITTED,
+        message: successMessage,
         type: 'success',
       });
 

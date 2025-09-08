@@ -301,8 +301,15 @@ export class MessageHandler {
           'MessageHandler'
         );
 
-        // Forward the START_AUTOMATION message to the content script
-        await browser.tabs.sendMessage(tabs[0].id, message);
+        // Forward the START_AUTOMATION message to the content script with sessionId
+        const messageWithSessionId: StartAutomationMessage = {
+          ...message,
+          payload: {
+            ...message.payload,
+            sessionId,
+          },
+        };
+        await browser.tabs.sendMessage(tabs[0].id, messageWithSessionId);
       } else {
         throw new Error('No active tab found to send automation message');
       }

@@ -6,6 +6,20 @@ import { ExtensionUtils } from '@/utils/ExtensionUtils';
 import { UIConfig } from '@/config/UIConfig';
 import { SingletonManager } from '@/utils/SingletonService';
 import { ErrorHandlingConfig } from '../utils/ErrorHandlingUtils';
+import {
+  EventBus,
+  EventTypes,
+  AutomationStoppedEvent,
+  AutomationErrorEvent,
+} from '@/events';
+import type {
+  StartAutomationResponseMessage,
+  AutomationMessage,
+} from '@/services/AutomationEngine/MessageTypes';
+import type {
+  MessageSender,
+  MessageResponse,
+} from '@/entrypoints/content/ExtensionTypes';
 
 import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
 import { ChatboxComponent, ChatMessage } from '@/components/ChatboxComponent';
@@ -15,14 +29,21 @@ import { ChatboxComponent, ChatMessage } from '@/components/ChatboxComponent';
  */
 export class ComponentService {
   private readonly logger: LoggingService;
+  private readonly eventBus: EventBus;
   private containerElement: HTMLElement | null = null;
   private reactRoot: Root | null = null;
   private isInitialized = false;
   private chatMessages: ChatMessage[] = [];
+  private isAutomationRunning = false;
+  private pendingPrompt: string | null = null;
+  private eventSubscriptions: string[] = [];
+  private currentSessionId: string | null = null;
+  private isMessageListenerSetup = false;
 
   private constructor() {
     const serviceFactory = ServiceFactory.getInstance();
     this.logger = serviceFactory.createLoggingService();
+    this.eventBus = EventBus.getInstance(this.logger);
   }
 
   static getInstance(): ComponentService {
@@ -58,6 +79,8 @@ export class ComponentService {
 
       this.createComponentContainer();
       this.renderAiTextFieldComponent();
+      this.setupEventSubscriptions();
+      this.setupMessageListener();
       this.isInitialized = true;
 
       this.logger.info(
@@ -203,12 +226,219 @@ export class ComponentService {
   }
 
   /**
+   * Setup message listener for background script responses
+   */
+  private setupMessageListener(): void {
+    if (this.isMessageListenerSetup) {
+      this.logger.warn(
+        'Message listener already setup, skipping',
+        'ComponentService'
+      );
+      return;
+    }
+
+    try {
+      browser.runtime.onMessage.addListener(
+        (message: AutomationMessage, sender, sendResponse) => {
+          this.handleMessage(message, sender, sendResponse);
+          return true; // Keep message channel open for async responses
+        }
+      );
+
+      this.isMessageListenerSetup = true;
+      this.logger.info(
+        'Message listener setup successfully',
+        'ComponentService'
+      );
+    } catch (error) {
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.setupMessageListener',
+        operation: 'setup message listener',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
+    }
+  }
+
+  /**
+   * Handle messages from background script
+   */
+  private handleMessage(
+    message: AutomationMessage,
+    _sender: MessageSender,
+    _sendResponse: MessageResponse
+  ): void {
+    try {
+      switch (message.type) {
+        case 'START_AUTOMATION_RESPONSE':
+          this.handleStartAutomationResponse(
+            message as StartAutomationResponseMessage
+          );
+          break;
+        default:
+          // Ignore other message types
+          break;
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to handle message: ${String(error)}`,
+        'ComponentService',
+        { messageType: message.type }
+      );
+    }
+  }
+
+  /**
+   * Handle START_AUTOMATION_RESPONSE from background script
+   */
+  private handleStartAutomationResponse(
+    message: StartAutomationResponseMessage
+  ): void {
+    try {
+      if (message.payload.success && message.payload.sessionId) {
+        this.currentSessionId = message.payload.sessionId;
+        this.logger.info(
+          `Received session ID: ${message.payload.sessionId}`,
+          'ComponentService'
+        );
+      } else {
+        this.logger.error(
+          `Failed to start automation: ${message.payload.error || 'Unknown error'}`,
+          'ComponentService'
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to handle START_AUTOMATION_RESPONSE: ${String(error)}`,
+        'ComponentService'
+      );
+    }
+  }
+
+  /**
+   * Setup event subscriptions for automation lifecycle
+   */
+  private setupEventSubscriptions(): void {
+    try {
+      // Listen for automation stopped events
+      const stoppedSubscription = this.eventBus.on(
+        EventTypes.AUTOMATION_STOPPED,
+        this.handleAutomationStopped.bind(this)
+      );
+      this.eventSubscriptions.push(stoppedSubscription);
+
+      // Listen for automation error events
+      const errorSubscription = this.eventBus.on(
+        EventTypes.AUTOMATION_ERROR,
+        this.handleAutomationError.bind(this)
+      );
+      this.eventSubscriptions.push(errorSubscription);
+
+      // Listen for automation started events
+      const startedSubscription = this.eventBus.on(
+        EventTypes.AUTOMATION_STARTED,
+        this.handleAutomationStarted.bind(this)
+      );
+      this.eventSubscriptions.push(startedSubscription);
+
+      this.logger.info(
+        'Event subscriptions setup successfully',
+        'ComponentService'
+      );
+    } catch (error) {
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.setupEventSubscriptions',
+        operation: 'setup event subscriptions',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
+    }
+  }
+
+  /**
+   * Handle automation started event
+   */
+  private handleAutomationStarted(): void {
+    this.isAutomationRunning = true;
+    this.logger.info('Automation started - tracking state', 'ComponentService');
+  }
+
+  /**
+   * Handle automation stopped event
+   */
+  private handleAutomationStopped(event: AutomationStoppedEvent): void {
+    this.isAutomationRunning = false;
+    // Clear the current session ID when automation stops
+    this.currentSessionId = null;
+    this.logger.info(
+      `Automation stopped - reason: ${event.reason}, session cleared`,
+      'ComponentService'
+    );
+
+    // If there's a pending prompt, start new automation
+    if (this.pendingPrompt) {
+      const prompt = this.pendingPrompt;
+      this.pendingPrompt = null;
+      this.logger.info(
+        'Starting new automation with pending prompt',
+        'ComponentService',
+        { prompt }
+      );
+      this.handleAutomationStart(prompt);
+    }
+  }
+
+  /**
+   * Handle automation error event
+   */
+  private handleAutomationError(event: AutomationErrorEvent): void {
+    this.isAutomationRunning = false;
+    // Clear the current session ID when automation errors
+    this.currentSessionId = null;
+    this.logger.error(
+      `Automation error occurred: ${event.error.message}, session cleared`,
+      'ComponentService'
+    );
+
+    // If there's a pending prompt, start new automation after error
+    if (this.pendingPrompt) {
+      const prompt = this.pendingPrompt;
+      this.pendingPrompt = null;
+      this.logger.info(
+        'Starting new automation with pending prompt after error',
+        'ComponentService',
+        { prompt }
+      );
+      this.handleAutomationStart(prompt);
+    }
+  }
+
+  /**
+   * Cleanup event subscriptions
+   */
+  private cleanupEventSubscriptions(): void {
+    this.eventSubscriptions.forEach((subscriptionId) => {
+      this.eventBus.off(subscriptionId);
+    });
+    this.eventSubscriptions = [];
+  }
+
+  /**
    * Destroy the service and cleanup
    */
   destroy(): void {
     try {
+      this.cleanupEventSubscriptions();
       this.removeComponentContainer();
+      this.isMessageListenerSetup = false;
+      this.currentSessionId = null;
       this.isInitialized = false;
+      this.isAutomationRunning = false;
+      this.pendingPrompt = null;
 
       this.logger.info('ComponentService destroyed', 'ComponentService');
     } catch (error) {
@@ -232,12 +462,27 @@ export class ComponentService {
 
   /**
    * Handle automation start by sending START_AUTOMATION message to background script
+   * If automation is already running, queue the prompt for later execution
    */
   private async handleAutomationStart(objective: string): Promise<void> {
     try {
+      // Check if automation is currently running
+      if (this.isAutomationRunning) {
+        this.logger.info(
+          'Automation already running, queuing new prompt',
+          'ComponentService',
+          { objective }
+        );
+        this.pendingPrompt = objective;
+        return;
+      }
+
       this.logger.info('Starting automation', 'ComponentService', {
         objective,
       });
+
+      // Clear any pending prompt since we're starting this one
+      this.pendingPrompt = null;
 
       await browser.runtime.sendMessage({
         type: 'START_AUTOMATION',
@@ -332,5 +577,40 @@ export class ComponentService {
    */
   getChatMessages(): ChatMessage[] {
     return [...this.chatMessages];
+  }
+
+  /**
+   * Check if automation is currently running
+   */
+  isAutomationCurrentlyRunning(): boolean {
+    return this.isAutomationRunning;
+  }
+
+  /**
+   * Get pending prompt if any
+   */
+  getPendingPrompt(): string | null {
+    return this.pendingPrompt;
+  }
+
+  /**
+   * Clear pending prompt
+   */
+  clearPendingPrompt(): void {
+    this.pendingPrompt = null;
+  }
+
+  /**
+   * Get current session ID
+   */
+  getCurrentSessionId(): string | null {
+    return this.currentSessionId;
+  }
+
+  /**
+   * Set current session ID
+   */
+  setCurrentSessionId(sessionId: string | null): void {
+    this.currentSessionId = sessionId;
   }
 }

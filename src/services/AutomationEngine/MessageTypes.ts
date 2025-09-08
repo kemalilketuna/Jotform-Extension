@@ -96,7 +96,7 @@ export interface InitSessionResponseMessage extends BaseAutomationMessage {
 
 export interface StartAutomationMessage extends BaseAutomationMessage {
   type: 'START_AUTOMATION';
-  payload: { objective: string };
+  payload: { objective: string; sessionId?: string };
 }
 
 export interface StartAutomationResponseMessage extends BaseAutomationMessage {

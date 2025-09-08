@@ -299,6 +299,15 @@ export class AutomationEngine {
       'AutomationEngine'
     );
 
+    // Use sessionId from message payload if available
+    const sessionId = message.payload.sessionId;
+    if (sessionId) {
+      this.logger.info(
+        `Using session ID from background script: ${sessionId}`,
+        'AutomationEngine'
+      );
+    }
+
     const config: ErrorHandlingConfig = {
       operation: 'start automation',
       context: 'AutomationEngine',
@@ -314,7 +323,10 @@ export class AutomationEngine {
             `Calling stepByStepOrchestrator.execute with objective: ${message.payload.objective}`,
             'AutomationEngine'
           );
-          await this.stepByStepOrchestrator.execute(message.payload.objective);
+          await this.stepByStepOrchestrator.execute(
+            message.payload.objective,
+            sessionId
+          );
         },
         config,
         this.logger

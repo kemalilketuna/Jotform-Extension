@@ -23,9 +23,13 @@ export class SessionCoordinator {
 
   /**
    * Get or initialize a session for the given objective
+   * First tries to get existing session from storage with retries to handle race conditions
    */
   async getOrInitializeSession(objective: string): Promise<string> {
-    let sessionId = await this.storageService.getSessionId();
+    // Try to get session ID from storage with retries to handle race conditions
+    // The background script may have just created a session
+    let sessionId = await this.getSessionIdWithRetry();
+
     this.logger.info(
       `Retrieved session ID from storage: ${sessionId}`,
       'SessionCoordinator'
@@ -36,6 +40,39 @@ export class SessionCoordinator {
     }
 
     return sessionId;
+  }
+
+  /**
+   * Get session ID from storage with retries to handle race conditions
+   */
+  private async getSessionIdWithRetry(
+    maxRetries: number = 3,
+    delayMs: number = 100
+  ): Promise<string | null> {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const sessionId = await this.storageService.getSessionId();
+      if (sessionId) {
+        this.logger.info(
+          `Found session ID on attempt ${attempt + 1}: ${sessionId}`,
+          'SessionCoordinator'
+        );
+        return sessionId;
+      }
+
+      if (attempt < maxRetries - 1) {
+        this.logger.debug(
+          `Session ID not found on attempt ${attempt + 1}, retrying in ${delayMs}ms`,
+          'SessionCoordinator'
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+
+    this.logger.info(
+      `No session ID found after ${maxRetries} attempts`,
+      'SessionCoordinator'
+    );
+    return null;
   }
 
   /**
@@ -64,6 +101,13 @@ export class SessionCoordinator {
         `Session initialization failed: ${initError instanceof Error ? initError.message : 'Unknown error'}`
       );
     }
+  }
+
+  /**
+   * Get session ID from storage
+   */
+  async getSessionIdFromStorage(): Promise<string | null> {
+    return await this.storageService.getSessionId();
   }
 
   /**
