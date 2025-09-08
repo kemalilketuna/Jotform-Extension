@@ -1,8 +1,9 @@
 import { browser } from 'wxt/browser';
+import { ScreenshotConfig } from '@/config/ScreenshotConfig';
 import {
-  ScreenshotConfig,
-  SCREENSHOT_STRINGS,
-} from '@/config/ScreenshotConfig';
+  ScreenshotServiceErrors,
+  ScreenshotError,
+} from './ScreenshotServiceErrors';
 
 /**
  * Simple screenshot service for capturing active tab screenshots
@@ -10,7 +11,7 @@ import {
 export class ScreenshotService {
   private static instance: ScreenshotService;
 
-  private constructor() { }
+  private constructor() {}
 
   public static getInstance(): ScreenshotService {
     if (!ScreenshotService.instance) {
@@ -31,7 +32,7 @@ export class ScreenshotService {
       });
 
       if (!activeTab) {
-        throw new Error(SCREENSHOT_STRINGS.NO_ACTIVE_TAB);
+        throw ScreenshotError.noActiveTab();
       }
 
       let dataUrl: string;
@@ -44,7 +45,7 @@ export class ScreenshotService {
             quality: ScreenshotConfig.QUALITY,
           });
         } else {
-          throw new Error(SCREENSHOT_STRINGS.NO_WINDOW_ID);
+          throw ScreenshotError.noWindowId();
         }
       } catch (windowError) {
         console.warn(
@@ -63,16 +64,14 @@ export class ScreenshotService {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      console.error(SCREENSHOT_STRINGS.CAPTURE_FAILED, errorMessage);
+      console.error(ScreenshotServiceErrors.CAPTURE_FAILED, errorMessage);
 
       // Provide more specific error information
       if (errorMessage.includes('permission')) {
-        throw new Error(
-          `${SCREENSHOT_STRINGS.CAPTURE_FAILED}: ${SCREENSHOT_STRINGS.PERMISSION_DENIED}`
-        );
+        throw ScreenshotError.captureFailedWithPermission();
       }
 
-      throw new Error(`${SCREENSHOT_STRINGS.CAPTURE_FAILED}: ${errorMessage}`);
+      throw ScreenshotError.captureFailedWithMessage(errorMessage);
     }
   }
 
@@ -84,7 +83,7 @@ export class ScreenshotService {
       // Fallback for data URLs that might not have the ';base64,' part but just a comma
       const commaIndex = dataUrl.indexOf(',');
       if (commaIndex === -1) {
-        throw new Error('Invalid data URL: does not contain a comma separator.');
+        throw ScreenshotError.invalidDataUrl();
       }
       return dataUrl.substring(commaIndex + 1);
     }
