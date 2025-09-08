@@ -7,7 +7,6 @@ import {
 import { MessageResponse, MessageSender } from './ExtensionTypes';
 import { ServiceCoordinator } from './ServiceCoordinator';
 import { AutomationStateManager } from './AutomationStateManager';
-import { ServiceFactory } from '@/services/DIContainer';
 import { ExtensionConfig } from '@/config/ExtensionConfig';
 import { SingletonManager } from '@/utils/SingletonService';
 import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';

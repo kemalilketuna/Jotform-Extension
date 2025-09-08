@@ -4,14 +4,18 @@ import {
   ScreenshotServiceErrors,
   ScreenshotError,
 } from './ScreenshotServiceErrors';
+import { LoggingService } from '../LoggingService';
 
 /**
  * Simple screenshot service for capturing active tab screenshots
  */
 export class ScreenshotService {
   private static instance: ScreenshotService;
+  private readonly logger: LoggingService;
 
-  private constructor() {}
+  private constructor() {
+    this.logger = LoggingService.getInstance();
+  }
 
   public static getInstance(): ScreenshotService {
     if (!ScreenshotService.instance) {
@@ -48,9 +52,10 @@ export class ScreenshotService {
           throw ScreenshotError.noWindowId();
         }
       } catch (windowError) {
-        console.warn(
-          'Failed to capture with window ID, trying without:',
-          windowError
+        this.logger.warn(
+          'Failed to capture with window ID, trying without',
+          'ScreenshotService',
+          { error: String(windowError) }
         );
         // Fallback: Try without window ID (uses current window)
         dataUrl = await browser.tabs.captureVisibleTab({
@@ -64,7 +69,11 @@ export class ScreenshotService {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      console.error(ScreenshotServiceErrors.CAPTURE_FAILED, errorMessage);
+      this.logger.error(
+        `${ScreenshotServiceErrors.CAPTURE_FAILED}: ${errorMessage}`,
+        'ScreenshotService',
+        { error: String(error) }
+      );
 
       // Provide more specific error information
       if (errorMessage.includes('permission')) {
