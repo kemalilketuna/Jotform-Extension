@@ -84,7 +84,7 @@ export class CursorBasedElementDetector {
             if (this.isElementTopmost(htmlElement)) {
               count += 1;
               if (!loggedElements.has(htmlElement)) {
-                this.logInteractiveElement(htmlElement);
+                // this.logInteractiveElement(htmlElement);
                 loggedElements.add(htmlElement);
                 visibleElements.push(htmlElement);
               }
