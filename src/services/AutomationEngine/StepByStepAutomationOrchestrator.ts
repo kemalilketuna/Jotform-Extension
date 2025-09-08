@@ -33,11 +33,7 @@ export class StepByStepAutomationOrchestrator {
       storageService
     );
     const domAnalyzer = new DOMAnalyzer(logger, domDetectionService);
-    const actionProcessor = new ActionProcessor(
-      logger,
-      apiService,
-      elementActionExecutor
-    );
+    const actionProcessor = new ActionProcessor(logger, elementActionExecutor);
 
     // Create execution controller with all components
     this.executionController = new ExecutionController(

@@ -23,6 +23,18 @@ export default defineBackground(() => {
     return await screenshotService.captureActiveTab();
   });
 
+  // Handle next action API calls
+  onMessage('getNextAction', async (message) => {
+    const apiService = serviceFactory.createAPIService();
+    return await apiService.getNextAction(
+      message.data.sessionId,
+      message.data.visibleElementsHtml,
+      message.data.lastTurnOutcome,
+      undefined,
+      message.data.screenshotBase64
+    );
+  });
+
   // Listen for messages from content scripts
   browser.runtime.onMessage.addListener(
     async (message: AutomationMessage, sender, sendResponse) => {

@@ -1,5 +1,4 @@
 import { LoggingService } from '@/services/LoggingService';
-import { APIService } from '@/services/APIService';
 import {
   ExecutedAction,
   Action,
@@ -19,23 +18,21 @@ import {
   ClickElementActionStrategy,
   TypeElementActionStrategy,
 } from './strategies';
+import { sendMessage } from '@/services/Messaging/messaging';
 
 /**
  * Processes and executes automation actions
  */
 export class ActionProcessor {
   private readonly logger: LoggingService;
-  private readonly apiService: APIService;
   private readonly elementActionExecutor: ElementActionExecutor;
   private readonly strategyRegistry: AutomationActionStrategyRegistry;
 
   constructor(
     logger: LoggingService,
-    apiService: APIService,
     elementActionExecutor: ElementActionExecutor
   ) {
     this.logger = logger;
-    this.apiService = apiService;
     this.elementActionExecutor = elementActionExecutor;
     this.strategyRegistry = new AutomationActionStrategyRegistry();
     this.initializeStrategies();
@@ -68,7 +65,7 @@ export class ActionProcessor {
   }
 
   /**
-   * Request next action from backend
+   * Request next action from backend via messaging system
    */
   async getNextAction(
     sessionId: string,
@@ -85,13 +82,12 @@ export class ActionProcessor {
 
     const result = await ErrorHandlingUtils.executeWithRetry(
       () =>
-        this.apiService.getNextAction(
+        sendMessage('getNextAction', {
           sessionId,
           visibleElementsHtml,
           lastTurnOutcome,
-          undefined,
-          screenshotBase64
-        ),
+          screenshotBase64,
+        }),
       config,
       this.logger
     );
