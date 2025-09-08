@@ -11,6 +11,7 @@ import { AudioConfig } from './AudioConfig';
 import { AutomationConfig } from './AutomationConfig';
 import { LoggingConfig } from './LoggingConfig';
 import { ExtensionConfig } from './ExtensionConfig';
+import { ScreenshotConfig } from './ScreenshotConfig';
 
 // Export all configuration classes
 export {
@@ -22,9 +23,10 @@ export {
   AutomationConfig,
   LoggingConfig,
   ExtensionConfig,
+  ScreenshotConfig,
 };
 
-// Re-export commonly used constants for convenience
+// Shorthand exports for convenience
 export const TIMING = TimingConfig;
 export const UI = UIConfig;
 export const DOM = DOMConfig;
@@ -33,3 +35,4 @@ export const AUDIO = AudioConfig;
 export const AUTOMATION = AutomationConfig;
 export const LOGGING = LoggingConfig;
 export const EXTENSION = ExtensionConfig;
+export const SCREENSHOT = ScreenshotConfig;

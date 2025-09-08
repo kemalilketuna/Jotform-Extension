@@ -11,7 +11,7 @@ import {
   ErrorHandlingUtils,
   ErrorHandlingConfig,
 } from '@/utils/ErrorHandlingUtils';
-
+import { sendMessage } from '../Messaging/messaging';
 /**
  * Controls the overall execution flow of step-by-step automation
  */
@@ -145,6 +145,8 @@ export class ExecutionController {
       const visibleElementsHtml =
         this.domAnalyzer.convertElementsToHTML(visibleElements);
 
+      const base64_image = await sendMessage('captureActiveTab', undefined);
+      console.log(base64_image);
       // Request next action from backend
       const nextActionResponse = await this.actionProcessor.getNextAction(
         sessionId,

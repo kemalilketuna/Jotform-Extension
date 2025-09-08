@@ -26,6 +26,7 @@ export default defineConfig({
       'https://*/*',
       '*://*.jotform.com/*',
       'http://localhost/*',
+      '<all_urls>',
     ],
     content_security_policy: {
       extension_pages:
