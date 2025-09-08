@@ -1,3 +1,5 @@
+import { browser } from 'wxt/browser';
+
 /**
  * Utility functions for browser extension environment detection and management
  */
@@ -66,5 +68,17 @@ export class ExtensionUtils {
       chrome.runtime !== undefined &&
       typeof chrome.runtime.getURL === 'function'
     );
+  }
+
+  /**
+   * Get the active tab ID
+   * @returns Promise<number> - The active tab ID or 0 if not found
+   */
+  static async getActiveTabId(): Promise<number> {
+    const tabs = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    return tabs[0]?.id || 0;
   }
 }

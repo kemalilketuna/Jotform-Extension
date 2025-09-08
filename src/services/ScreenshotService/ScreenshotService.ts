@@ -29,7 +29,12 @@ export class ScreenshotService {
    */
   public async captureActiveTab(): Promise<{ base64: string }> {
     try {
-      // First attempt: Get the current active tab and use its window
+      // Get the active tab ID and full tab object
+      const activeTabId = await ExtensionUtils.getActiveTabId();
+      if (activeTabId === 0) {
+        throw ScreenshotError.noActiveTab();
+      }
+
       const [activeTab] = await browser.tabs.query({
         active: true,
         currentWindow: true,
@@ -67,20 +72,13 @@ export class ScreenshotService {
       const base64 = this.dataUrlToBase64(dataUrl);
       return { base64 };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
-        `${ScreenshotServiceErrors.CAPTURE_FAILED}: ${errorMessage}`,
-        'ScreenshotService',
-        { error: String(error) }
+        `${ScreenshotServiceErrors.CAPTURE_FAILED}: ${error instanceof Error ? error.message : String(error)}`,
+        'ScreenshotService.captureActiveTab'
       );
-
-      // Provide more specific error information
-      if (errorMessage.includes('permission')) {
-        throw ScreenshotError.captureFailedWithPermission();
-      }
-
-      throw ScreenshotError.captureFailedWithMessage(errorMessage);
+      throw ScreenshotError.captureFailedWithMessage(
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 

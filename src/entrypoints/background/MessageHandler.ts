@@ -17,6 +17,7 @@ import {
 import { AutomationCoordinator } from './AutomationCoordinator.js';
 import { browser } from 'wxt/browser';
 import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
+import { ExtensionUtils } from '../../utils/ExtensionUtils';
 
 /**
  * Message handler for processing all background script messages
@@ -131,20 +132,18 @@ export class MessageHandler {
           'MessageHandler'
         );
         try {
-          const tabs = await browser.tabs.query({
-            active: true,
-            currentWindow: true,
-          });
-          if (tabs[0]?.id) {
-            targetTabId = tabs[0].id;
-            this.logger.info(
-              `Found active tab: ${targetTabId}`,
-              'MessageHandler'
+          targetTabId = await ExtensionUtils.getActiveTabId();
+          if (targetTabId === 0) {
+            this.logger.error(
+              'No active tab found for sequence execution',
+              'MessageHandler.handleExecuteSequence'
             );
-          } else {
-            this.logger.error('No active tab found', 'MessageHandler');
             return;
           }
+          this.logger.info(
+            `Found active tab: ${targetTabId}`,
+            'MessageHandler'
+          );
         } catch (error) {
           const config: ErrorHandlingConfig = {
             context: 'MessageHandler.handleExecuteSequence',
@@ -233,13 +232,15 @@ export class MessageHandler {
   ): Promise<void> {
     if (!sender.tab?.id) {
       try {
-        const tabs = await browser.tabs.query({
-          active: true,
-          currentWindow: true,
-        });
-        if (tabs[0]?.id) {
-          await browser.tabs.sendMessage(tabs[0].id, message);
+        const activeTabId = await ExtensionUtils.getActiveTabId();
+        if (activeTabId === 0) {
+          this.logger.error(
+            'No active tab found for LIST_INTERACTIVE_ELEMENTS',
+            'MessageHandler'
+          );
+          return;
         }
+        await browser.tabs.sendMessage(activeTabId, message);
       } catch (error) {
         this.logger.error(
           `Failed to forward LIST_INTERACTIVE_ELEMENTS to content script: ${error}`,
@@ -290,29 +291,25 @@ export class MessageHandler {
       );
 
       // Get the active tab to send the message to content script
-      const tabs = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-
-      if (tabs[0]?.id) {
-        this.logger.info(
-          `Forwarding START_AUTOMATION to content script on tab ${tabs[0].id}`,
-          'MessageHandler'
-        );
-
-        // Forward the START_AUTOMATION message to the content script with sessionId
-        const messageWithSessionId: StartAutomationMessage = {
-          ...message,
-          payload: {
-            ...message.payload,
-            sessionId,
-          },
-        };
-        await browser.tabs.sendMessage(tabs[0].id, messageWithSessionId);
-      } else {
-        throw new Error('No active tab found to send automation message');
+      const activeTabId = await ExtensionUtils.getActiveTabId();
+      if (activeTabId === 0) {
+        throw new Error('No active tab found for automation');
       }
+
+      this.logger.info(
+        `Forwarding START_AUTOMATION to content script on tab ${activeTabId}`,
+        'MessageHandler'
+      );
+
+      // Forward the START_AUTOMATION message to the content script with sessionId
+      const messageWithSessionId: StartAutomationMessage = {
+        ...message,
+        payload: {
+          ...message.payload,
+          sessionId,
+        },
+      };
+      await browser.tabs.sendMessage(activeTabId, messageWithSessionId);
 
       const response: StartAutomationResponseMessage = {
         type: 'START_AUTOMATION_RESPONSE',

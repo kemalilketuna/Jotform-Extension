@@ -7,6 +7,7 @@ import {
 import { EventBus, EventTypes, NavigationEvent } from '@/events';
 import { SingletonManager } from '@/utils/SingletonService';
 import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
+import { ExtensionUtils } from '../../utils/ExtensionUtils';
 
 /**
  * Navigation detection and content script coordination
@@ -175,14 +176,6 @@ export class NavigationDetector {
    * Get current tab ID (fallback method)
    */
   private async getCurrentTabId(): Promise<number> {
-    try {
-      const tabs = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      return tabs[0]?.id || 0;
-    } catch {
-      return 0;
-    }
+    return await ExtensionUtils.getActiveTabId();
   }
 }
