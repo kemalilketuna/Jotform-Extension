@@ -33,7 +33,6 @@ export class LoggingConfig {
     ELEMENT_UTILS: 'ElementUtils',
     BACKGROUND: 'Background',
     CONTENT_SCRIPT: 'ContentScript',
-    POPUP: 'Popup',
   } as const;
 
   // Log formatting

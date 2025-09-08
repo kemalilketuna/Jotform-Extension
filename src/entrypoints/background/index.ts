@@ -16,7 +16,7 @@ export default defineBackground(() => {
 
   logger.info('JotForm Extension background script loaded', 'BackgroundScript');
 
-  // Listen for messages from popup and content scripts
+  // Listen for messages from content scripts
   browser.runtime.onMessage.addListener(
     async (message: AutomationMessage, sender, sendResponse) => {
       await messageHandler.handleMessage(message, sender, sendResponse);

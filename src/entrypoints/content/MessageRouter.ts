@@ -53,7 +53,7 @@ export class MessageRouter {
       return;
     }
 
-    // Listen for messages from popup/background
+    // Listen for messages from background
     browser.runtime.onMessage.addListener(
       async (
         message: AutomationMessage,

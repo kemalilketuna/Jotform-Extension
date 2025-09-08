@@ -42,7 +42,7 @@ export class MessageHandler {
   ): Promise<void> {
     try {
       this.logger.info(
-        `Background received message: ${message.type} from ${sender.tab ? 'content script' : 'popup'}`,
+        `Background received message: ${message.type} from ${sender.tab ? 'content script' : 'extension'}`,
         'MessageHandler'
       );
       this.logger.debug(`Message details:`, 'MessageHandler', {
@@ -127,7 +127,7 @@ export class MessageHandler {
 
       if (!targetTabId) {
         this.logger.info(
-          'Message from popup, getting active tab',
+          'Message from extension, getting active tab',
           'MessageHandler'
         );
         try {

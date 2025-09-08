@@ -4,8 +4,6 @@
  */
 export class UIConfig {
   // Extension dimensions
-  static readonly POPUP_WIDTH = 360 as const;
-  static readonly POPUP_MAX_HEIGHT = 600 as const;
   static readonly AI_TEXT_FIELD_WIDTH = 320 as const; // 80 * 0.25rem = 320px
   static readonly CHATBOX_WIDTH = 320 as const; // 80 * 0.25rem = 320px
   static readonly CHATBOX_MIN_HEIGHT = 200 as const;
@@ -56,7 +54,6 @@ export class UIConfig {
 
   // Spacing and sizing
   static readonly SPACING = {
-    POPUP_PADDING: 'p-5',
     COMPONENT_MARGIN: 'mb-4',
     BUTTON_PADDING: 'py-2.5 px-4',
     INPUT_PADDING: 'px-4 py-3 pr-12',
