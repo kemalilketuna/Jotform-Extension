@@ -22,7 +22,9 @@ export type ServiceType =
   | 'ElementActionExecutor'
   | 'AutomationLifecycleManager'
   | 'MessageHandler'
-  | 'EventBus';
+  | 'EventBus'
+  | 'ScreenshotService'
+  | 'UserMessagesService';
 
 /**
  * Factory function type for creating service instances

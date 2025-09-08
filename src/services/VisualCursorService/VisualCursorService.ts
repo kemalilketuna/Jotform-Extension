@@ -36,7 +36,7 @@ export class VisualCursorService {
     const serviceFactory = ServiceFactory.getInstance();
     this.logger = logger || serviceFactory.createLoggingService();
     this.eventBus = serviceFactory.createEventBus();
-    this.audioService = AudioService.getInstance(this.logger);
+    this.audioService = serviceFactory.createAudioService();
     this.domManager = new CursorDOMManager(this.logger);
     this.animationManager = new CursorAnimationManager(
       this.domManager,

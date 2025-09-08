@@ -11,6 +11,8 @@ import { ComponentService } from '@/services/ComponentService';
 import { AutomationEngine } from '@/services/AutomationEngine';
 import { JotformAgentDisabler } from '@/services/JotformAgentDisabler';
 import { NavigationDetector } from '@/entrypoints/content/NavigationDetector';
+import { ScreenshotService } from '@/services/ScreenshotService';
+import { UserMessagesService } from '@/services/MessagesService';
 import { EventBus } from '@/events';
 import { ServiceType, ServiceFactory, ServiceInstance } from './DITypes';
 import { DIError } from './DIErrors';
@@ -92,6 +94,12 @@ export class DIContainer {
     this.registerSingleton('AutomationEngine', () => {
       return AutomationEngine.getInstance();
     });
+
+    // Utility services
+    this.registerSingleton('ScreenshotService', () =>
+      ScreenshotService.getInstance()
+    );
+    this.registerSingleton('UserMessagesService', () => UserMessagesService);
   }
 
   /**

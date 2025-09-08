@@ -13,6 +13,8 @@ import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 import { ComponentService } from '@/services/ComponentService';
 import { JotformAgentDisabler } from '@/services/JotformAgentDisabler';
 import { NavigationDetector } from '@/entrypoints/content/NavigationDetector';
+import { ScreenshotService } from '@/services/ScreenshotService';
+import { UserMessagesService } from '@/services/MessagesService';
 import { EventBus } from '@/events';
 import { SingletonManager } from '../../utils/SingletonService';
 
@@ -139,6 +141,22 @@ export class ServiceFactory {
    */
   createEventBus(): EventBus {
     return EventBus.getInstance(this.logger);
+  }
+
+  /**
+   * Create a screenshot service instance
+   */
+  createScreenshotService(): ScreenshotService {
+    return this.container.get<ScreenshotService>('ScreenshotService');
+  }
+
+  /**
+   * Get the user messages service instance
+   */
+  getUserMessagesService(): typeof UserMessagesService {
+    return this.container.get<typeof UserMessagesService>(
+      'UserMessagesService'
+    );
   }
 
   /**

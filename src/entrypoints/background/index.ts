@@ -4,7 +4,6 @@ import { MessageHandler } from './MessageHandler';
 import { AutomationMessage } from '@/services/AutomationEngine/MessageTypes';
 import { browser } from 'wxt/browser';
 import { onMessage } from '@/services/Messaging/messaging';
-import { ScreenshotService } from '@/services/ScreenshotService';
 
 /**
  * Background script entry point for JotForm extension
@@ -15,7 +14,7 @@ export default defineBackground(() => {
   const logger = serviceFactory.createLoggingService();
   const coordinator = AutomationCoordinator.getInstance();
   const messageHandler = new MessageHandler(coordinator);
-  const screenshotService = ScreenshotService.getInstance();
+  const screenshotService = serviceFactory.createScreenshotService();
 
   logger.info('JotForm Extension background script loaded', 'BackgroundScript');
 

@@ -5,6 +5,8 @@ import {
   ScreenshotError,
 } from './ScreenshotServiceErrors';
 import { LoggingService } from '../LoggingService';
+import { ServiceFactory } from '@/services/DIContainer';
+import { ExtensionUtils } from '@/utils/ExtensionUtils';
 
 /**
  * Simple screenshot service for capturing active tab screenshots
@@ -14,7 +16,8 @@ export class ScreenshotService {
   private readonly logger: LoggingService;
 
   private constructor() {
-    this.logger = LoggingService.getInstance();
+    const serviceFactory = ServiceFactory.getInstance();
+    this.logger = serviceFactory.createLoggingService();
   }
 
   public static getInstance(): ScreenshotService {
