@@ -6,6 +6,7 @@ import { ComponentStrings } from './ComponentStrings';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
 import { StatusMessage } from './StatusMessage';
+import { AutomationControlButtons } from './AutomationControlButtons';
 
 /**
  * AI text field component that appears when the extension is active
@@ -94,13 +95,19 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
       className={`fixed bottom-5 right-5 z-[999999] pointer-events-auto transition-all duration-300 w-80 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
     >
       <form onSubmit={handleSubmit} className="relative">
-        <div className="relative">
-          <AiTextInput
-            value={inputText}
-            onChange={setInputText}
-            onKeyDown={handleKeyDown}
+        <div className="relative flex items-center">
+          <AutomationControlButtons
+            className="mr-2"
+            onStatusChange={(status) => setStatus(status)}
           />
-          <SubmitButton disabled={!inputText.trim()} />
+          <div className="relative flex-1">
+            <AiTextInput
+              value={inputText}
+              onChange={setInputText}
+              onKeyDown={handleKeyDown}
+            />
+            <SubmitButton disabled={!inputText.trim()} />
+          </div>
         </div>
         {status && (
           <StatusMessage message={status.message} type={status.type} />
@@ -115,6 +122,10 @@ export { AiTextInput, type AiTextInputProps } from './AiTextInput';
 export { SubmitButton, type SubmitButtonProps } from './SubmitButton';
 export { SendIcon, type SendIconProps } from './SendIcon';
 export { StatusMessage, type StatusMessageProps } from './StatusMessage';
+export {
+  AutomationControlButtons,
+  type AutomationControlButtonsProps,
+} from './AutomationControlButtons';
 
 // Default export
 export default AiTextFieldComponent;

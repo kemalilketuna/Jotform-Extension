@@ -35,6 +35,66 @@ export default defineBackground(() => {
     );
   });
 
+  // Handle automation control messages
+  onMessage('startAutomation', async () => {
+    try {
+      const automationEngine = serviceFactory.createAutomationEngine();
+      // Start automation with a default objective or get from pending prompt
+      const componentService = serviceFactory.createComponentService();
+      const pendingPrompt = componentService.getPendingPrompt();
+
+      if (pendingPrompt) {
+        await automationEngine.handleMessage({
+          type: 'START_AUTOMATION',
+          payload: {
+            objective: pendingPrompt,
+            sessionId: componentService.getCurrentSessionId() || undefined,
+          },
+        });
+        componentService.clearPendingPrompt();
+      } else {
+        logger.warn(
+          'No pending prompt found for automation start',
+          'BackgroundScript'
+        );
+      }
+    } catch (error) {
+      logger.error('Failed to start automation', 'BackgroundScript', {
+        error: (error as Error).message,
+      });
+      throw error;
+    }
+  });
+
+  onMessage('stopAutomation', async () => {
+    try {
+      const state = coordinator.getAutomationState();
+      if (state.isActive) {
+        coordinator.handleAutomationError('User requested stop', undefined);
+        logger.info('Automation stopped by user request', 'BackgroundScript');
+      } else {
+        logger.info('No active automation to stop', 'BackgroundScript');
+      }
+    } catch (error) {
+      logger.error('Failed to stop automation', 'BackgroundScript', {
+        error: (error as Error).message,
+      });
+      throw error;
+    }
+  });
+
+  onMessage('getAutomationStatus', async () => {
+    try {
+      const automationEngine = serviceFactory.createAutomationEngine();
+      return { isRunning: automationEngine.isRunning };
+    } catch (error) {
+      logger.error('Failed to get automation status', 'BackgroundScript', {
+        error: (error as Error).message,
+      });
+      return { isRunning: false };
+    }
+  });
+
   // Listen for messages from content scripts
   browser.runtime.onMessage.addListener(
     async (message: AutomationMessage, sender, sendResponse) => {

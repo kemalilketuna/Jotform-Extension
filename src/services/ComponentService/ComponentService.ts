@@ -268,9 +268,69 @@ export class ComponentService {
   }
 
   /**
-   * Set current session ID
+   * Set the current session ID
    */
   setCurrentSessionId(sessionId: string | null): void {
     this.stateManager.setSessionId(sessionId);
+  }
+
+  /**
+   * Start automation with the given objective
+   */
+  async startAutomation(objective: string): Promise<void> {
+    await this.handleAutomationStart(objective);
+  }
+
+  /**
+   * Stop the currently running automation
+   */
+  async stopAutomation(): Promise<void> {
+    try {
+      this.logger.info('Stopping automation', 'ComponentService');
+      await browser.runtime.sendMessage({
+        type: 'stopAutomation',
+        payload: {},
+      });
+      this.stateManager.setAutomationRunning(false);
+    } catch (error) {
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.stopAutomation',
+        operation: 'stop automation',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get the current automation status
+   */
+  async getAutomationStatus(): Promise<{
+    isRunning: boolean;
+    sessionId: string | null;
+  }> {
+    try {
+      const response = await browser.runtime.sendMessage({
+        type: 'getAutomationStatus',
+        payload: {},
+      });
+      return {
+        isRunning: response?.isRunning || this.stateManager.isRunning(),
+        sessionId: response?.sessionId || this.stateManager.getSessionId(),
+      };
+    } catch (error) {
+      const config: ErrorHandlingConfig = {
+        context: 'ComponentService.getAutomationStatus',
+        operation: 'get automation status',
+      };
+      const errorMessage = `${config.operation} failed: ${String(error)}`;
+      this.logger.error(errorMessage, config.context, {
+        error: String(error),
+      });
+      throw error;
+    }
   }
 }

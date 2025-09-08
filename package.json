@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@jotforminc/jotform.css": "^2.5.8",
+    "@jotforminc/svg-icons": "^9.21.0",
     "@webext-core/isolated-element": "^1.1.2",
     "@webext-core/messaging": "^2.3.0",
     "@webext-core/proxy-service": "^1.2.1",

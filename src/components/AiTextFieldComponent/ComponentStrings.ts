@@ -24,5 +24,15 @@ export class ComponentStrings {
       NEW_SESSION: 'Starting new session',
       QUEUED: 'Prompt queued for next session',
     },
+    AUTOMATION_CONTROL: {
+      START_TOOLTIP: 'Start automation',
+      STOP_TOOLTIP: 'Stop automation',
+      STARTING: 'Starting automation...',
+      STOPPING: 'Stopping automation...',
+      START_SUCCESS: 'Automation started',
+      STOP_SUCCESS: 'Automation stopped',
+      START_ERROR: 'Failed to start automation',
+      STOP_ERROR: 'Failed to stop automation',
+    },
   } as const;
 }

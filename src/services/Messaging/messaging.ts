@@ -12,6 +12,9 @@ interface ProtocolMap {
     lastTurnOutcome: ExecutedAction[];
     screenshotBase64?: string;
   }) => NextActionResponse;
+  startAutomation: () => void;
+  stopAutomation: () => void;
+  getAutomationStatus: () => { isRunning: boolean };
 }
 
 export const { sendMessage, onMessage } =
