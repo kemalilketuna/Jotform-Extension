@@ -151,7 +151,8 @@ export class ExecutionController {
       const nextActionResponse = await this.actionProcessor.getNextAction(
         sessionId,
         visibleElementsHtml,
-        lastTurnOutcome
+        lastTurnOutcome,
+        base64_image.base64
       );
 
       // Process and execute actions

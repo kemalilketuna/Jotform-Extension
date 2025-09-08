@@ -16,6 +16,7 @@ export interface NextActionRequest {
   visibleElementsHtml: string[];
   userResponse?: string;
   lastTurnOutcome: ExecutedAction[];
+  screenshotBase64?: string;
 }
 
 export interface Action {

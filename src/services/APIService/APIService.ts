@@ -118,6 +118,7 @@ export class APIService {
     visibleElementsHtml: string[],
     lastTurnOutcome: ExecutedAction[],
     userResponse?: string,
+    screenshotBase64?: string,
     requestConfig?: APIRequestConfig
   ): Promise<NextActionResponse> {
     try {
@@ -131,6 +132,7 @@ export class APIService {
         visibleElementsHtml: visibleElementsHtml,
         lastTurnOutcome: lastTurnOutcome,
         userResponse: userResponse,
+        screenshotBase64: screenshotBase64,
       };
 
       const response = await this.apiClient.nextAction(request, requestConfig);
@@ -162,6 +164,7 @@ export class APIService {
     visibleElementsHtml: string[],
     executedActions: ExecutedAction[],
     userResponse?: string,
+    screenshotBase64?: string,
     requestConfig?: APIRequestConfig
   ): Promise<NextActionResponse> {
     return this.getNextAction(
@@ -169,6 +172,7 @@ export class APIService {
       visibleElementsHtml,
       executedActions,
       userResponse,
+      screenshotBase64,
       requestConfig
     );
   }

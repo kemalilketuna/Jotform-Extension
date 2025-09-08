@@ -73,7 +73,8 @@ export class ActionProcessor {
   async getNextAction(
     sessionId: string,
     visibleElementsHtml: string[],
-    lastTurnOutcome: ExecutedAction[]
+    lastTurnOutcome: ExecutedAction[],
+    screenshotBase64?: string
   ): Promise<NextActionResponse> {
     const config: ErrorHandlingConfig = {
       context: 'ActionProcessor',
@@ -87,7 +88,9 @@ export class ActionProcessor {
         this.apiService.getNextAction(
           sessionId,
           visibleElementsHtml,
-          lastTurnOutcome
+          lastTurnOutcome,
+          undefined,
+          screenshotBase64
         ),
       config,
       this.logger
