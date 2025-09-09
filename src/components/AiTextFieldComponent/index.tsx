@@ -120,7 +120,6 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 // Export sub-components
 export { AiTextInput, type AiTextInputProps } from './AiTextInput';
 export { SubmitButton, type SubmitButtonProps } from './SubmitButton';
-export { SendIcon, type SendIconProps } from './SendIcon';
 export { StatusMessage, type StatusMessageProps } from './StatusMessage';
 export {
   AutomationControlButtons,

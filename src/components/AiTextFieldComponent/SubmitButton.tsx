@@ -1,6 +1,6 @@
 import React from 'react';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
-import { SendIcon } from './SendIcon';
+import { IconAnglesUp } from '@jotforminc/svg-icons';
 
 export interface SubmitButtonProps {
   disabled?: boolean;
@@ -24,7 +24,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       style={{ backgroundColor: disabled ? undefined : '#091551' }}
       title={title}
     >
-      <SendIcon />
+      <IconAnglesUp className={`fill-white w-5 h-5`} />
     </button>
   );
 };
