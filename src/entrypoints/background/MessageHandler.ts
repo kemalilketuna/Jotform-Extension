@@ -62,7 +62,8 @@ export class MessageHandler {
 
         case 'CONTENT_SCRIPT_READY':
           await this.handleContentScriptReady(
-            message as ContentScriptReadyMessage
+            message as ContentScriptReadyMessage,
+            sender
           );
           break;
 
@@ -80,7 +81,8 @@ export class MessageHandler {
 
         case 'NAVIGATION_DETECTED':
           await this.handleNavigationDetected(
-            message as NavigationDetectedMessage
+            message as NavigationDetectedMessage,
+            sender
           );
           break;
 
@@ -174,12 +176,18 @@ export class MessageHandler {
   }
 
   private async handleContentScriptReady(
-    message: ContentScriptReadyMessage
+    message: ContentScriptReadyMessage,
+    sender: chrome.runtime.MessageSender
   ): Promise<void> {
-    await this.coordinator.continueAutomation(
-      message.payload.tabId,
-      message.payload.url
-    );
+    const tabId = sender.tab?.id;
+    if (tabId) {
+      await this.coordinator.continueAutomation(tabId, message.payload.url);
+    } else {
+      this.logger.warn(
+        'Content script ready message received without valid tab ID',
+        'MessageHandler'
+      );
+    }
   }
 
   private handleAutomationStateRequest(
@@ -210,12 +218,18 @@ export class MessageHandler {
   }
 
   private async handleNavigationDetected(
-    message: NavigationDetectedMessage
+    message: NavigationDetectedMessage,
+    sender: chrome.runtime.MessageSender
   ): Promise<void> {
-    await this.coordinator.continueAutomation(
-      message.payload.tabId,
-      message.payload.toUrl
-    );
+    const tabId = sender.tab?.id;
+    if (tabId) {
+      await this.coordinator.continueAutomation(tabId, message.payload.toUrl);
+    } else {
+      this.logger.warn(
+        'Navigation detected message received without valid tab ID',
+        'MessageHandler'
+      );
+    }
   }
 
   private handleStepProgressUpdate(message: StepProgressUpdateMessage): void {

@@ -7,7 +7,6 @@ import {
 import { EventBus, EventTypes, NavigationEvent } from '@/events';
 import { SingletonManager } from '@/utils/SingletonService';
 import { ErrorHandlingConfig } from '../../utils/ErrorHandlingUtils';
-import { ExtensionUtils } from '../../utils/ExtensionUtils';
 
 /**
  * Navigation detection and content script coordination
@@ -130,7 +129,7 @@ export class NavigationDetector {
       const message: ContentScriptReadyMessage = {
         type: 'CONTENT_SCRIPT_READY',
         payload: {
-          tabId: await this.getCurrentTabId(),
+          tabId: 0, // Background script will get actual tab ID from sender
           url: window?.location?.href || '',
         },
       };
@@ -158,7 +157,7 @@ export class NavigationDetector {
         payload: {
           fromUrl,
           toUrl,
-          tabId: await this.getCurrentTabId(),
+          tabId: 0, // Background script will get actual tab ID from sender
         },
       };
       await browser.runtime.sendMessage(message);
@@ -170,12 +169,5 @@ export class NavigationDetector {
       const errorMessage = `Failed to notify navigation: ${error instanceof Error ? error.message : String(error)}`;
       this.logger.error(errorMessage, config.context);
     }
-  }
-
-  /**
-   * Get current tab ID (fallback method)
-   */
-  private async getCurrentTabId(): Promise<number> {
-    return await ExtensionUtils.getActiveTabId();
   }
 }
