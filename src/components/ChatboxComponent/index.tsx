@@ -15,7 +15,6 @@ export interface ChatboxComponentProps {
 export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
   isVisible = true,
   className = '',
-  maxHeight = '300px',
 }) => {
 
   if (!isVisible) {
@@ -24,29 +23,21 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
 
   return (
     <div
-      className={`${ComponentStrings.CSS_CLASSES.CONTAINER} fixed bottom-24 right-5 z-[999998] pointer-events-auto transition-all duration-300 w-80 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
+      className={`${ComponentStrings.CSS_CLASSES.CONTAINER} fixed bottom-21.5 right-5 z-[999998] pointer-events-auto transition-all duration-300 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
       role="region"
       aria-label={ComponentStrings.ACCESSIBILITY.CHATBOX_CONTAINER}
     >
       <div
-        className="bg-white border shadow-lg overflow-hidden"
-        style={{ borderRadius: '12px', border: '1px solid #f3f3f3' }}
+        className="bg-white border shadow-lg overflow-hidden w-80 p-4 min-h-[180px] max-h-[300px]"
+        style={{ borderRadius: '12px', border: '1px solid #f3f3f3', boxShadow: '0 16px 24px 0 rgba(5, 53, 85, .06), 0 2px 8px 0 rgba(5, 53, 85, .01)' }}
       >
-        {/* Empty State Container */}
         <div
-          className={`${ComponentStrings.CSS_CLASSES.MESSAGE_LIST} p-3 min-h-[200px]`}
-          style={{ maxHeight }}
-          role="log"
-          aria-label={ComponentStrings.ACCESSIBILITY.SCROLL_AREA}
+          className={`${ComponentStrings.CSS_CLASSES.EMPTY_STATE} text-center`}
         >
-          <div
-            className={`${ComponentStrings.CSS_CLASSES.EMPTY_STATE} text-center py-8`}
-          >
-            <MessagingText message={ComponentStrings.CHATBOX_LABELS.EMPTY_STATE} />
-          </div>
+          <MessagingText message={ComponentStrings.CHATBOX_LABELS.EMPTY_STATE} />
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

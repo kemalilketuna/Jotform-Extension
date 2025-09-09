@@ -17,12 +17,16 @@ export const MessagingText: React.FC<MessagingTextProps> = ({
 }) => {
   const defaultStyle = {
     color: '#01105c',
+    fontSize: '16px',
+    lineHeight: '24px',
+    letterSpacing: '-0.176px',
+    fontFamily: 'Inter',
     ...style,
   };
 
   return (
     <div
-      className={`z-[2] text-base leading-6 tracking-tight-custom font-inter ${className}`}
+      className={`leading-6 ${className}`}
       style={defaultStyle}
     >
       {message}
