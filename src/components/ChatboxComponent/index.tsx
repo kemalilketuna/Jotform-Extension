@@ -16,7 +16,6 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
   isVisible = true,
   className = '',
 }) => {
-
   if (!isVisible) {
     return null;
   }
@@ -29,15 +28,22 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
     >
       <div
         className="bg-white border shadow-lg overflow-hidden w-80 p-4 min-h-[180px] max-h-[300px]"
-        style={{ borderRadius: '12px', border: '1px solid #f3f3f3', boxShadow: '0 16px 24px 0 rgba(5, 53, 85, .06), 0 2px 8px 0 rgba(5, 53, 85, .01)' }}
+        style={{
+          borderRadius: '12px',
+          border: '1px solid #f3f3f3',
+          boxShadow:
+            '0 16px 24px 0 rgba(5, 53, 85, .06), 0 2px 8px 0 rgba(5, 53, 85, .01)',
+        }}
       >
         <div
           className={`${ComponentStrings.CSS_CLASSES.EMPTY_STATE} text-center`}
         >
-          <MessagingText message={ComponentStrings.CHATBOX_LABELS.EMPTY_STATE} />
+          <MessagingText
+            message={ComponentStrings.CHATBOX_LABELS.EMPTY_STATE}
+          />
         </div>
       </div>
-    </div >
+    </div>
   );
 };
 

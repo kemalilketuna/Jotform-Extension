@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { ServiceFactory } from '@/services/DIContainer';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
-import { TimingConfig } from '@/config/TimingConfig';
-import { ComponentStrings } from './ComponentStrings';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
-import { StatusMessage } from './StatusMessage';
 import { AutomationControlButtons } from './AutomationControlButtons';
 
 /**
@@ -21,10 +18,6 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
   className = '',
 }) => {
   const [inputText, setInputText] = useState('');
-  const [status, setStatus] = useState<{
-    message: string;
-    type: 'info' | 'success' | 'error' | 'loading';
-  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,54 +25,16 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
     if (!trimmedText) return;
 
     try {
-      // Check if automation is currently running
-      const componentService =
-        ServiceFactory.getInstance().createComponentService();
-      const isAutomationRunning =
-        componentService.isAutomationCurrentlyRunning();
-
-      if (isAutomationRunning) {
-        setStatus({
-          message: ComponentStrings.USER_MESSAGES.AUTOMATION_RUNNING,
-          type: 'info',
-        });
-      } else {
-        setStatus({
-          message: ComponentStrings.USER_MESSAGES.NEW_SESSION_STARTING,
-          type: 'loading',
-        });
-      }
-
       // Call the onSubmit callback if provided
       onSubmit?.(trimmedText);
 
       setInputText('');
-
-      // Show appropriate success message based on automation status
-      const successMessage = isAutomationRunning
-        ? ComponentStrings.USER_MESSAGES.PROMPT_QUEUED
-        : ComponentStrings.USER_MESSAGES.PROMPT_SUBMITTED;
-
-      setStatus({
-        message: successMessage,
-        type: 'success',
-      });
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setStatus(null);
-      }, TimingConfig.AI_TEXT_FIELD_STATUS_DURATION);
     } catch (error) {
       ServiceFactory.getInstance()
         .createLoggingService()
         .error('Failed to submit prompt', 'AiTextFieldComponent', {
           error: (error as Error).message,
         });
-
-      const errorMessage =
-        ComponentStrings.USER_MESSAGES.PROMPT_SUBMISSION_FAILED;
-
-      setStatus({ message: errorMessage, type: 'error' });
     }
   };
 
@@ -96,10 +51,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
     >
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative flex items-center">
-          <AutomationControlButtons
-            className="mr-2"
-            onStatusChange={(status) => setStatus(status)}
-          />
+          <AutomationControlButtons className="mr-2" />
           <div className="relative flex-1">
             <AiTextInput
               value={inputText}
@@ -109,9 +61,6 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
             <SubmitButton disabled={!inputText.trim()} />
           </div>
         </div>
-        {status && (
-          <StatusMessage message={status.message} type={status.type} />
-        )}
       </form>
     </div>
   );
@@ -120,7 +69,6 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 // Export sub-components
 export { AiTextInput, type AiTextInputProps } from './AiTextInput';
 export { SubmitButton, type SubmitButtonProps } from './SubmitButton';
-export { StatusMessage, type StatusMessageProps } from './StatusMessage';
 export {
   AutomationControlButtons,
   type AutomationControlButtonsProps,

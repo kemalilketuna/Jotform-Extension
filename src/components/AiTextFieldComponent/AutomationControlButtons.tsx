@@ -2,23 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { ServiceFactory } from '@/services/DIContainer';
 import { sendMessage } from '@/services/Messaging/messaging';
 import { ComponentStrings } from './ComponentStrings';
-import { TimingConfig } from '@/config/TimingConfig';
 import { IconPauseFilled } from '@jotforminc/svg-icons';
 import { IconPlayFilled } from '@jotforminc/svg-icons';
 
 export interface AutomationControlButtonsProps {
   className?: string;
-  onStatusChange?: (
-    status: {
-      message: string;
-      type: 'info' | 'success' | 'error' | 'loading';
-    } | null
-  ) => void;
 }
 
 export const AutomationControlButtons: React.FC<
   AutomationControlButtonsProps
-> = ({ className = '', onStatusChange }) => {
+> = ({ className = '' }) => {
   const [isAutomationRunning, setIsAutomationRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasAutomationStarted, setHasAutomationStarted] = useState(false);
@@ -65,69 +58,28 @@ export const AutomationControlButtons: React.FC<
 
     if (isAutomationRunning) {
       // Stop automation
-      onStatusChange?.({
-        message: ComponentStrings.USER_MESSAGES.AUTOMATION_CONTROL.STOPPING,
-        type: 'loading',
-      });
-
       try {
         await sendMessage('stopAutomation', undefined);
         setIsAutomationRunning(false);
-        onStatusChange?.({
-          message:
-            ComponentStrings.USER_MESSAGES.AUTOMATION_CONTROL.STOP_SUCCESS,
-          type: 'success',
-        });
-
-        // Clear success message after delay
-        setTimeout(() => {
-          onStatusChange?.(null);
-        }, TimingConfig.AI_TEXT_FIELD_STATUS_DURATION);
       } catch (error) {
         ServiceFactory.getInstance()
           .createLoggingService()
           .error('Failed to stop automation', 'AutomationControlButtons', {
             error: (error as Error).message,
           });
-
-        onStatusChange?.({
-          message: ComponentStrings.USER_MESSAGES.AUTOMATION_CONTROL.STOP_ERROR,
-          type: 'error',
-        });
       }
     } else {
       // Start automation
-      onStatusChange?.({
-        message: ComponentStrings.USER_MESSAGES.AUTOMATION_CONTROL.STARTING,
-        type: 'loading',
-      });
-
       try {
         await sendMessage('startAutomation', undefined);
         setIsAutomationRunning(true);
         setHasAutomationStarted(true);
-        onStatusChange?.({
-          message:
-            ComponentStrings.USER_MESSAGES.AUTOMATION_CONTROL.START_SUCCESS,
-          type: 'success',
-        });
-
-        // Clear success message after delay
-        setTimeout(() => {
-          onStatusChange?.(null);
-        }, TimingConfig.AI_TEXT_FIELD_STATUS_DURATION);
       } catch (error) {
         ServiceFactory.getInstance()
           .createLoggingService()
           .error('Failed to start automation', 'AutomationControlButtons', {
             error: (error as Error).message,
           });
-
-        onStatusChange?.({
-          message:
-            ComponentStrings.USER_MESSAGES.AUTOMATION_CONTROL.START_ERROR,
-          type: 'error',
-        });
       }
     }
 

@@ -4,11 +4,10 @@ import { ExtensionUtils } from '@/utils/ExtensionUtils';
 import { SingletonManager } from '@/utils/SingletonService';
 import { ErrorHandlingConfig } from '@/utils/ErrorHandlingUtils';
 import { EventBus } from '@/events';
-import { ChatMessage } from '@/components/ChatboxComponent';
 
 import { DOMContainerManager } from './DOMContainerManager';
 import { ReactComponentManager } from './ReactComponentManager';
-import { ChatMessageManager } from './ChatMessageManager';
+import { ChatMessageManager, ChatMessage } from './ChatMessageManager';
 import { AutomationStateManager } from './AutomationStateManager';
 import { EventSubscriptionManager } from './EventSubscriptionManager';
 import { MessageHandler } from './MessageHandler';
@@ -80,7 +79,6 @@ export class ComponentService {
       const containerElement = this.domManager.createContainer();
       this.reactManager.initializeAndRender(
         containerElement,
-        this.chatManager.getMessages(),
         this.handleAutomationStart.bind(this)
       );
       this.eventManager.setupSubscriptions(
@@ -189,10 +187,7 @@ export class ComponentService {
 
       // Re-render components to show new message
       if (this.isInitialized && this.reactManager.isInitialized()) {
-        this.reactManager.rerender(
-          this.chatManager.getMessages(),
-          this.handleAutomationStart.bind(this)
-        );
+        this.reactManager.rerender(this.handleAutomationStart.bind(this));
       }
     } catch (error) {
       const config: ErrorHandlingConfig = {
@@ -215,10 +210,7 @@ export class ComponentService {
 
       // Re-render components to clear messages
       if (this.isInitialized && this.reactManager.isInitialized()) {
-        this.reactManager.rerender(
-          this.chatManager.getMessages(),
-          this.handleAutomationStart.bind(this)
-        );
+        this.reactManager.rerender(this.handleAutomationStart.bind(this));
       }
     } catch (error) {
       const config: ErrorHandlingConfig = {

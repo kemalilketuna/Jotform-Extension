@@ -1,5 +1,4 @@
 import React from 'react';
-import { ComponentStrings } from './ComponentStrings';
 
 export interface MessagingTextProps {
   message?: string;
@@ -25,10 +24,7 @@ export const MessagingText: React.FC<MessagingTextProps> = ({
   };
 
   return (
-    <div
-      className={`leading-6 ${className}`}
-      style={defaultStyle}
-    >
+    <div className={`leading-6 ${className}`} style={defaultStyle}>
       {message}
     </div>
   );

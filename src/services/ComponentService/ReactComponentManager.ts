@@ -3,7 +3,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { LoggingService } from '../LoggingService';
 import { ErrorHandlingConfig } from '@/utils/ErrorHandlingUtils';
 import { AiTextFieldComponent } from '@/components/AiTextFieldComponent';
-import { ChatboxComponent, ChatMessage } from '@/components/ChatboxComponent';
+import { ChatboxComponent } from '@/components/ChatboxComponent';
 
 /**
  * Manages React component rendering and lifecycle
@@ -21,7 +21,6 @@ export class ReactComponentManager {
    */
   initializeAndRender(
     containerElement: HTMLElement,
-    chatMessages: ChatMessage[],
     onSubmit: (text: string) => Promise<void>
   ): void {
     try {
@@ -37,7 +36,6 @@ export class ReactComponentManager {
         React.createElement(React.Fragment, null, [
           React.createElement(ChatboxComponent, {
             key: 'chatbox',
-            messages: chatMessages,
             isVisible: true,
           }),
           React.createElement(AiTextFieldComponent, {
@@ -67,10 +65,7 @@ export class ReactComponentManager {
   /**
    * Re-render components with updated data
    */
-  rerender(
-    chatMessages: ChatMessage[],
-    onSubmit: (text: string) => Promise<void>
-  ): void {
+  rerender(onSubmit: (text: string) => Promise<void>): void {
     try {
       if (!this.reactRoot) {
         throw new Error('React root not initialized');
@@ -81,7 +76,6 @@ export class ReactComponentManager {
         React.createElement(React.Fragment, null, [
           React.createElement(ChatboxComponent, {
             key: 'chatbox',
-            messages: chatMessages,
             isVisible: true,
           }),
           React.createElement(AiTextFieldComponent, {

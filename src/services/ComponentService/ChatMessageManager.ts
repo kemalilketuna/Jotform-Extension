@@ -1,6 +1,14 @@
 import { LoggingService } from '../LoggingService';
 import { ErrorHandlingConfig } from '@/utils/ErrorHandlingUtils';
-import { ChatMessage } from '@/components/ChatboxComponent';
+
+/**
+ * Interface for chat messages
+ */
+export interface ChatMessage {
+  id: string;
+  message: string;
+  timestamp: Date;
+}
 
 /**
  * Manages chat message state and operations
