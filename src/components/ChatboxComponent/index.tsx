@@ -1,6 +1,7 @@
 import React from 'react';
 import { ComponentStrings } from './ComponentStrings';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
+import { MessagingText } from './MessagingText';
 
 export interface ChatboxComponentProps {
   isVisible?: boolean;
@@ -41,12 +42,7 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
           <div
             className={`${ComponentStrings.CSS_CLASSES.EMPTY_STATE} text-center py-8`}
           >
-            <div
-              className="z-[2] text-base leading-6 tracking-tight-custom font-inter"
-              style={{ color: '#01105c' }}
-            >
-              {ComponentStrings.CHATBOX_LABELS.EMPTY_STATE}
-            </div>
+            <MessagingText message={ComponentStrings.CHATBOX_LABELS.EMPTY_STATE} />
           </div>
         </div>
       </div>
@@ -54,5 +50,6 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
   );
 };
 
-// Export strings
+// Export strings and components
 export { ComponentStrings } from './ComponentStrings';
+export { MessagingText } from './MessagingText';
