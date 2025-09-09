@@ -19,12 +19,14 @@ export const MessagingText: React.FC<MessagingTextProps> = ({
     fontSize: '16px',
     lineHeight: '24px',
     letterSpacing: '-0.176px',
-    fontFamily: 'Inter',
     ...style,
   };
 
   return (
-    <div className={`leading-6 ${className}`} style={defaultStyle}>
+    <div 
+      className={`leading-6 font-sans ${className}`} 
+      style={defaultStyle}
+    >
       {message}
     </div>
   );
