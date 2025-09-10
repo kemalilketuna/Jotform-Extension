@@ -113,7 +113,7 @@ export class AutomationLifecycleManager {
       return;
     }
 
-    this.logger.warn(
+    this.logger.debug(
       'Performing error teardown of automation environment',
       'AutomationLifecycleManager'
     );

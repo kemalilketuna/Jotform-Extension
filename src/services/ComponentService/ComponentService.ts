@@ -280,8 +280,8 @@ export class ComponentService {
     try {
       this.logger.info('Stopping automation', 'ComponentService');
       await browser.runtime.sendMessage({
-        type: 'stopAutomation',
-        payload: {},
+        type: 'STOP_AUTOMATION',
+        payload: { reason: 'User requested stop' },
       });
       // Use handleAutomationStopped instead of setAutomationRunning directly
       this.stateManager.handleAutomationStopped('user_request');

@@ -196,6 +196,9 @@ export class AutomationEngine {
     if (message.type === 'START_AUTOMATION') {
       this.logger.info('Routing to handleStartAutomation', 'AutomationEngine');
       await this.handleStartAutomation(message as StartAutomationMessage);
+    } else if (message.type === 'STOP_AUTOMATION') {
+      this.logger.info('Routing to stopAutomation', 'AutomationEngine');
+      await this.stopAutomation('user_request');
     } else {
       await this.messageHandler.processMessage(
         message,
@@ -433,9 +436,14 @@ export class AutomationEngine {
    * Stop the currently running automation
    * This will cause the automation loop to exit gracefully
    */
-  async stopAutomation(reason: 'user_request' | 'error' | 'completed' = 'user_request'): Promise<void> {
+  async stopAutomation(
+    reason: 'user_request' | 'error' | 'completed' = 'user_request'
+  ): Promise<void> {
     if (!this.isExecuting) {
-      this.logger.info('No automation currently running to stop', 'AutomationEngine');
+      this.logger.info(
+        'No automation currently running to stop',
+        'AutomationEngine'
+      );
       return;
     }
 

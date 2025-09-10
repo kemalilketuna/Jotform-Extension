@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PodoLogo from '../PodoLogo';
 import { AutomationDeletionButton } from './AutiomationDeletionButton';
-import { EventBus } from '@/events/EventBus';
 import {
   EventTypes,
   AutomationStartedEvent,
@@ -57,7 +56,7 @@ export const AutomationController: React.FC = () => {
 
       // Send message to background script to stop automation
       await browser.runtime.sendMessage({
-        type: 'stopAutomation',
+        type: 'STOP_AUTOMATION',
         payload: {},
       });
     } catch (error) {

@@ -131,7 +131,10 @@ export class ExecutionController {
     let stepCount = 0;
     let lastTurnOutcome: ExecutedAction[] = [];
 
-    while (stepCount < this.maxSteps && this.automationEngine.shouldContinueExecution()) {
+    while (
+      stepCount < this.maxSteps &&
+      this.automationEngine.shouldContinueExecution()
+    ) {
       this.logger.info(
         `Starting automation step ${stepCount + 1}`,
         'ExecutionController'

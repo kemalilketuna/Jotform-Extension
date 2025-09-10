@@ -13,6 +13,7 @@ import {
   InitSessionResponseMessage,
   StartAutomationMessage,
   StartAutomationResponseMessage,
+  StopAutomationMessage,
 } from '@/services/AutomationEngine/MessageTypes';
 import { AutomationCoordinator } from './AutomationCoordinator.js';
 import { browser } from 'wxt/browser';
@@ -104,6 +105,13 @@ export class MessageHandler {
         case 'START_AUTOMATION':
           await this.handleStartAutomation(
             message as StartAutomationMessage,
+            sendResponse
+          );
+          break;
+
+        case 'STOP_AUTOMATION':
+          await this.handleStopAutomation(
+            message as StopAutomationMessage,
             sendResponse
           );
           break;
@@ -341,6 +349,38 @@ export class MessageHandler {
         },
       };
       sendResponse(response);
+    }
+  }
+
+  private async handleStopAutomation(
+    message: StopAutomationMessage,
+    _sendResponse: (response?: AutomationMessage) => void
+  ): Promise<void> {
+    try {
+      this.logger.info(
+        'Background handling STOP_AUTOMATION request',
+        'MessageHandler'
+      );
+
+      // Get the active tab to send the stop message to content script
+      const activeTabId = await ExtensionUtils.getActiveTabId();
+      if (activeTabId !== 0) {
+        // Forward the STOP_AUTOMATION message to the content script
+        await browser.tabs.sendMessage(activeTabId, message);
+      }
+
+      // Also handle it in the coordinator
+      this.coordinator.handleAutomationError(
+        message.payload.reason || 'User requested stop',
+        undefined
+      );
+
+      this.logger.info('Automation stopped successfully', 'MessageHandler');
+    } catch (error) {
+      this.logger.error(
+        `Failed to stop automation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'MessageHandler'
+      );
     }
   }
 }

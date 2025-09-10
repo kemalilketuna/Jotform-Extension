@@ -197,17 +197,17 @@ export class CursorAnimationManager {
    */
   cancel(): void {
     this.isCancelled = true;
-    
+
     if (this.currentAnimationFrame) {
       cancelAnimationFrame(this.currentAnimationFrame);
       this.currentAnimationFrame = null;
     }
-    
+
     if (this.animationTimeout) {
       clearTimeout(this.animationTimeout);
       this.animationTimeout = null;
     }
-    
+
     this.isAnimating = false;
     this.logger.debug('All animations cancelled', 'CursorAnimationManager');
   }
