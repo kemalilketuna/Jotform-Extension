@@ -10,12 +10,9 @@ export interface AutomationDeletionButtonProps {
   disabled?: boolean;
 }
 
-export const AutomationDeletionButton: React.FC<AutomationDeletionButtonProps> = ({
-  className = '',
-  size = 'md',
-  onClick,
-  disabled = false,
-}) => {
+export const AutomationDeletionButton: React.FC<
+  AutomationDeletionButtonProps
+> = ({ className = '', size = 'md', onClick, disabled = false }) => {
   const getSizeClass = () => {
     switch (size) {
       case 'sm':
@@ -57,9 +54,9 @@ export const AutomationDeletionButton: React.FC<AutomationDeletionButtonProps> =
       type="button"
       aria-label="Delete automation"
     >
-      <IconTrashFilled 
-        width={getIconSize()} 
-        height={getIconSize()} 
+      <IconTrashFilled
+        width={getIconSize()}
+        height={getIconSize()}
         className="text-white"
       />
     </button>
@@ -67,4 +64,3 @@ export const AutomationDeletionButton: React.FC<AutomationDeletionButtonProps> =
 };
 
 export default AutomationDeletionButton;
-
