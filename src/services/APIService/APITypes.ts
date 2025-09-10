@@ -23,6 +23,7 @@ export interface Action {
   type: 'CLICK' | 'TYPE' | 'ASK_USER' | 'FINISH' | 'FAIL';
   targetElementIndex?: number;
   value?: string;
+  typeValue?: string; // Alternative property name for TYPE actions
   question?: string;
   message?: string;
   explanation: string;

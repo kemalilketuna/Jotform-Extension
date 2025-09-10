@@ -21,7 +21,9 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
         );
       }
 
-      if (!action.value) {
+      // Check for both 'value' and 'typeValue' properties for compatibility
+      const typeValue = action.value || (action as any).typeValue;
+      if (!typeValue) {
         throw new AutomationError('Value is required for TYPE action');
       }
 
@@ -32,14 +34,17 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
         );
       }
 
+      // Create a normalized action with the correct value property
+      const normalizedAction = { ...action, value: typeValue };
+      
       await this.elementActionExecutor.executeActionWithElementIndex(
-        action,
+        normalizedAction,
         visibleElements,
         stepCount
       );
 
       this.logger.info(
-        `Successfully typed "${action.value}" into element at index ${action.targetElementIndex}`,
+        `Successfully typed "${typeValue}" into element at index ${action.targetElementIndex}`,
         'TypeElementActionStrategy'
       );
 
