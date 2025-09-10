@@ -190,8 +190,8 @@
 
 .chatboxToggleButton {
   position: fixed;
-  bottom: 240px;
-  right: 16px;
+  bottom: calc(84px + 8px);
+  right: 20px;
   z-index: 999999;
   width: 24px;
   height: 24px;
@@ -206,8 +206,17 @@
   box-shadow:
     0 16px 24px 0 rgba(5, 53, 85, 0.06),
     0 2px 8px 0 rgba(5, 53, 85, 0.01);
-  transition: all 0.3s ease;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: auto;
+}
+
+.chatboxToggleButton.chatboxExpanded {
+  bottom: calc(80px + 162px);
+}
+
+.chatboxToggleButton.chatboxCollapsed {
+  bottom: calc(68px);
+  right: 3px;
 }
 
 .chatboxToggleButton:hover {
@@ -223,7 +232,7 @@
 }
 
 .chatboxSlideContainer {
-  transition: all 0.3s ease-in-out;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: bottom;
   overflow: hidden;
 }
@@ -442,14 +451,6 @@
 /* Utility Classes */
 .flexShrink0 {
   flex-shrink: 0;
-}
-
-.hidden {
-  display: none;
-}
-
-.visible {
-  display: block;
 }
 
 /* Reset any potential page interference */

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IconChevronDown, IconChevronUp } from '@jotforminc/svg-icons';
+import { IconXmarkSm, IconAiColor } from '@jotforminc/svg-icons';
 import { ComponentStrings } from './ComponentStrings';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { MessagingText } from './MessagingText';
@@ -34,7 +34,7 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
     <>
       {/* Toggle Button */}
       <button
-        className={`${styles.chatboxToggleButton} ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS}`}
+        className={`${styles.chatboxToggleButton} ${isExpanded ? styles.chatboxExpanded : styles.chatboxCollapsed} ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS}`}
         onClick={handleToggle}
         aria-label={ComponentStrings.ACCESSIBILITY.TOGGLE_BUTTON}
         title={
@@ -43,7 +43,7 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
             : ComponentStrings.CHATBOX_LABELS.TOGGLE_SHOW
         }
       >
-        {isExpanded ? <IconChevronDown /> : <IconChevronUp />}
+        {isExpanded ? <IconXmarkSm /> : <IconAiColor />}
       </button>
 
       {/* Chatbox Container */}

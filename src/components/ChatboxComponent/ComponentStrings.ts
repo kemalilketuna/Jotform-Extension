@@ -28,7 +28,7 @@ export class ComponentStrings {
   static readonly ANIMATION_DURATIONS = {
     MESSAGE_APPEAR: 300,
     SCROLL_SMOOTH: 200,
-    SLIDE_TOGGLE: 300,
+    SLIDE_TOGGLE: 800,
   } as const;
 }
 
