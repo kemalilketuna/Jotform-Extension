@@ -49,6 +49,7 @@ export const AutomationDeletionButton: React.FC<
         border-none
         cursor-pointer
       `}
+      style={{ border: 'none' }}
       onClick={onClick}
       disabled={disabled}
       type="button"
