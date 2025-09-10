@@ -18,7 +18,7 @@ export class CursorAnimationManager {
     private readonly domManager: CursorDOMManager,
     private readonly audioService: AudioService,
     private readonly logger: LoggingService
-  ) {}
+  ) { }
 
   /**
    * Animate cursor movement to target position
