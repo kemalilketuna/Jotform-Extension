@@ -51,7 +51,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
     >
       <form onSubmit={handleSubmit} className="relative">
         <div
-          className="bg-white shadow-lg overflow-hidden"
+          className="bg-white overflow-hidden"
           style={{
             border: '1px solid rgba(0, 0, 0, .08)',
             borderRadius: '16px 16px 4px',
