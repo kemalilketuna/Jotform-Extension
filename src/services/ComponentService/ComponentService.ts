@@ -130,7 +130,10 @@ export class ComponentService {
         currentSessionId,
       });
 
-      await this.messageHandler.sendStartAutomationMessage(objective, continueSession);
+      await this.messageHandler.sendStartAutomationMessage(
+        objective,
+        continueSession
+      );
     } catch (error) {
       const config: ErrorHandlingConfig = {
         context: 'ComponentService.handleAutomationStart',

@@ -119,7 +119,10 @@ export class MessageHandler {
   /**
    * Send START_AUTOMATION message to background script
    */
-  async sendStartAutomationMessage(objective: string, continueSession: boolean = false): Promise<void> {
+  async sendStartAutomationMessage(
+    objective: string,
+    continueSession: boolean = false
+  ): Promise<void> {
     try {
       this.logger.info('Sending START_AUTOMATION message', 'MessageHandler', {
         objective,

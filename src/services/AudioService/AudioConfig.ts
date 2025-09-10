@@ -10,9 +10,9 @@ export class AudioPaths {
  * Audio configuration constants
  */
 export class AudioConfig {
-  static readonly DEFAULT_VOLUME = 0.6 as const;
-  static readonly KEYSTROKE_VOLUME = 0.3 as const; // Reduced to minimize noise from overlapping sounds
-  static readonly KEYSTROKE_VOLUME_MIN = 0.2 as const; // Minimum volume for variation
-  static readonly KEYSTROKE_VOLUME_MAX = 0.4 as const; // Maximum volume for variation
+  static readonly DEFAULT_VOLUME = 1.0 as const;
+  static readonly KEYSTROKE_VOLUME = 0.6 as const; // Increased for better audibility
+  static readonly KEYSTROKE_VOLUME_MIN = 0.5 as const; // Minimum volume for variation
+  static readonly KEYSTROKE_VOLUME_MAX = 0.8 as const; // Maximum volume for variation
   static readonly PRELOAD_POLICY = 'metadata' as const; // Changed from 'auto' to prevent corruption
 }

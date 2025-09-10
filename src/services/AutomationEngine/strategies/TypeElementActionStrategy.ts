@@ -3,12 +3,29 @@ import { BaseAutomationActionStrategy } from './AutomationActionStrategy';
 import { AutomationError } from '../AutomationErrors';
 import { TypingService } from '@/services/TypingService';
 import { ServiceFactory } from '@/services/DIContainer';
+import { VisualCursorService } from '@/services/VisualCursorService';
+import { TimingConfig } from '@/config';
+import {
+  ErrorHandlingUtils,
+  ErrorHandlingConfig,
+} from '@/utils/ErrorHandlingUtils';
+import { LoggingService } from '@/services/LoggingService';
+import { ElementActionExecutor } from '../ElementActionExecutor';
 
 /**
  * Strategy for handling TYPE actions on elements
- * Uses TypingService for human-like typing behavior instead of ElementActionExecutor
+ * First clicks the element to ensure focus, then uses TypingService for human-like typing behavior
  */
 export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
+  private readonly visualCursorService: VisualCursorService;
+
+  constructor(
+    logger: LoggingService,
+    elementActionExecutor: ElementActionExecutor
+  ) {
+    super(logger, elementActionExecutor);
+    this.visualCursorService = VisualCursorService.getInstance(logger);
+  }
   /**
    * Execute TYPE action
    */
@@ -39,11 +56,19 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
       }
 
       // Validate element is typeable
-      if (!(targetElement instanceof HTMLInputElement || targetElement instanceof HTMLTextAreaElement)) {
+      if (
+        !(
+          targetElement instanceof HTMLInputElement ||
+          targetElement instanceof HTMLTextAreaElement
+        )
+      ) {
         throw new AutomationError(
           'Target element is not a valid input or textarea element'
         );
       }
+
+      // First click the element to ensure it has focus
+      await this.clickElementBeforeTyping(targetElement, stepCount);
 
       // Get TypingService instance
       const typingService = TypingService.getInstance(
@@ -58,7 +83,7 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
         },
         onComplete: () => {
           this.logger.debug('Typing completed');
-        }
+        },
       });
 
       this.logger.info(
@@ -92,6 +117,61 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
         shouldContinue: false, // Stop automation on failure
       };
     }
+  }
+
+  /**
+   * Click element before typing to ensure proper focus
+   */
+  private async clickElementBeforeTyping(
+    element: HTMLElement,
+    stepIndex: number
+  ): Promise<void> {
+    this.logger.info(
+      `Step ${stepIndex}: Clicking element before typing to ensure focus on ${element.tagName}`,
+      'TypeElementActionStrategy'
+    );
+
+    const visualCursorConfig: ErrorHandlingConfig = {
+      context: 'TypeElementActionStrategy',
+      operation: 'clickBeforeType',
+      logLevel: 'warn',
+    };
+
+    const visualClickSuccess = await ErrorHandlingUtils.safeExecute(
+      async () => {
+        // Initialize visual cursor if not already done
+        await this.visualCursorService.initialize();
+
+        // Show cursor and move to element
+        this.visualCursorService.show();
+        await this.visualCursorService.moveToElement(element);
+
+        // Perform visual click animation
+        await this.visualCursorService.performClick();
+
+        // Actually click the element
+        element.click();
+
+        // Small delay to show the click effect
+        await new Promise((resolve) =>
+          setTimeout(resolve, TimingConfig.CLICK_EFFECT_DELAY)
+        );
+        return true;
+      },
+      false,
+      visualCursorConfig,
+      this.logger
+    );
+
+    if (!visualClickSuccess) {
+      // Fallback to direct click if visual cursor fails
+      element.click();
+    }
+
+    this.logger.info(
+      `Click before typing completed on: ${element.tagName}`,
+      'TypeElementActionStrategy'
+    );
   }
 
   /**

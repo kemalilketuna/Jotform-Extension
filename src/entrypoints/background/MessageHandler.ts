@@ -311,18 +311,21 @@ export class MessageHandler {
       // Check if we should continue existing session or create new one
       let sessionId: string;
       if (message.payload.continueSession) {
-        const continueResult = await this.coordinator.continueSession(message.payload.objective);
-        sessionId = continueResult || await this.coordinator.initializeSession(message.payload.objective);
+        const continueResult = await this.coordinator.continueSession(
+          message.payload.objective
+        );
+        sessionId =
+          continueResult ||
+          (await this.coordinator.initializeSession(message.payload.objective));
         this.logger.info(
           `Session handling result: ${sessionId}`,
           'MessageHandler'
         );
       } else {
-        sessionId = await this.coordinator.initializeSession(message.payload.objective);
-        this.logger.info(
-          `Created new session: ${sessionId}`,
-          'MessageHandler'
+        sessionId = await this.coordinator.initializeSession(
+          message.payload.objective
         );
+        this.logger.info(`Created new session: ${sessionId}`, 'MessageHandler');
       }
 
       // Get the active tab to send the message to content script
