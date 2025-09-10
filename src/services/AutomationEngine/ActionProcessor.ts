@@ -164,7 +164,7 @@ export class ActionProcessor {
       }
 
       // Add small delay between actions
-      await this.wait(500);
+      await this.wait(1500);
     }
 
     return { shouldContinue, outcomes, userResponse };
