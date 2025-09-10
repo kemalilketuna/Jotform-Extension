@@ -224,7 +224,7 @@ async function initializeContentScript(): Promise<void> {
 
 // WXT content script definition
 export default defineContentScript({
-  matches: ['*://*.jotform.com/*'],
+  matches: ['*://*.jotform.com/*', '*://*.sahibinden.com/*', '*://*.arabam.com/*'],
   runAt: 'document_end',
   allFrames: false,
   main() {
