@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from '@/styles/extension.module.css';
 
 export interface MessagingTextProps {
   message?: string;
@@ -14,15 +15,8 @@ export const MessagingText: React.FC<MessagingTextProps> = ({
   className = '',
   style = {},
 }) => {
-  const defaultStyle = {
-    color: '#01105c',
-    letterSpacing: '-0.176px',
-    fontFamily: 'Inter',
-    ...style,
-  };
-
   return (
-    <span className={`text-base leading-6 ${className}`} style={defaultStyle}>
+    <span className={`${styles.messagingText} ${className}`} style={style}>
       {message}
     </span>
   );

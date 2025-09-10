@@ -1,0 +1,411 @@
+/* Extension Component Styles - Isolated from page styles
+ * 
+ * This CSS module provides complete style isolation for the browser extension
+ * components to prevent inheritance from host page styles. All extension
+ * components use the 'extensionComponent' base class which resets styles
+ * and establishes a clean styling foundation.
+ * 
+ * Key features:
+ * - Complete style isolation using 'all: initial'
+ * - Consistent typography with Inter font family
+ * - Scoped class names prevent conflicts
+ * - No dependency on external CSS frameworks
+ */
+
+/* Base extension component container */
+.extensionComponent {
+  all: initial;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* AI Text Field Component */
+.aiTextField {
+  composes: extensionComponent;
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 999999;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+  width: 324px;
+}
+
+.aiTextFieldForm {
+  position: relative;
+}
+
+.aiTextFieldContainer {
+  background-color: white;
+  overflow: hidden;
+  height: 56px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px 16px 4px 16px;
+}
+
+.aiTextFieldInner {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-left: 6px;
+  padding-right: 12px;
+  gap: 12px;
+}
+
+/* AI Text Input */
+.aiTextInput {
+  composes: extensionComponent;
+  width: 100%;
+  background-color: transparent;
+  color: #374151;
+  border: none;
+  outline: none;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.aiTextInput::placeholder {
+  color: #9ca3af;
+}
+
+/* Submit Button */
+.submitButton {
+  composes: extensionComponent;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background-color: #091551;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.submitButton:hover {
+  opacity: 0.8;
+}
+
+.submitButton:disabled {
+  background-color: #9ca3af !important;
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+.submitButtonIcon {
+  fill: white;
+  width: 16px;
+  height: 16px;
+}
+
+/* Automation Control Buttons */
+.automationControls {
+  composes: extensionComponent;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.automationButton {
+  composes: extensionComponent;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.automationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.automationButtonStop {
+  color: #dc2626;
+}
+
+.automationButtonStop:hover:not(:disabled) {
+  color: #b91c1c;
+  background-color: #fef2f2;
+}
+
+.automationButtonStart {
+  color: #16a34a;
+}
+
+.automationButtonStart:hover:not(:disabled) {
+  color: #15803d;
+  background-color: #f0fdf4;
+}
+
+.automationButtonIcon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Chatbox Component */
+.chatbox {
+  composes: extensionComponent;
+  position: fixed;
+  bottom: 84px;
+  right: 16px;
+  z-index: 999998;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+}
+
+.chatboxContainer {
+  background-color: white;
+  border: 1px solid #f3f3f3;
+  overflow: hidden;
+  width: 324px;
+  padding: 16px;
+  min-height: 120px;
+  max-height: 300px;
+  border-radius: 12px;
+  box-shadow:
+    0 16px 24px 0 rgba(5, 53, 85, 0.06),
+    0 2px 8px 0 rgba(5, 53, 85, 0.01);
+}
+
+.chatboxEmptyState {
+  text-align: center;
+}
+
+.messagingText {
+  composes: extensionComponent;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #01105c;
+  letter-spacing: -0.176px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Status Message */
+.statusMessage {
+  composes: extensionComponent;
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.statusMessageText {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Logo Components */
+.logoContainer {
+  composes: extensionComponent;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.logoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.logoSm {
+  width: 24px;
+  height: 24px;
+}
+
+.logoMd {
+  width: 44px;
+  height: 44px;
+}
+
+.logoLg {
+  width: 64px;
+  height: 64px;
+}
+
+/* Popup Components */
+.popupHeader {
+  composes: extensionComponent;
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.popupHeaderLogo {
+  height: 40px;
+  width: 40px;
+  margin-right: 16px;
+  border-radius: 8px;
+}
+
+.popupHeaderContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.popupHeaderTitle {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+.popupHeaderSubtitle {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: normal;
+  color: white;
+}
+
+.popupFooter {
+  composes: extensionComponent;
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+}
+
+.popupFooterText {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Connection Status */
+.connectionStatus {
+  composes: extensionComponent;
+  margin-bottom: 16px;
+}
+
+.connectionStatusIndicator {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.connectionStatusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.connectionStatusConnecting {
+  background-color: #eab308;
+}
+
+.connectionStatusOpen {
+  background-color: #22c55e;
+}
+
+.connectionStatusClosing {
+  background-color: #f97316;
+}
+
+.connectionStatusClosed {
+  background-color: #ef4444;
+}
+
+.connectionStatusDefault {
+  background-color: #6b7280;
+}
+
+.connectionStatusText {
+  color: white;
+  font-size: 14px;
+  margin: 0;
+}
+
+.connectionStatusError {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.connectionStatusErrorText {
+  color: #fca5a5;
+  font-size: 12px;
+  margin: 0;
+}
+
+.connectionStatusReconnect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.connectionStatusAttempts {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+}
+
+.connectionStatusButton {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.connectionStatusButton:hover {
+  background-color: #2563eb;
+}
+
+.connectionStatusButton:disabled {
+  background-color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Utility Classes */
+.flexShrink0 {
+  flex-shrink: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+.visible {
+  display: block;
+}
+
+/* Reset any potential page interference */
+.extensionComponent * {
+  box-sizing: border-box;
+}
+
+.extensionComponent *:before,
+.extensionComponent *:after {
+  box-sizing: border-box;
+}

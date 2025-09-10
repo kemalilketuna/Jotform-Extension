@@ -75,7 +75,8 @@ export class AutomationEngine {
       storageService,
       this.messageHandler,
       elementActionExecutor,
-      this.lifecycleManager
+      this.lifecycleManager,
+      this
     );
     this.sequenceOrchestrator = new SequenceAutomationOrchestrator(
       this.logger,
@@ -195,6 +196,9 @@ export class AutomationEngine {
     if (message.type === 'START_AUTOMATION') {
       this.logger.info('Routing to handleStartAutomation', 'AutomationEngine');
       await this.handleStartAutomation(message as StartAutomationMessage);
+    } else if (message.type === 'STOP_AUTOMATION') {
+      this.logger.info('Routing to stopAutomation', 'AutomationEngine');
+      await this.stopAutomation('user_request');
     } else {
       await this.messageHandler.processMessage(
         message,
@@ -300,8 +304,8 @@ export class AutomationEngine {
     );
 
     // Use sessionId from message payload if available
-    const sessionId = message.payload.sessionId;
-    if (sessionId) {
+    const sessionId = message.payload.sessionId || `session_${Date.now()}`;
+    if (message.payload.sessionId) {
       this.logger.info(
         `Using session ID from background script: ${sessionId}`,
         'AutomationEngine'
@@ -319,6 +323,15 @@ export class AutomationEngine {
     try {
       const result = await ErrorHandlingUtils.executeWithRetry(
         async () => {
+          // Emit automation started event
+          await this.eventBus.emit({
+            type: EventTypes.AUTOMATION_STARTED,
+            timestamp: Date.now(),
+            sessionId,
+            objective: message.payload.objective,
+            source: 'AutomationEngine',
+          });
+
           this.logger.info(
             `Calling stepByStepOrchestrator.execute with objective: ${message.payload.objective}`,
             'AutomationEngine'
@@ -327,6 +340,15 @@ export class AutomationEngine {
             message.payload.objective,
             sessionId
           );
+
+          // Emit automation completed event
+          await this.eventBus.emit({
+            type: EventTypes.AUTOMATION_STOPPED,
+            timestamp: Date.now(),
+            sessionId,
+            reason: 'completed',
+            source: 'AutomationEngine',
+          });
         },
         config,
         this.logger
@@ -334,13 +356,21 @@ export class AutomationEngine {
 
       if (!result.success) {
         // Emit automation error event
-        const sessionId = `session_${Date.now()}`;
         await this.eventBus.emit({
           type: EventTypes.AUTOMATION_ERROR,
           timestamp: Date.now(),
           sessionId,
           error: result.error!,
           context: { objective: message.payload.objective },
+          source: 'AutomationEngine',
+        });
+
+        // Emit automation stopped event for error case
+        await this.eventBus.emit({
+          type: EventTypes.AUTOMATION_STOPPED,
+          timestamp: Date.now(),
+          sessionId,
+          reason: 'error',
           source: 'AutomationEngine',
         });
 
@@ -365,6 +395,16 @@ export class AutomationEngine {
         );
         throw result.error!;
       }
+    } catch (error) {
+      // Emit automation stopped event for unexpected errors
+      await this.eventBus.emit({
+        type: EventTypes.AUTOMATION_STOPPED,
+        timestamp: Date.now(),
+        sessionId,
+        reason: 'error',
+        source: 'AutomationEngine',
+      });
+      throw error;
     } finally {
       this.isExecuting = false;
     }
@@ -382,5 +422,44 @@ export class AutomationEngine {
    */
   get isRunning(): boolean {
     return this.isExecuting;
+  }
+
+  /**
+   * Check if automation should continue executing
+   * Used by ExecutionController to check for cancellation
+   */
+  shouldContinueExecution(): boolean {
+    return this.isExecuting;
+  }
+
+  /**
+   * Stop the currently running automation
+   * This will cause the automation loop to exit gracefully
+   */
+  async stopAutomation(
+    reason: 'user_request' | 'error' | 'completed' = 'user_request'
+  ): Promise<void> {
+    if (!this.isExecuting) {
+      this.logger.info(
+        'No automation currently running to stop',
+        'AutomationEngine'
+      );
+      return;
+    }
+
+    this.logger.info(`Stopping automation: ${reason}`, 'AutomationEngine');
+    this.isExecuting = false;
+
+    // Emit automation stopped event
+    await this.eventBus.emit({
+      type: EventTypes.AUTOMATION_STOPPED,
+      timestamp: Date.now(),
+      sessionId: 'current', // This should be the actual session ID
+      reason,
+      source: 'AutomationEngine',
+    });
+
+    // Trigger lifecycle teardown
+    await this.lifecycleManager.teardownOnError();
   }
 }

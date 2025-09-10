@@ -75,14 +75,15 @@ export class VisualCursorService {
       }
     );
 
-    // Listen for automation stop to hide cursor
+    // Listen for automation stop to hide cursor and cancel animations
     this.eventBus.on<AutomationStoppedEvent>(
       EventTypes.AUTOMATION_STOPPED,
       (event) => {
         this.logger.info(
-          `Automation stopped for session ${event.sessionId}, hiding cursor`,
+          `Automation stopped for session ${event.sessionId}, cancelling animations and hiding cursor`,
           'VisualCursorService'
         );
+        this.animationManager.cancel();
         this.hide();
       }
     );

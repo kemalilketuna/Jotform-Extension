@@ -18,7 +18,8 @@ export type AutomationMessageType =
   | 'INIT_SESSION'
   | 'INIT_SESSION_RESPONSE'
   | 'START_AUTOMATION'
-  | 'START_AUTOMATION_RESPONSE';
+  | 'START_AUTOMATION_RESPONSE'
+  | 'STOP_AUTOMATION';
 
 export interface BaseAutomationMessage {
   type: AutomationMessageType;
@@ -104,6 +105,11 @@ export interface StartAutomationResponseMessage extends BaseAutomationMessage {
   payload: { sessionId: string; success: boolean; error?: string };
 }
 
+export interface StopAutomationMessage extends BaseAutomationMessage {
+  type: 'STOP_AUTOMATION';
+  payload: { reason?: string };
+}
+
 export type AutomationMessage =
   | ExecuteSequenceMessage
   | SequenceCompleteMessage
@@ -119,4 +125,5 @@ export type AutomationMessage =
   | InitSessionMessage
   | InitSessionResponseMessage
   | StartAutomationMessage
-  | StartAutomationResponseMessage;
+  | StartAutomationResponseMessage
+  | StopAutomationMessage;

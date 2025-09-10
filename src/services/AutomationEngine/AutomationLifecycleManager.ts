@@ -84,11 +84,9 @@ export class AutomationLifecycleManager {
       // Disable user interaction blocking
       this.userInteractionBlocker.disableBlocking();
 
-      // Hide cursor
+      // Hide and destroy cursor immediately
       this.visualCursor.hide();
-      setTimeout(() => {
-        this.visualCursor.destroy();
-      }, AutomationConfig.DELAYS.AUTOMATION_CLEANUP);
+      this.visualCursor.destroy();
 
       this.isSetup = false;
       this.logger.info(
@@ -113,7 +111,7 @@ export class AutomationLifecycleManager {
       return;
     }
 
-    this.logger.warn(
+    this.logger.debug(
       'Performing error teardown of automation environment',
       'AutomationLifecycleManager'
     );
@@ -137,12 +135,10 @@ export class AutomationLifecycleManager {
       }
     }
 
-    // Hide cursor
+    // Hide and destroy cursor immediately
     try {
       this.visualCursor.hide();
-      setTimeout(() => {
-        this.visualCursor.destroy();
-      }, AutomationConfig.DELAYS.AUTOMATION_CLEANUP);
+      this.visualCursor.destroy();
     } catch (error) {
       this.logger.warn(
         `Failed to cleanup visual cursor: ${error instanceof Error ? error.message : 'Unknown error'}`,

@@ -21,13 +21,7 @@ export default defineConfig({
       default_title: 'AI-Form - Smart Form Assistant',
     },
     permissions: ['tabs', 'activeTab', 'scripting', 'storage'],
-    host_permissions: [
-      'http://*/*',
-      'https://*/*',
-      '*://*.jotform.com/*',
-      'http://localhost/*',
-      '<all_urls>',
-    ],
+    host_permissions: ['<all_urls>'],
     content_security_policy: {
       extension_pages:
         "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",

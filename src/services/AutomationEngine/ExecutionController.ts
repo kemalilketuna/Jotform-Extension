@@ -22,6 +22,7 @@ export class ExecutionController {
   private readonly sessionCoordinator: SessionCoordinator;
   private readonly domAnalyzer: DOMAnalyzer;
   private readonly actionProcessor: ActionProcessor;
+  private readonly automationEngine: { shouldContinueExecution(): boolean };
   private readonly maxSteps = AutomationConfig.LIMITS.MAX_STEPS; // Safety limit
 
   constructor(
@@ -30,7 +31,8 @@ export class ExecutionController {
     messageHandler: MessageHandler,
     sessionCoordinator: SessionCoordinator,
     domAnalyzer: DOMAnalyzer,
-    actionProcessor: ActionProcessor
+    actionProcessor: ActionProcessor,
+    automationEngine: { shouldContinueExecution(): boolean }
   ) {
     this.logger = logger;
     this.lifecycleManager = lifecycleManager;
@@ -38,6 +40,7 @@ export class ExecutionController {
     this.sessionCoordinator = sessionCoordinator;
     this.domAnalyzer = domAnalyzer;
     this.actionProcessor = actionProcessor;
+    this.automationEngine = automationEngine;
   }
 
   /**
@@ -128,11 +131,23 @@ export class ExecutionController {
     let stepCount = 0;
     let lastTurnOutcome: ExecutedAction[] = [];
 
-    while (stepCount < this.maxSteps) {
+    while (
+      stepCount < this.maxSteps &&
+      this.automationEngine.shouldContinueExecution()
+    ) {
       this.logger.info(
         `Starting automation step ${stepCount + 1}`,
         'ExecutionController'
       );
+
+      // Check for cancellation before each major operation
+      if (!this.automationEngine.shouldContinueExecution()) {
+        this.logger.info(
+          'Automation cancelled by user request',
+          'ExecutionController'
+        );
+        break;
+      }
 
       // Wait for DOM to be ready
       await this.domAnalyzer.waitForDOMReady();

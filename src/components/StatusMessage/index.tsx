@@ -1,20 +1,25 @@
 import React from 'react';
+import styles from '@/styles/extension.module.css';
 
 interface StatusMessageProps {
   status: string;
+  className?: string;
 }
 
 /**
  * Component for displaying current operation status
  */
-export const StatusMessage: React.FC<StatusMessageProps> = ({ status }) => {
+export const StatusMessage: React.FC<StatusMessageProps> = ({
+  status,
+  className = '',
+}) => {
   if (!status) {
     return null;
   }
 
   return (
-    <div className="mb-4 p-3 bg-white/10 rounded-lg border border-white/20">
-      <p className="m-0 text-sm text-white/90">{status}</p>
+    <div className={`${styles.statusMessage} ${className}`}>
+      <p className={styles.statusMessageText}>{status}</p>
     </div>
   );
 };

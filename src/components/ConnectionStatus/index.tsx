@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from '@/styles/extension.module.css';
 
 interface ConnectionStatusProps {
   connectionStatus: 'connecting' | 'open' | 'closing' | 'closed';
@@ -31,43 +32,45 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     }
   };
 
-  const getStatusColor = () => {
+  const getStatusColorClass = () => {
     switch (connectionStatus) {
       case 'connecting':
-        return 'bg-yellow-500';
+        return styles.connectionStatusConnecting;
       case 'open':
-        return 'bg-green-500';
+        return styles.connectionStatusOpen;
       case 'closing':
-        return 'bg-orange-500';
+        return styles.connectionStatusClosing;
       case 'closed':
-        return 'bg-red-500';
+        return styles.connectionStatusClosed;
       default:
-        return 'bg-gray-500';
+        return styles.connectionStatusDefault;
     }
   };
 
   return (
-    <div className="mb-4">
-      <div className="status-indicator">
-        <span className={`status-dot ${getStatusColor()}`}></span>
-        <span className="text-sm text-white/90">{getStatusText()}</span>
+    <div className={styles.connectionStatus}>
+      <div className={styles.connectionStatusIndicator}>
+        <span
+          className={`${styles.connectionStatusDot} ${getStatusColorClass()}`}
+        ></span>
+        <span className={styles.connectionStatusText}>{getStatusText()}</span>
       </div>
 
       {reconnectAttempts > 0 && (
-        <div className="mt-2">
-          <span className="text-xs text-white/70">
+        <div className={styles.connectionStatusReconnect}>
+          <span className={styles.connectionStatusAttempts}>
             Reconnection attempts: {reconnectAttempts}
           </span>
         </div>
       )}
 
       {connectionError && (
-        <div className="mt-2 p-2 bg-red-500/20 rounded border border-red-500/30">
-          <span className="text-xs text-red-200 block mb-2">
+        <div className={styles.connectionStatusError}>
+          <span className={styles.connectionStatusErrorText}>
             {connectionError}
           </span>
           <button
-            className="btn-secondary text-xs py-1 px-2"
+            className={styles.connectionStatusButton}
             onClick={onForceReconnect}
             disabled={connectionStatus === 'connecting'}
           >

@@ -11,12 +11,14 @@ import { CursorAnimationError } from './VisualCursorErrors';
 export class CursorAnimationManager {
   private animationTimeout: number | null = null;
   private isAnimating = false;
+  private isCancelled = false;
+  private currentAnimationFrame: number | null = null;
 
   constructor(
     private readonly domManager: CursorDOMManager,
     private readonly audioService: AudioService,
     private readonly logger: LoggingService
-  ) {}
+  ) { }
 
   /**
    * Animate cursor movement to target position
@@ -56,14 +58,23 @@ export class CursorAnimationManager {
 
         this.domManager.updatePosition(currentPos);
 
-        if (progress < 1) {
-          requestAnimationFrame(animate);
+        if (progress < 1 && !this.isCancelled) {
+          this.currentAnimationFrame = requestAnimationFrame(animate);
         } else {
           this.isAnimating = false;
-          this.logger.debug(
-            'Cursor animation completed',
-            'CursorAnimationManager'
-          );
+          this.currentAnimationFrame = null;
+          if (this.isCancelled) {
+            this.logger.debug(
+              'Cursor animation cancelled',
+              'CursorAnimationManager'
+            );
+            this.isCancelled = false;
+          } else {
+            this.logger.debug(
+              'Cursor animation completed',
+              'CursorAnimationManager'
+            );
+          }
           resolve(currentPos);
         }
       };
@@ -182,14 +193,30 @@ export class CursorAnimationManager {
   }
 
   /**
-   * Clean up any running animations
+   * Cancel any ongoing animations
    */
-  destroy(): void {
+  cancel(): void {
+    this.isCancelled = true;
+
+    if (this.currentAnimationFrame) {
+      cancelAnimationFrame(this.currentAnimationFrame);
+      this.currentAnimationFrame = null;
+    }
+
     if (this.animationTimeout) {
       clearTimeout(this.animationTimeout);
       this.animationTimeout = null;
     }
+
     this.isAnimating = false;
+    this.logger.debug('All animations cancelled', 'CursorAnimationManager');
+  }
+
+  /**
+   * Clean up any running animations
+   */
+  destroy(): void {
+    this.cancel();
     this.logger.debug('Animation manager destroyed', 'CursorAnimationManager');
   }
 
