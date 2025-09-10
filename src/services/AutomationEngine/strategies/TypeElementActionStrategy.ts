@@ -1,9 +1,12 @@
 import { Action, ExecutedAction } from '@/services/APIService/APITypes';
 import { BaseAutomationActionStrategy } from './AutomationActionStrategy';
 import { AutomationError } from '../AutomationErrors';
+import { TypingService } from '@/services/TypingService';
+import { ServiceFactory } from '@/services/DIContainer';
 
 /**
  * Strategy for handling TYPE actions on elements
+ * Uses TypingService for human-like typing behavior instead of ElementActionExecutor
  */
 export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
   /**
@@ -27,6 +30,7 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
         throw new AutomationError('Value is required for TYPE action');
       }
 
+      // Get the target element for typing
       const targetElement = visibleElements[action.targetElementIndex];
       if (!targetElement) {
         throw new AutomationError(
@@ -34,17 +38,31 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
         );
       }
 
-      // Create a normalized action with the correct value property
-      const normalizedAction = { ...action, value: typeValue };
-      
-      await this.elementActionExecutor.executeActionWithElementIndex(
-        normalizedAction,
-        visibleElements,
-        stepCount
+      // Validate element is typeable
+      if (!(targetElement instanceof HTMLInputElement || targetElement instanceof HTMLTextAreaElement)) {
+        throw new AutomationError(
+          'Target element is not a valid input or textarea element'
+        );
+      }
+
+      // Get TypingService instance
+      const typingService = TypingService.getInstance(
+        ServiceFactory.getInstance().createLoggingService()
       );
 
+      // Use realistic typing with human-like behavior
+      await typingService.simulateRealisticTyping(targetElement, typeValue, {
+        speedMultiplier: 1.0, // Normal human typing speed
+        onProgress: (currentText: string) => {
+          this.logger.debug(`Typing progress: ${currentText}`);
+        },
+        onComplete: () => {
+          this.logger.debug('Typing completed');
+        }
+      });
+
       this.logger.info(
-        `Successfully typed "${typeValue}" into element at index ${action.targetElementIndex}`,
+        `Successfully typed value with human-like behavior: "${typeValue}" into element at index ${action.targetElementIndex}`,
         'TypeElementActionStrategy'
       );
 

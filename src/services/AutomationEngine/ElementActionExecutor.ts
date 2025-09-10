@@ -70,14 +70,8 @@ export class ElementActionExecutor {
         stepIndex
       );
     } else if (action.type === 'TYPE') {
-      if (!action.value) {
-        throw new Error('TYPE action missing value');
-      }
-      await this.executeTypeOnElement(
-        targetElement,
-        action.value,
-        action.explanation,
-        stepIndex
+      throw new Error(
+        'TYPE actions should be handled by TypeElementActionStrategy, not ElementActionExecutor'
       );
     } else {
       throw new Error(
@@ -143,73 +137,6 @@ export class ElementActionExecutor {
     );
   }
 
-  /**
-   * Execute type action directly on element with visual cursor
-   */
-  private async executeTypeOnElement(
-    element: HTMLElement,
-    value: string,
-    description: string | undefined,
-    stepIndex: number
-  ): Promise<void> {
-    const logMessage = description
-      ? `Step ${stepIndex}: ${description} - Typing "${value}" on ${element.tagName}`
-      : `Step ${stepIndex}: Executing direct type on element: ${element.tagName}`;
-
-    this.logger.info(logMessage, 'ElementActionExecutor');
-
-    const visualCursorConfig: ErrorHandlingConfig = {
-      context: 'ElementActionExecutor',
-      operation: 'executeVisualType',
-      logLevel: 'warn',
-    };
-
-    await ErrorHandlingUtils.safeExecute(
-      async () => {
-        // Initialize visual cursor if not already done
-        await this.visualCursorService.initialize();
-
-        // Show cursor and move to element
-        this.visualCursorService.show();
-        await this.visualCursorService.moveToElement(element);
-
-        // Perform visual click to focus
-        await this.visualCursorService.performClick();
-        return true;
-      },
-      false,
-      visualCursorConfig,
-      this.logger
-    );
-
-    // Focus the element first
-    element.focus();
-
-    // Clear existing value if it's an input element
-    if (
-      element instanceof HTMLInputElement ||
-      element instanceof HTMLTextAreaElement
-    ) {
-      element.value = '';
-    }
-
-    // Type the value
-    if (
-      element instanceof HTMLInputElement ||
-      element instanceof HTMLTextAreaElement
-    ) {
-      element.value = value;
-      // Trigger input event to notify any listeners
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-      element.dispatchEvent(new Event('change', { bubbles: true }));
-    } else {
-      // For contenteditable elements
-      element.textContent = value;
-    }
-
-    this.logger.info(
-      `Direct type completed on: ${element.tagName}`,
-      'ElementActionExecutor'
-    );
-  }
+  // Note: TYPE actions are now handled by TypeElementActionStrategy with TypingService
+  // for human-like typing behavior. The executeTypeOnElement method has been removed.
 }
