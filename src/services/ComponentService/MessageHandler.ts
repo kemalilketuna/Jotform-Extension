@@ -119,15 +119,16 @@ export class MessageHandler {
   /**
    * Send START_AUTOMATION message to background script
    */
-  async sendStartAutomationMessage(objective: string): Promise<void> {
+  async sendStartAutomationMessage(objective: string, continueSession: boolean = false): Promise<void> {
     try {
       this.logger.info('Sending START_AUTOMATION message', 'MessageHandler', {
         objective,
+        continueSession,
       });
 
       await browser.runtime.sendMessage({
         type: 'START_AUTOMATION',
-        payload: { objective },
+        payload: { objective, continueSession },
       });
     } catch (error) {
       const config: ErrorHandlingConfig = {

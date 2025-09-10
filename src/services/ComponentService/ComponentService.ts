@@ -120,11 +120,17 @@ export class ComponentService {
         return;
       }
 
+      // Check if there's an existing session to continue
+      const currentSessionId = this.stateManager.getSessionId();
+      const continueSession = currentSessionId !== null;
+
       this.logger.info('Starting automation', 'ComponentService', {
         objective,
+        continueSession,
+        currentSessionId,
       });
 
-      await this.messageHandler.sendStartAutomationMessage(objective);
+      await this.messageHandler.sendStartAutomationMessage(objective, continueSession);
     } catch (error) {
       const config: ErrorHandlingConfig = {
         context: 'ComponentService.handleAutomationStart',

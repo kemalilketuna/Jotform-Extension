@@ -167,6 +167,25 @@ export class AutomationCoordinator {
   }
 
   /**
+   * Continue an existing session with a new objective
+   */
+  async continueSession(objective: string): Promise<string | null> {
+    const currentSessionId = await this.sessionManager.getCurrentSessionId();
+    if (currentSessionId) {
+      this.logger.info(
+        `Continuing session ${currentSessionId} with new objective: ${objective}`,
+        'AutomationCoordinator'
+      );
+      return currentSessionId;
+    }
+    this.logger.warn(
+      'No existing session to continue, creating new session',
+      'AutomationCoordinator'
+    );
+    return this.initializeSession(objective);
+  }
+
+  /**
    * Get the current session ID
    */
   async getCurrentSessionId(): Promise<string | null> {
