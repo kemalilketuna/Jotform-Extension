@@ -7,7 +7,7 @@ export interface MessagingTextProps {
 }
 
 /**
- * MessagingText component for displaying individual message text
+ * MessagingText component for displaying individual message text with Inter font
  */
 export const MessagingText: React.FC<MessagingTextProps> = ({
   message = '',
@@ -17,6 +17,7 @@ export const MessagingText: React.FC<MessagingTextProps> = ({
   const defaultStyle = {
     color: '#01105c',
     letterSpacing: '-0.176px',
+    fontFamily: 'Inter',
     ...style,
   };
 

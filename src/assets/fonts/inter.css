@@ -1,0 +1,26 @@
+/* Inter Font - Self-hosted for extension */
+/* Using font-display: block to prevent font swap and ensure immediate rendering */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block; /* Use block to prevent font swap */
+  src: url('./inter-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block; /* Use block to prevent font swap */
+  src: url('./inter-medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block; /* Use block to prevent font swap */
+  src: url('./inter-semibold.woff2') format('woff2');
+}
