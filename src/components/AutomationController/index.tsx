@@ -8,6 +8,7 @@ import { browser } from 'wxt/browser';
 
 export const AutomationController: React.FC = () => {
     const [isAutomationRunning, setIsAutomationRunning] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
         const serviceFactory = ServiceFactory.getInstance();
@@ -64,8 +65,12 @@ export const AutomationController: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center">
-            {isAutomationRunning ? (
+        <div
+            className="flex items-center"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {(isAutomationRunning && isHovered) ? (
                 <AutomationDeletionButton
                     size="md"
                     onClick={handleDeleteAutomation}
