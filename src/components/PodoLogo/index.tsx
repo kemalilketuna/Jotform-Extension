@@ -1,6 +1,7 @@
 import React from 'react';
 import { PodoLogoStrings } from './PodoLogoStrings';
 import { ServiceFactory } from '@/services/DIContainer';
+import styles from '@/styles/extension.module.css';
 
 export interface PodoLogoProps {
   className?: string;
@@ -20,14 +21,23 @@ export const PodoLogo: React.FC<PodoLogoProps> = ({
     return `/${PodoLogoStrings.ASSET_PATHS.LOGO_IMAGE}`;
   };
 
+  const getSizeClass = () => {
+    switch (size) {
+      case 'sm':
+        return styles.logoSm;
+      case 'lg':
+        return styles.logoLg;
+      default:
+        return styles.logoMd;
+    }
+  };
+
   return (
-    <div
-      className={`${PodoLogoStrings.SIZE_CLASSES[size]} ${PodoLogoStrings.CSS_CLASSES.CONTAINER_BASE} ${className}`}
-    >
+    <div className={`${styles.logoContainer} ${getSizeClass()} ${className}`}>
       <img
         src={getImageSrc()}
         alt={PodoLogoStrings.ALT_TEXT.LOGO}
-        className={PodoLogoStrings.CSS_CLASSES.IMAGE}
+        className={styles.logoImage}
         onError={(e) => {
           ServiceFactory.getInstance()
             .createLoggingService()

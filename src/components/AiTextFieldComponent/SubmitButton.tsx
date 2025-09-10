@@ -1,6 +1,7 @@
 import React from 'react';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { IconArrowUp } from '@jotforminc/svg-icons';
+import styles from '@/styles/extension.module.css';
 
 export interface SubmitButtonProps {
   disabled?: boolean;
@@ -20,11 +21,10 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       type="submit"
       disabled={disabled}
       onClick={onClick}
-      className={`w-8 h-8 flex items-center justify-center rounded-full hover:opacity-80 disabled:!bg-gray-400 disabled:!cursor-not-allowed disabled:!opacity-50 transition-all duration-200 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
-      style={{ backgroundColor: disabled ? undefined : '#091551' }}
+      className={`${styles.submitButton} ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
       title={title}
     >
-      <IconArrowUp className={`fill-white w-4 h-4`} />
+      <IconArrowUp className={styles.submitButtonIcon} />
     </button>
   );
 };
