@@ -3,7 +3,7 @@ import { ServiceFactory } from '@/services/DIContainer';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
-import { PodoLogo } from '@/components/PodoLogo';
+import AutomationController from '@/components/AutomationController/index.tsx';
 import styles from '@/styles/extension.module.css';
 
 /**
@@ -53,7 +53,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
       <form onSubmit={handleSubmit} className={styles.aiTextFieldForm}>
         <div className={styles.aiTextFieldContainer}>
           <div className={styles.aiTextFieldInner}>
-            <PodoLogo size="md" className={styles.flexShrink0} />
+            <AutomationController />
             <AiTextInput
               value={inputText}
               onChange={setInputText}
