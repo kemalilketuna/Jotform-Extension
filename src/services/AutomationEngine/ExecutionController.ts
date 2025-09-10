@@ -174,14 +174,43 @@ export class ExecutionController {
       const result = await this.actionProcessor.processActions(
         nextActionResponse,
         visibleElements,
-        stepCount
+        stepCount,
+        sessionId
       );
 
       lastTurnOutcome = result.outcomes;
 
-      // Check if automation should continue
-      if (!result.shouldContinue) {
-        break;
+      // If we got a user response, continue with it immediately
+      if (result.userResponse) {
+        // Get next action with user response
+        const userResponseAction = await this.actionProcessor.getNextAction(
+          sessionId,
+          visibleElementsHtml,
+          lastTurnOutcome,
+          base64_image.base64,
+          result.userResponse
+        );
+
+        // Process the response action
+        const userResponseResult = await this.actionProcessor.processActions(
+          userResponseAction,
+          visibleElements,
+          stepCount + 1,
+          sessionId
+        );
+
+        lastTurnOutcome = userResponseResult.outcomes;
+        stepCount++;
+
+        // Check if automation should continue after user response
+        if (!userResponseResult.shouldContinue) {
+          break;
+        }
+      } else {
+        // Check if automation should continue
+        if (!result.shouldContinue) {
+          break;
+        }
       }
 
       stepCount++;

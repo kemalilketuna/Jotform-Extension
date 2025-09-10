@@ -11,6 +11,7 @@ interface ProtocolMap {
     visibleElementsHtml: string[];
     lastTurnOutcome: ExecutedAction[];
     screenshotBase64?: string;
+    userResponse?: string;
   }) => NextActionResponse;
   startAutomation: () => void;
   stopAutomation: () => void;

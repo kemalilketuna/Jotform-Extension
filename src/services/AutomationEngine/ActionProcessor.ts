@@ -19,6 +19,8 @@ import {
   TypeElementActionStrategy,
 } from './strategies';
 import { sendMessage } from '@/services/Messaging/messaging';
+import { browser } from 'wxt/browser';
+import { RequestUserInputMessage, UserResponseMessage } from './MessageTypes';
 
 /**
  * Processes and executes automation actions
@@ -27,6 +29,7 @@ export class ActionProcessor {
   private readonly logger: LoggingService;
   private readonly elementActionExecutor: ElementActionExecutor;
   private readonly strategyRegistry: AutomationActionStrategyRegistry;
+  private pendingUserResponse: { sessionId: string; resolve: (response: string) => void } | null = null;
 
   constructor(
     logger: LoggingService,
@@ -36,6 +39,7 @@ export class ActionProcessor {
     this.elementActionExecutor = elementActionExecutor;
     this.strategyRegistry = new AutomationActionStrategyRegistry();
     this.initializeStrategies();
+    this.setupMessageListener();
   }
 
   /**
@@ -50,10 +54,11 @@ export class ActionProcessor {
       'FAIL',
       new FailActionStrategy(this.logger, this.elementActionExecutor)
     );
-    this.strategyRegistry.register(
-      'ASK_USER',
-      new AskUserActionStrategy(this.logger, this.elementActionExecutor)
-    );
+    
+    const askUserStrategy = new AskUserActionStrategy(this.logger, this.elementActionExecutor);
+    askUserStrategy.setActionProcessor(this);
+    this.strategyRegistry.register('ASK_USER', askUserStrategy);
+    
     this.strategyRegistry.register(
       'CLICK',
       new ClickElementActionStrategy(this.logger, this.elementActionExecutor)
@@ -65,13 +70,14 @@ export class ActionProcessor {
   }
 
   /**
-   * Request next action from backend via messaging system
+   * Get next action from backend
    */
   async getNextAction(
     sessionId: string,
     visibleElementsHtml: string[],
     lastTurnOutcome: ExecutedAction[],
-    screenshotBase64?: string
+    screenshotBase64?: string,
+    userResponse?: string
   ): Promise<NextActionResponse> {
     const config: ErrorHandlingConfig = {
       context: 'ActionProcessor',
@@ -87,6 +93,7 @@ export class ActionProcessor {
           visibleElementsHtml,
           lastTurnOutcome,
           screenshotBase64,
+          userResponse,
         }),
       config,
       this.logger
@@ -107,8 +114,9 @@ export class ActionProcessor {
   async processActions(
     actionResponse: NextActionResponse,
     visibleElements: HTMLElement[],
-    stepCount: number
-  ): Promise<{ shouldContinue: boolean; outcomes: ExecutedAction[] }> {
+    stepCount: number,
+    sessionId: string
+  ): Promise<{ shouldContinue: boolean; outcomes: ExecutedAction[]; userResponse?: string }> {
     if (!actionResponse.actions || actionResponse.actions.length === 0) {
       this.logger.info(
         'No actions received from backend, ending automation',
@@ -119,6 +127,7 @@ export class ActionProcessor {
 
     const outcomes: ExecutedAction[] = [];
     let shouldContinue = true;
+    let userResponse: string | undefined;
 
     for (const action of actionResponse.actions) {
       this.logger.info(
@@ -129,9 +138,15 @@ export class ActionProcessor {
       const result = await this.executeAction(
         action,
         visibleElements,
-        stepCount
+        stepCount,
+        sessionId
       );
       outcomes.push(result.outcome);
+
+      // Capture user response if this was an ASK_USER action
+      if (action.type === 'ASK_USER' && 'userResponse' in result) {
+        userResponse = result.userResponse;
+      }
 
       if (!result.shouldContinue) {
         shouldContinue = false;
@@ -142,7 +157,7 @@ export class ActionProcessor {
       await this.wait(500);
     }
 
-    return { shouldContinue, outcomes };
+    return { shouldContinue, outcomes, userResponse };
   }
 
   /**
@@ -151,14 +166,20 @@ export class ActionProcessor {
   private async executeAction(
     action: Action,
     visibleElements: HTMLElement[],
-    stepCount: number
-  ): Promise<{ outcome: ExecutedAction; shouldContinue: boolean }> {
+    stepCount: number,
+    sessionId?: string
+  ): Promise<{ outcome: ExecutedAction; shouldContinue: boolean; userResponse?: string }> {
     const strategy = this.strategyRegistry.getStrategy(action.type);
 
     if (!strategy) {
       const errorMsg = `Unknown action type: ${action.type}`;
       this.logger.error(errorMsg, 'ActionProcessor');
       throw new AutomationError(errorMsg);
+    }
+
+    // For ASK_USER actions, pass sessionId
+    if (action.type === 'ASK_USER') {
+      return await (strategy as any).execute(action, visibleElements, stepCount, sessionId);
     }
 
     return await strategy.execute(action, visibleElements, stepCount);
@@ -174,5 +195,59 @@ export class ActionProcessor {
 
     this.logger.debug(`Waiting ${ms}ms`, 'ActionProcessor');
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Setup message listener for user responses
+   */
+  private setupMessageListener(): void {
+    browser.runtime.onMessage.addListener(
+      (message: UserResponseMessage, sender, sendResponse) => {
+        if (message.type === 'USER_RESPONSE' && this.pendingUserResponse) {
+          if (message.payload.sessionId === this.pendingUserResponse.sessionId) {
+            this.logger.info(
+              `Received user response: ${message.payload.response}`,
+              'ActionProcessor'
+            );
+            this.pendingUserResponse.resolve(message.payload.response);
+            this.pendingUserResponse = null;
+            sendResponse({ success: true });
+          }
+        }
+        return true; // Keep message channel open for async response
+      }
+    );
+  }
+
+  /**
+   * Request user input and wait for response
+   */
+  async requestUserInput(question: string, sessionId: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      this.pendingUserResponse = { sessionId, resolve };
+      
+      // Send message to popup to show user input dialog
+      const requestMessage: RequestUserInputMessage = {
+        type: 'REQUEST_USER_INPUT',
+        payload: { question, sessionId }
+      };
+      
+      browser.runtime.sendMessage(requestMessage).catch((error) => {
+        this.logger.error(
+          `Failed to send user input request: ${error}`,
+          'ActionProcessor'
+        );
+        this.pendingUserResponse = null;
+        reject(error);
+      });
+      
+      // Set timeout for user response (5 minutes)
+      setTimeout(() => {
+        if (this.pendingUserResponse?.sessionId === sessionId) {
+          this.pendingUserResponse = null;
+          reject(new Error('User input timeout'));
+        }
+      }, 300000); // 5 minutes
+    });
   }
 }

@@ -1,7 +1,7 @@
 import { ServiceFactory } from '@/services/DIContainer';
 import { AutomationCoordinator } from './AutomationCoordinator';
 import { MessageHandler } from './MessageHandler';
-import { AutomationMessage } from '@/services/AutomationEngine/MessageTypes';
+import { AutomationMessage, UserResponseMessage } from '@/services/AutomationEngine/MessageTypes';
 import { browser } from 'wxt/browser';
 import { onMessage } from '@/services/Messaging/messaging';
 
@@ -30,7 +30,7 @@ export default defineBackground(() => {
       message.data.sessionId,
       message.data.visibleElementsHtml,
       message.data.lastTurnOutcome,
-      undefined,
+      message.data.userResponse,
       message.data.screenshotBase64
     );
   });
@@ -92,6 +92,16 @@ export default defineBackground(() => {
         error: (error as Error).message,
       });
       return { isRunning: false };
+    }
+  });
+
+  // Handle USER_RESPONSE messages
+  browser.runtime.onMessage.addListener((message: any) => {
+    if (message.type === 'USER_RESPONSE') {
+      const userResponseMessage = message as UserResponseMessage;
+      // Forward to ActionProcessor via browser.runtime.sendMessage
+      // This will be handled by the ActionProcessor's message listener
+      return true; // Keep the message channel open
     }
   });
 

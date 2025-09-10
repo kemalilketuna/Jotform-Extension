@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ServiceFactory } from '@/services/DIContainer';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
 import { AutomationController } from '../AutomationController';
+import { browser } from 'wxt/browser';
+import { RequestUserInputMessage, UserResponseMessage } from '@/services/AutomationEngine/MessageTypes';
 import styles from '@/styles/extension.module.css';
 
 /**
@@ -19,6 +21,9 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
   className = '',
 }) => {
   const [inputText, setInputText] = useState('');
+  const [isWaitingForUserInput, setIsWaitingForUserInput] = useState(false);
+  const [userInputQuestion, setUserInputQuestion] = useState<string>('');
+  const [currentSessionId, setCurrentSessionId] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,8 +31,25 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
     if (!trimmedText) return;
 
     try {
-      // Call the onSubmit callback if provided
-      onSubmit?.(trimmedText);
+      if (isWaitingForUserInput) {
+        // Send user response message
+        const userResponseMessage: UserResponseMessage = {
+          type: 'USER_RESPONSE',
+          payload: {
+            response: trimmedText,
+            sessionId: currentSessionId,
+          },
+        };
+        
+        await browser.runtime.sendMessage(userResponseMessage);
+        
+        // Reset state
+        setIsWaitingForUserInput(false);
+        setUserInputQuestion('');
+      } else {
+        // Call the onSubmit callback if provided
+        onSubmit?.(trimmedText);
+      }
 
       setInputText('');
     } catch (error) {
@@ -46,6 +68,24 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
     }
   };
 
+  // Listen for REQUEST_USER_INPUT messages
+  useEffect(() => {
+    const handleMessage = (message: any) => {
+       if (message.type === 'REQUEST_USER_INPUT') {
+         const requestMessage = message as RequestUserInputMessage;
+         setIsWaitingForUserInput(true);
+         setUserInputQuestion(requestMessage.payload.question);
+         setCurrentSessionId(requestMessage.payload.sessionId);
+       }
+     };
+
+    browser.runtime.onMessage.addListener(handleMessage);
+
+    return () => {
+      browser.runtime.onMessage.removeListener(handleMessage);
+    };
+  }, []);
+
   return (
     <div
       className={`${styles.aiTextField} ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
@@ -58,6 +98,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
               value={inputText}
               onChange={setInputText}
               onKeyDown={handleKeyDown}
+              placeholder={isWaitingForUserInput ? userInputQuestion : undefined}
             />
             <SubmitButton disabled={!inputText.trim()} />
           </div>

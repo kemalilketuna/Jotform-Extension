@@ -19,7 +19,9 @@ export type AutomationMessageType =
   | 'INIT_SESSION_RESPONSE'
   | 'START_AUTOMATION'
   | 'START_AUTOMATION_RESPONSE'
-  | 'STOP_AUTOMATION';
+  | 'STOP_AUTOMATION'
+  | 'USER_RESPONSE'
+  | 'REQUEST_USER_INPUT';
 
 export interface BaseAutomationMessage {
   type: AutomationMessageType;
@@ -110,6 +112,16 @@ export interface StopAutomationMessage extends BaseAutomationMessage {
   payload: { reason?: string };
 }
 
+export interface RequestUserInputMessage extends BaseAutomationMessage {
+  type: 'REQUEST_USER_INPUT';
+  payload: { question: string; sessionId: string };
+}
+
+export interface UserResponseMessage extends BaseAutomationMessage {
+  type: 'USER_RESPONSE';
+  payload: { response: string; sessionId: string };
+}
+
 export type AutomationMessage =
   | ExecuteSequenceMessage
   | SequenceCompleteMessage
@@ -126,4 +138,6 @@ export type AutomationMessage =
   | InitSessionResponseMessage
   | StartAutomationMessage
   | StartAutomationResponseMessage
-  | StopAutomationMessage;
+  | StopAutomationMessage
+  | RequestUserInputMessage
+  | UserResponseMessage;
