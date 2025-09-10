@@ -34,7 +34,11 @@ export default defineConfig({
     },
     web_accessible_resources: [
       {
-        resources: ['sounds/radioSelect.mp3', 'sounds/keystrokeSoft.mp3'],
+        resources: [
+          'sounds/radioSelect.mp3',
+          'sounds/keystrokeSoft.mp3',
+          'podoLogo.png',
+        ],
         matches: ['<all_urls>'],
       },
     ],

@@ -3,7 +3,7 @@ import { ServiceFactory } from '@/services/DIContainer';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
-import { AutomationControlButtons } from './AutomationControlButtons';
+import { PodoLogo } from '@/components/PodoLogo';
 
 /**
  * AI text field component that appears when the extension is active
@@ -50,15 +50,25 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
       className={`fixed bottom-5 right-5 z-[999999] pointer-events-auto transition-all duration-300 w-80 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
     >
       <form onSubmit={handleSubmit} className="relative">
-        <div className="relative flex items-center">
-          <AutomationControlButtons className="mr-2" />
-          <div className="relative flex-1">
-            <AiTextInput
-              value={inputText}
-              onChange={setInputText}
-              onKeyDown={handleKeyDown}
-            />
-            <SubmitButton disabled={!inputText.trim()} />
+        <div
+          className="bg-white shadow-lg overflow-hidden"
+          style={{
+            border: '1px solid rgba(0, 0, 0, .08)',
+            borderRadius: '16px 16px 4px',
+            height: '56px',
+          }}
+        >
+          <div className="flex items-center h-full px-3 gap-3">
+            <PodoLogo size="md" className="flex-shrink-0" />
+            <div className="relative flex-1 h-full">
+              <AiTextInput
+                value={inputText}
+                onChange={setInputText}
+                onKeyDown={handleKeyDown}
+                className="pr-12 h-full"
+              />
+              <SubmitButton disabled={!inputText.trim()} />
+            </div>
           </div>
         </div>
       </form>

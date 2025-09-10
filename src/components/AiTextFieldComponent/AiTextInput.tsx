@@ -31,12 +31,7 @@ export const AiTextInput: React.FC<AiTextInputProps> = ({
       onBlur={onBlur}
       onKeyDown={onKeyDown}
       placeholder={placeholder}
-      className={`w-full px-4 pr-12 bg-white text-gray-800 placeholder-gray-500 transition-all duration-200 focus:outline-none ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
-      style={{
-        height: '56px',
-        border: '1px solid rgba(0, 0, 0, .08)',
-        borderRadius: '16px 16px 4px',
-      }}
+      className={`w-full px-4 bg-transparent text-gray-800 placeholder-gray-500 transition-all duration-200 focus:outline-none ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
       title={title}
     />
   );

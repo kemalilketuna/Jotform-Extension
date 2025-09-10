@@ -23,10 +23,7 @@ export const MessagingText: React.FC<MessagingTextProps> = ({
   };
 
   return (
-    <div 
-      className={`leading-6 font-sans ${className}`} 
-      style={defaultStyle}
-    >
+    <div className={`leading-6 font-sans ${className}`} style={defaultStyle}>
       {message}
     </div>
   );
