@@ -57,7 +57,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
             borderRadius: '16px 16px 4px',
           }}
         >
-          <div className="flex items-center h-full px-2 pr-2.5 gap-3">
+          <div className="flex items-center h-full pl-1.5 pr-3 gap-3">
             <PodoLogo size="md" className="flex-shrink-0" />
             <AiTextInput
               value={inputText}
@@ -67,7 +67,7 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
             />
             <SubmitButton
               disabled={!inputText.trim()}
-              className="flex-shrink-0"
+              className="flex-shrink-0 pt-0.5"
             />
           </div>
         </div>

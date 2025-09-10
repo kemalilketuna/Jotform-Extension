@@ -22,7 +22,7 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
 
   return (
     <div
-      className={`${ComponentStrings.CSS_CLASSES.CONTAINER} fixed bottom-20.5 right-4 z-[999998] pointer-events-auto transition-all duration-300 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
+      className={`${ComponentStrings.CSS_CLASSES.CONTAINER} fixed bottom-21 right-4 z-[999998] pointer-events-auto transition-all duration-300 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
       role="region"
       aria-label={ComponentStrings.ACCESSIBILITY.CHATBOX_CONTAINER}
     >
