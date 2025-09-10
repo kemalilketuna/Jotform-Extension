@@ -24,7 +24,8 @@ export class StepByStepAutomationOrchestrator {
     storageService: StorageService,
     messageHandler: MessageHandler,
     elementActionExecutor: ElementActionExecutor,
-    lifecycleManager: AutomationLifecycleManager
+    lifecycleManager: AutomationLifecycleManager,
+    automationEngine: { shouldContinueExecution(): boolean }
   ) {
     // Create focused components
     const sessionCoordinator = new SessionCoordinator(
@@ -42,7 +43,8 @@ export class StepByStepAutomationOrchestrator {
       messageHandler,
       sessionCoordinator,
       domAnalyzer,
-      actionProcessor
+      actionProcessor,
+      automationEngine
     );
   }
 

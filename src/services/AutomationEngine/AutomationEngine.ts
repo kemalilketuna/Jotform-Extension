@@ -75,7 +75,8 @@ export class AutomationEngine {
       storageService,
       this.messageHandler,
       elementActionExecutor,
-      this.lifecycleManager
+      this.lifecycleManager,
+      this
     );
     this.sequenceOrchestrator = new SequenceAutomationOrchestrator(
       this.logger,
@@ -418,5 +419,39 @@ export class AutomationEngine {
    */
   get isRunning(): boolean {
     return this.isExecuting;
+  }
+
+  /**
+   * Check if automation should continue executing
+   * Used by ExecutionController to check for cancellation
+   */
+  shouldContinueExecution(): boolean {
+    return this.isExecuting;
+  }
+
+  /**
+   * Stop the currently running automation
+   * This will cause the automation loop to exit gracefully
+   */
+  async stopAutomation(reason: 'user_request' | 'error' | 'completed' = 'user_request'): Promise<void> {
+    if (!this.isExecuting) {
+      this.logger.info('No automation currently running to stop', 'AutomationEngine');
+      return;
+    }
+
+    this.logger.info(`Stopping automation: ${reason}`, 'AutomationEngine');
+    this.isExecuting = false;
+
+    // Emit automation stopped event
+    await this.eventBus.emit({
+      type: EventTypes.AUTOMATION_STOPPED,
+      timestamp: Date.now(),
+      sessionId: 'current', // This should be the actual session ID
+      reason,
+      source: 'AutomationEngine',
+    });
+
+    // Trigger lifecycle teardown
+    await this.lifecycleManager.teardownOnError();
   }
 }

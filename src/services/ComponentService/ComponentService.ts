@@ -283,7 +283,8 @@ export class ComponentService {
         type: 'stopAutomation',
         payload: {},
       });
-      this.stateManager.setAutomationRunning(false);
+      // Use handleAutomationStopped instead of setAutomationRunning directly
+      this.stateManager.handleAutomationStopped('user_request');
     } catch (error) {
       const config: ErrorHandlingConfig = {
         context: 'ComponentService.stopAutomation',
