@@ -22,12 +22,12 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
 
   return (
     <div
-      className={`${ComponentStrings.CSS_CLASSES.CONTAINER} fixed bottom-21.5 right-5 z-[999998] pointer-events-auto transition-all duration-300 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
+      className={`${ComponentStrings.CSS_CLASSES.CONTAINER} fixed bottom-20.5 right-4 z-[999998] pointer-events-auto transition-all duration-300 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
       role="region"
       aria-label={ComponentStrings.ACCESSIBILITY.CHATBOX_CONTAINER}
     >
       <div
-        className="bg-white border overflow-hidden w-80 p-4 min-h-[180px] max-h-[300px] rounded-xl"
+        className="bg-white border overflow-hidden w-81 p-4 min-h-[120px] max-h-[300px] rounded-xl"
         style={{
           border: '1px solid #f3f3f3',
           boxShadow:
