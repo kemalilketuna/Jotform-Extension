@@ -17,7 +17,7 @@ import {
   AutomationStoppedEvent,
   ElementDetectedEvent,
 } from '@/events';
-import { SingletonManager } from '../../utils/SingletonService';
+import { SingletonManager } from '@/utils/SingletonService';
 
 /**
  * Visual cursor service for showing automation actions to users
@@ -70,7 +70,7 @@ export class VisualCursorService {
           'VisualCursorService'
         );
         if (this.isInitialized && this.config.enabled) {
-          this.show({ x: 100, y: 100 });
+          this.show({ x: window.innerWidth / 2, y: window.innerHeight - 20 });
         }
       }
     );

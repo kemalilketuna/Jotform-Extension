@@ -2,7 +2,6 @@ import { LoggingService } from '@/services/LoggingService';
 import { VisualCursorService } from '@/services/VisualCursorService';
 import { UserInteractionBlocker } from '@/services/UserInteractionBlocker';
 import { VisualAnimationConfig } from '@/services/VisualCursorService';
-import { AutomationConfig } from '@/config/AutomationConfig';
 
 /**
  * Manages the lifecycle of automation components including visual cursor, interaction blocking, and state management
@@ -49,7 +48,10 @@ export class AutomationLifecycleManager {
         this.visualCursor.updateConfig(visualConfig);
       }
       await this.visualCursor.initialize();
-      this.visualCursor.show(AutomationConfig.CURSOR.SHOW_POSITION);
+      this.visualCursor.show({
+        x: window.innerWidth / 2,
+        y: window.innerHeight - 20,
+      });
 
       this.isSetup = true;
       this.logger.info(

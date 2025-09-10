@@ -41,7 +41,6 @@ export class AutomationConfig {
   static readonly CURSOR = {
     HOVER_DURATION: 800, // ms hover before click
     CLICK_DURATION: 300, // ms click animation
-    SHOW_POSITION: { x: 100, y: 100 }, // Default show position
   } as const;
 
   // Action types
