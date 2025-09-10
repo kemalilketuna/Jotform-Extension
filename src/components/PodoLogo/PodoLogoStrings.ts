@@ -17,7 +17,7 @@ export class PodoLogoStrings {
 
   static readonly SIZE_CLASSES = {
     sm: 'w-6 h-6' as const,
-    md: 'w-10 h-10' as const,
+    md: 'w-11 h-11' as const,
     lg: 'w-16 h-16' as const,
   } as const;
 }

@@ -16,15 +16,13 @@ export const MessagingText: React.FC<MessagingTextProps> = ({
 }) => {
   const defaultStyle = {
     color: '#01105c',
-    fontSize: '16px',
-    lineHeight: '24px',
     letterSpacing: '-0.176px',
     ...style,
   };
 
   return (
-    <div className={`leading-6 font-sans ${className}`} style={defaultStyle}>
+    <span className={`text-base leading-6 ${className}`} style={defaultStyle}>
       {message}
-    </div>
+    </span>
   );
 };

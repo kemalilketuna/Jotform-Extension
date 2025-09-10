@@ -27,9 +27,8 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
       aria-label={ComponentStrings.ACCESSIBILITY.CHATBOX_CONTAINER}
     >
       <div
-        className="bg-white border overflow-hidden w-80 p-4 min-h-[180px] max-h-[300px]"
+        className="bg-white border overflow-hidden w-80 p-4 min-h-[180px] max-h-[300px] rounded-xl"
         style={{
-          borderRadius: '12px',
           border: '1px solid #f3f3f3',
           boxShadow:
             '0 16px 24px 0 rgba(5, 53, 85, .06), 0 2px 8px 0 rgba(5, 53, 85, .01)',
