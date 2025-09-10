@@ -29,7 +29,10 @@ export class ActionProcessor {
   private readonly logger: LoggingService;
   private readonly elementActionExecutor: ElementActionExecutor;
   private readonly strategyRegistry: AutomationActionStrategyRegistry;
-  private pendingUserResponse: { sessionId: string; resolve: (response: string) => void } | null = null;
+  private pendingUserResponse: {
+    sessionId: string;
+    resolve: (response: string) => void;
+  } | null = null;
 
   constructor(
     logger: LoggingService,
@@ -54,11 +57,14 @@ export class ActionProcessor {
       'FAIL',
       new FailActionStrategy(this.logger, this.elementActionExecutor)
     );
-    
-    const askUserStrategy = new AskUserActionStrategy(this.logger, this.elementActionExecutor);
+
+    const askUserStrategy = new AskUserActionStrategy(
+      this.logger,
+      this.elementActionExecutor
+    );
     askUserStrategy.setActionProcessor(this);
     this.strategyRegistry.register('ASK_USER', askUserStrategy);
-    
+
     this.strategyRegistry.register(
       'CLICK',
       new ClickElementActionStrategy(this.logger, this.elementActionExecutor)
@@ -116,7 +122,11 @@ export class ActionProcessor {
     visibleElements: HTMLElement[],
     stepCount: number,
     sessionId: string
-  ): Promise<{ shouldContinue: boolean; outcomes: ExecutedAction[]; userResponse?: string }> {
+  ): Promise<{
+    shouldContinue: boolean;
+    outcomes: ExecutedAction[];
+    userResponse?: string;
+  }> {
     if (!actionResponse.actions || actionResponse.actions.length === 0) {
       this.logger.info(
         'No actions received from backend, ending automation',
@@ -168,7 +178,11 @@ export class ActionProcessor {
     visibleElements: HTMLElement[],
     stepCount: number,
     sessionId?: string
-  ): Promise<{ outcome: ExecutedAction; shouldContinue: boolean; userResponse?: string }> {
+  ): Promise<{
+    outcome: ExecutedAction;
+    shouldContinue: boolean;
+    userResponse?: string;
+  }> {
     const strategy = this.strategyRegistry.getStrategy(action.type);
 
     if (!strategy) {
@@ -179,7 +193,12 @@ export class ActionProcessor {
 
     // For ASK_USER actions, pass sessionId
     if (action.type === 'ASK_USER') {
-      return await (strategy as any).execute(action, visibleElements, stepCount, sessionId);
+      return await (strategy as AskUserActionStrategy).execute(
+        action,
+        visibleElements,
+        stepCount,
+        sessionId
+      );
     }
 
     return await strategy.execute(action, visibleElements, stepCount);
@@ -204,7 +223,9 @@ export class ActionProcessor {
     browser.runtime.onMessage.addListener(
       (message: UserResponseMessage, sender, sendResponse) => {
         if (message.type === 'USER_RESPONSE' && this.pendingUserResponse) {
-          if (message.payload.sessionId === this.pendingUserResponse.sessionId) {
+          if (
+            message.payload.sessionId === this.pendingUserResponse.sessionId
+          ) {
             this.logger.info(
               `Received user response: ${message.payload.response}`,
               'ActionProcessor'
@@ -225,13 +246,13 @@ export class ActionProcessor {
   async requestUserInput(question: string, sessionId: string): Promise<string> {
     return new Promise((resolve, reject) => {
       this.pendingUserResponse = { sessionId, resolve };
-      
+
       // Send message to popup to show user input dialog
       const requestMessage: RequestUserInputMessage = {
         type: 'REQUEST_USER_INPUT',
-        payload: { question, sessionId }
+        payload: { question, sessionId },
       };
-      
+
       browser.runtime.sendMessage(requestMessage).catch((error) => {
         this.logger.error(
           `Failed to send user input request: ${error}`,
@@ -240,7 +261,7 @@ export class ActionProcessor {
         this.pendingUserResponse = null;
         reject(error);
       });
-      
+
       // Set timeout for user response (5 minutes)
       setTimeout(() => {
         if (this.pendingUserResponse?.sessionId === sessionId) {

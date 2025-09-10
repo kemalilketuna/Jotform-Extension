@@ -160,14 +160,34 @@ export class ExecutionController {
       const visibleElementsHtml =
         this.domAnalyzer.convertElementsToHTML(visibleElements);
 
-      const base64_image = await sendMessage('captureActiveTab', undefined);
+      // Attempt to capture screenshot, but continue without it if it fails
+      let screenshotBase64: string | undefined;
+      try {
+        const base64_image = await sendMessage('captureActiveTab', undefined);
+        // Check if screenshot capture actually succeeded (empty base64 indicates failure)
+        if (base64_image.base64 && base64_image.base64.trim() !== '') {
+          screenshotBase64 = base64_image.base64;
+        } else {
+          this.logger.warn(
+            'Screenshot capture returned empty result. Continuing without screenshot.',
+            'ExecutionController'
+          );
+          screenshotBase64 = undefined;
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to capture screenshot: ${error instanceof Error ? error.message : String(error)}. Continuing without screenshot.`,
+          'ExecutionController'
+        );
+        screenshotBase64 = undefined;
+      }
 
       // Request next action from backend
       const nextActionResponse = await this.actionProcessor.getNextAction(
         sessionId,
         visibleElementsHtml,
         lastTurnOutcome,
-        base64_image.base64
+        screenshotBase64
       );
 
       // Process and execute actions
@@ -187,7 +207,7 @@ export class ExecutionController {
           sessionId,
           visibleElementsHtml,
           lastTurnOutcome,
-          base64_image.base64,
+          screenshotBase64,
           result.userResponse
         );
 

@@ -23,7 +23,11 @@ export class AskUserActionStrategy extends BaseAutomationActionStrategy {
     visibleElements: HTMLElement[],
     stepCount: number,
     sessionId?: string
-  ): Promise<{ outcome: ExecutedAction; shouldContinue: boolean; userResponse?: string }> {
+  ): Promise<{
+    outcome: ExecutedAction;
+    shouldContinue: boolean;
+    userResponse?: string;
+  }> {
     const question = action.question || 'User input required';
     this.logger.info(
       `Step ${stepCount}: Asking user: ${question} (${visibleElements.length} elements visible)`,
@@ -31,18 +35,22 @@ export class AskUserActionStrategy extends BaseAutomationActionStrategy {
     );
 
     if (!this.actionProcessor || !sessionId) {
-      const errorMsg = 'ActionProcessor or sessionId not available for user input';
+      const errorMsg =
+        'ActionProcessor or sessionId not available for user input';
       this.logger.error(errorMsg, 'AskUserActionStrategy');
       return {
         outcome: { status: 'FAIL', errorMessage: errorMsg },
-        shouldContinue: false
+        shouldContinue: false,
       };
     }
 
     try {
       // Request user input and wait for response
-      const userResponse = await this.actionProcessor.requestUserInput(question, sessionId);
-      
+      const userResponse = await this.actionProcessor.requestUserInput(
+        question,
+        sessionId
+      );
+
       this.logger.info(
         `User provided response: ${userResponse}`,
         'AskUserActionStrategy'
@@ -55,15 +63,15 @@ export class AskUserActionStrategy extends BaseAutomationActionStrategy {
       return {
         outcome,
         shouldContinue: true, // Continue with user response
-        userResponse
+        userResponse,
       };
     } catch (error) {
       const errorMsg = `Failed to get user input: ${(error as Error).message}`;
       this.logger.error(errorMsg, 'AskUserActionStrategy');
-      
+
       return {
         outcome: { status: 'FAIL', errorMessage: errorMsg },
-        shouldContinue: false
+        shouldContinue: false,
       };
     }
   }

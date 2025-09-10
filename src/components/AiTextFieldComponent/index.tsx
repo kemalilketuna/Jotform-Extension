@@ -5,7 +5,10 @@ import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
 import { AutomationController } from '../AutomationController';
 import { browser } from 'wxt/browser';
-import { RequestUserInputMessage, UserResponseMessage } from '@/services/AutomationEngine/MessageTypes';
+import {
+  RequestUserInputMessage,
+  UserResponseMessage,
+} from '@/services/AutomationEngine/MessageTypes';
 import styles from '@/styles/extension.module.css';
 
 /**
@@ -40,9 +43,9 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
             sessionId: currentSessionId,
           },
         };
-        
+
         await browser.runtime.sendMessage(userResponseMessage);
-        
+
         // Reset state
         setIsWaitingForUserInput(false);
         setUserInputQuestion('');
@@ -70,14 +73,14 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 
   // Listen for REQUEST_USER_INPUT messages
   useEffect(() => {
-    const handleMessage = (message: any) => {
-       if (message.type === 'REQUEST_USER_INPUT') {
-         const requestMessage = message as RequestUserInputMessage;
-         setIsWaitingForUserInput(true);
-         setUserInputQuestion(requestMessage.payload.question);
-         setCurrentSessionId(requestMessage.payload.sessionId);
-       }
-     };
+    const handleMessage = (message: RequestUserInputMessage) => {
+      if (message.type === 'REQUEST_USER_INPUT') {
+        const requestMessage = message as RequestUserInputMessage;
+        setIsWaitingForUserInput(true);
+        setUserInputQuestion(requestMessage.payload.question);
+        setCurrentSessionId(requestMessage.payload.sessionId);
+      }
+    };
 
     browser.runtime.onMessage.addListener(handleMessage);
 
@@ -98,7 +101,9 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
               value={inputText}
               onChange={setInputText}
               onKeyDown={handleKeyDown}
-              placeholder={isWaitingForUserInput ? userInputQuestion : undefined}
+              placeholder={
+                isWaitingForUserInput ? userInputQuestion : undefined
+              }
             />
             <SubmitButton disabled={!inputText.trim()} />
           </div>

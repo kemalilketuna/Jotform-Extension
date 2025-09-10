@@ -1,7 +1,10 @@
 import { ServiceFactory } from '@/services/DIContainer';
 import { AutomationCoordinator } from './AutomationCoordinator';
 import { MessageHandler } from './MessageHandler';
-import { AutomationMessage, UserResponseMessage } from '@/services/AutomationEngine/MessageTypes';
+import {
+  AutomationMessage,
+  UserResponseMessage,
+} from '@/services/AutomationEngine/MessageTypes';
 import { browser } from 'wxt/browser';
 import { onMessage } from '@/services/Messaging/messaging';
 
@@ -20,7 +23,16 @@ export default defineBackground(() => {
 
   // Handle screenshot messages
   onMessage('captureActiveTab', async () => {
-    return await screenshotService.captureActiveTab();
+    try {
+      return await screenshotService.captureActiveTab();
+    } catch (error) {
+      logger.error(
+        `Failed to capture screenshot: ${error instanceof Error ? error.message : String(error)}`,
+        'BackgroundScript'
+      );
+      // Return empty base64 to indicate failure
+      return { base64: '' };
+    }
   });
 
   // Handle next action API calls
@@ -96,9 +108,9 @@ export default defineBackground(() => {
   });
 
   // Handle USER_RESPONSE messages
-  browser.runtime.onMessage.addListener((message: any) => {
+  browser.runtime.onMessage.addListener((message: UserResponseMessage) => {
     if (message.type === 'USER_RESPONSE') {
-      const userResponseMessage = message as UserResponseMessage;
+      const _userResponseMessage = message as UserResponseMessage;
       // Forward to ActionProcessor via browser.runtime.sendMessage
       // This will be handled by the ActionProcessor's message listener
       return true; // Keep the message channel open
