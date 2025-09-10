@@ -13,8 +13,8 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({ status }) => {
   }
 
   return (
-    <div className="mb-4 p-3 bg-white/10 rounded-lg border border-white/20">
-      <p className="m-0 text-sm text-white/90">{status}</p>
+    <div className="!mb-4 !p-3 !bg-white/10 !rounded-lg !border !border-white/20">
+      <p className="!m-0 !text-sm !text-white/90">{status}</p>
     </div>
   );
 };

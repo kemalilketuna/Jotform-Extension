@@ -47,27 +47,27 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 
   return (
     <div
-      className={`fixed bottom-4 right-4 z-[999999] pointer-events-auto transition-all duration-300 w-81 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
+      className={`!fixed !bottom-4 !right-4 !z-[999999] !pointer-events-auto !transition-all !duration-300 !w-81 ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
     >
-      <form onSubmit={handleSubmit} className="relative">
+      <form onSubmit={handleSubmit} className="!relative">
         <div
-          className="bg-white overflow-hidden h-14"
+          className="!bg-white !overflow-hidden !h-14"
           style={{
             border: '1px solid rgba(0, 0, 0, .08)',
             borderRadius: '16px 16px 4px',
           }}
         >
-          <div className="flex items-center h-full pl-1.5 pr-3 gap-3">
-            <PodoLogo size="md" className="flex-shrink-0" />
+          <div className="!flex !items-center !h-full !pl-1.5 !pr-3 !gap-3">
+            <PodoLogo size="md" className="!flex-shrink-0" />
             <AiTextInput
               value={inputText}
               onChange={setInputText}
               onKeyDown={handleKeyDown}
-              className="h-full"
+              className="!h-full"
             />
             <SubmitButton
               disabled={!inputText.trim()}
-              className="flex-shrink-0 pt-0.5"
+              className="!flex-shrink-0 !pt-0.5"
             />
           </div>
         </div>

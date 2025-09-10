@@ -22,7 +22,7 @@ export const MessagingText: React.FC<MessagingTextProps> = ({
   };
 
   return (
-    <span className={`text-base leading-6 ${className}`} style={defaultStyle}>
+    <span className={`!text-base !leading-6 ${className}`} style={defaultStyle}>
       {message}
     </span>
   );

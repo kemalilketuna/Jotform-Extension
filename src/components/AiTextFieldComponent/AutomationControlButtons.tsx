@@ -87,7 +87,7 @@ export const AutomationControlButtons: React.FC<
   };
 
   return (
-    <div className={`flex items-center space-x-1 ${className}`}>
+    <div className={`!flex !items-center !space-x-1 ${className}`}>
       <button
         type="button"
         onClick={handleToggleAutomation}
@@ -97,16 +97,15 @@ export const AutomationControlButtons: React.FC<
             ? ComponentStrings.USER_MESSAGES.AUTOMATION_CONTROL.STOP_TOOLTIP
             : ComponentStrings.USER_MESSAGES.AUTOMATION_CONTROL.START_TOOLTIP
         }
-        className={`p-2 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-          isAutomationRunning
+        className={`!p-2 !rounded-md !transition-colors !duration-200 disabled:!opacity-50 disabled:!cursor-not-allowed ${isAutomationRunning
             ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
             : 'text-green-600 hover:text-green-700 hover:bg-green-50'
-        }`}
+          }`}
       >
         {isAutomationRunning ? (
-          <IconPauseFilled className="w-4 h-4" />
+          <IconPauseFilled className="!w-4 !h-4" />
         ) : (
-          <IconPlayFilled className="w-4 h-4" />
+          <IconPlayFilled className="!w-4 !h-4" />
         )}
       </button>
     </div>

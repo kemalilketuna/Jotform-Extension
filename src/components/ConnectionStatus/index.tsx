@@ -50,24 +50,24 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     <div className="mb-4">
       <div className="status-indicator">
         <span className={`status-dot ${getStatusColor()}`}></span>
-        <span className="text-sm text-white/90">{getStatusText()}</span>
+        <span className="!text-sm !text-white/90">{getStatusText()}</span>
       </div>
 
       {reconnectAttempts > 0 && (
         <div className="mt-2">
-          <span className="text-xs text-white/70">
+          <span className="!text-xs !text-white/70">
             Reconnection attempts: {reconnectAttempts}
           </span>
         </div>
       )}
 
       {connectionError && (
-        <div className="mt-2 p-2 bg-red-500/20 rounded border border-red-500/30">
-          <span className="text-xs text-red-200 block mb-2">
+        <div className="!mt-2 !p-2 !bg-red-500/20 !rounded !border !border-red-500/30">
+          <span className="!text-xs !text-red-200 !block !mb-2">
             {connectionError}
           </span>
           <button
-            className="btn-secondary text-xs py-1 px-2"
+            className="btn-secondary !text-xs !py-1 !px-2"
             onClick={onForceReconnect}
             disabled={connectionStatus === 'connecting'}
           >
