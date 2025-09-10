@@ -3,7 +3,7 @@ import { ServiceFactory } from '@/services/DIContainer';
 import { EXTENSION_COMPONENTS } from '@/services/UserInteractionBlocker';
 import { AiTextInput } from './AiTextInput';
 import { SubmitButton } from './SubmitButton';
-import AutomationController from '@/components/AutomationController/index.tsx';
+import { AutomationController } from '../AutomationController';
 import styles from '@/styles/extension.module.css';
 
 /**
@@ -70,10 +70,6 @@ export const AiTextFieldComponent: React.FC<AiTextFieldComponentProps> = ({
 // Export sub-components
 export { AiTextInput, type AiTextInputProps } from './AiTextInput';
 export { SubmitButton, type SubmitButtonProps } from './SubmitButton';
-export {
-  AutomationControlButtons,
-  type AutomationControlButtonsProps,
-} from './AutomationControlButtons';
 
 // Default export
 export default AiTextFieldComponent;
