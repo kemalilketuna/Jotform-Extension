@@ -188,6 +188,58 @@
   text-align: center;
 }
 
+.chatboxToggleButton {
+  position: fixed;
+  bottom: 240px;
+  right: 16px;
+  z-index: 999999;
+  width: 24px;
+  height: 24px;
+  padding: 3px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 16px 24px 0 rgba(5, 53, 85, 0.06),
+    0 2px 8px 0 rgba(5, 53, 85, 0.01);
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.chatboxToggleButton:hover {
+  background-color: #f3f3f3;
+  transform: scale(1.05);
+}
+
+.chatboxToggleButton svg {
+  width: 12px;
+  height: 12px;
+  color: #000;
+  transition: transform 0.3s ease;
+}
+
+.chatboxSlideContainer {
+  transition: all 0.3s ease-in-out;
+  transform-origin: bottom;
+  overflow: hidden;
+}
+
+.chatboxSlideContainer.hidden {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chatboxSlideContainer.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .messagingText {
   composes: extensionComponent;
   font-size: 16px;

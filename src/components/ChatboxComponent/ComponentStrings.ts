@@ -7,12 +7,15 @@ export class ComponentStrings {
     EMPTY_STATE:
       "🚀 Ready to automate! I'm your AI agent that can interact with any website, fill forms, click buttons, and complete tasks just like a human. What would you like me to help you with?",
     LOADING: 'AI is thinking...',
+    TOGGLE_HIDE: 'Hide chatbot',
+    TOGGLE_SHOW: 'Show chatbot',
   } as const;
 
   static readonly ACCESSIBILITY = {
     CHATBOX_CONTAINER: 'AI agent chatbox messages',
     MESSAGE_ITEM: 'AI agent message',
     SCROLL_AREA: 'Message history scroll area',
+    TOGGLE_BUTTON: 'Toggle chatbot visibility',
   } as const;
 
   static readonly CSS_CLASSES = {
@@ -25,6 +28,7 @@ export class ComponentStrings {
   static readonly ANIMATION_DURATIONS = {
     MESSAGE_APPEAR: 300,
     SCROLL_SMOOTH: 200,
+    SLIDE_TOGGLE: 300,
   } as const;
 }
 

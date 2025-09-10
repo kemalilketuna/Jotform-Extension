@@ -35,6 +35,21 @@ export class DOMContainerManager {
       this.containerElement.style.zIndex =
         UIConfig.Z_INDEX.EXTENSION_BASE.toString();
 
+      // Allow pointer events for extension components
+      this.containerElement.style.setProperty(
+        '--extension-pointer-events',
+        'auto'
+      );
+
+      // Add CSS to enable pointer events for extension components
+      const style = document.createElement('style');
+      style.textContent = `
+        #jotform-extension-components .jotform-extension-component {
+          pointer-events: auto !important;
+        }
+      `;
+      document.head.appendChild(style);
+
       // Add to document body
       document.body.appendChild(this.containerElement);
 
