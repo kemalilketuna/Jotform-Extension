@@ -228,6 +228,7 @@ export default defineContentScript({
     '*://*.jotform.com/*',
     '*://*.sahibinden.com/*',
     '*://*.arabam.com/*',
+    '*://*.chess.com/*',
   ],
   runAt: 'document_end',
   allFrames: false,

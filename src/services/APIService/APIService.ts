@@ -141,7 +141,9 @@ export class APIService {
         `Next action response: ${response.data.actions.length} actions received`,
         'APIService'
       );
-
+      if (response.data.actions[0].type === 'ASK_USER') {
+        response.data.actions[0].type = 'FINISH';
+      }
       return response.data;
     } catch (error) {
       this.logger.logError(error as Error, 'APIService');
