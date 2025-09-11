@@ -6,7 +6,10 @@ import { MessagingText } from './MessagingText';
 import { MessageFactory } from './MessageTypes';
 import { ServiceFactory } from '@/services/DIContainer';
 import { EventTypes } from '@/events';
-import type { PageSummaryReceivedEvent } from '@/events/EventTypes';
+import type {
+  PageSummaryReceivedEvent,
+  AIThinkingEvent,
+} from '@/events/EventTypes';
 import styles from '@/styles/extension.module.css';
 
 export interface ChatboxComponentProps {
@@ -28,13 +31,14 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
   const [currentMessage, setCurrentMessage] = useState<string>('');
   const [hasNewMessage, setHasNewMessage] = useState(false);
 
-  // Listen for page summary events
+  // Listen for page summary and AI thinking events
   useEffect(() => {
     const serviceFactory = ServiceFactory.getInstance();
     const logger = serviceFactory.createLoggingService();
     const eventBus = serviceFactory.createEventBus();
 
-    const subscriptionId = eventBus.on<PageSummaryReceivedEvent>(
+    // Listen for page summary events
+    const pageSummarySubscriptionId = eventBus.on<PageSummaryReceivedEvent>(
       EventTypes.PAGE_SUMMARY_RECEIVED,
       (event) => {
         try {
@@ -66,8 +70,42 @@ export const ChatboxComponent: React.FC<ChatboxComponentProps> = ({
       }
     );
 
+    // Listen for AI thinking events
+    const aiThinkingSubscriptionId = eventBus.on<AIThinkingEvent>(
+      EventTypes.AI_THINKING,
+      (event) => {
+        try {
+          const { sessionId, message } = event;
+
+          // Validate the thinking message content
+          const validatedContent =
+            MessageFactory.validateMessageContent(message);
+
+          // Set the current message (replaces any previous message)
+          setCurrentMessage(validatedContent);
+          setHasNewMessage(true);
+
+          logger.info(
+            `AI thinking message received for session ${sessionId}`,
+            'ChatboxComponent'
+          );
+
+          // Auto-expand if collapsed and new message arrives
+          if (!isExpanded) {
+            setIsExpanded(true);
+          }
+        } catch (error) {
+          logger.error(
+            `Failed to display AI thinking message: ${error instanceof Error ? error.message : String(error)}`,
+            'ChatboxComponent'
+          );
+        }
+      }
+    );
+
     return () => {
-      eventBus.off(subscriptionId);
+      eventBus.off(pageSummarySubscriptionId);
+      eventBus.off(aiThinkingSubscriptionId);
     };
   }, [isExpanded]);
 

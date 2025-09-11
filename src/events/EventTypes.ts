@@ -113,6 +113,13 @@ export interface PageSummaryReceivedEvent extends BaseEvent {
   readonly pageSummary: string;
 }
 
+// AI thinking events
+export interface AIThinkingEvent extends BaseEvent {
+  readonly type: 'ai:thinking';
+  readonly sessionId: string;
+  readonly message: string;
+}
+
 // Union type of all events
 export type ExtensionEvent =
   | AutomationStartedEvent
@@ -129,7 +136,8 @@ export type ExtensionEvent =
   | StorageChangedEvent
   | APIRequestEvent
   | APIResponseEvent
-  | PageSummaryReceivedEvent;
+  | PageSummaryReceivedEvent
+  | AIThinkingEvent;
 
 // Event type constants for type safety
 export const EventTypes = {
@@ -148,6 +156,7 @@ export const EventTypes = {
   API_REQUEST: 'api:request',
   API_RESPONSE: 'api:response',
   PAGE_SUMMARY_RECEIVED: 'page_summary:received',
+  AI_THINKING: 'ai:thinking',
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
