@@ -34,6 +34,7 @@ export interface NextActionResponse {
   actions: Action[];
   overallExplanationOfBundle: string;
   fullThoughtProcess?: string;
+  pageSummary?: string;
 }
 
 export interface APIRequestConfig {

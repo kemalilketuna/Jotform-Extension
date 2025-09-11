@@ -9,6 +9,8 @@ export class ComponentStrings {
     LOADING: 'AI is thinking...',
     TOGGLE_HIDE: 'Hide chatbot',
     TOGGLE_SHOW: 'Show chatbot',
+    PAGE_SUMMARY_PREFIX: '📄 Page Analysis:',
+    PAGE_SUMMARY_TITLE: 'Current Page Summary',
   } as const;
 
   static readonly ACCESSIBILITY = {

@@ -54,6 +54,9 @@ class ContentScriptMain {
       // Setup navigation detection
       this.setupNavigationDetection();
 
+      // Setup page summary handler
+      this.setupPageSummaryHandler();
+
       this.isInitialized = true;
       this.logger.info(
         'Content script initialization completed successfully',
@@ -102,6 +105,18 @@ class ContentScriptMain {
   private setupNavigationDetection(): void {
     this.navigationDetector = NavigationDetector.getInstance();
     this.navigationDetector.initialize();
+  }
+
+  /**
+   * Setup page summary message handler
+   */
+  private setupPageSummaryHandler(): void {
+    // The displayPageSummary message will be handled directly by the ChatBox component
+    // via the onMessage listener in the component itself
+    this.logger.debug(
+      'Page summary handler setup completed',
+      'ContentScriptMain'
+    );
   }
 
   /**

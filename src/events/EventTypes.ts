@@ -106,6 +106,13 @@ export interface APIResponseEvent extends BaseEvent {
   readonly success: boolean;
 }
 
+// Page summary events
+export interface PageSummaryReceivedEvent extends BaseEvent {
+  readonly type: 'page_summary:received';
+  readonly sessionId: string;
+  readonly pageSummary: string;
+}
+
 // Union type of all events
 export type ExtensionEvent =
   | AutomationStartedEvent
@@ -121,7 +128,8 @@ export type ExtensionEvent =
   | AudioPlayEvent
   | StorageChangedEvent
   | APIRequestEvent
-  | APIResponseEvent;
+  | APIResponseEvent
+  | PageSummaryReceivedEvent;
 
 // Event type constants for type safety
 export const EventTypes = {
@@ -139,6 +147,7 @@ export const EventTypes = {
   STORAGE_CHANGED: 'storage:changed',
   API_REQUEST: 'api:request',
   API_RESPONSE: 'api:response',
+  PAGE_SUMMARY_RECEIVED: 'page_summary:received',
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];

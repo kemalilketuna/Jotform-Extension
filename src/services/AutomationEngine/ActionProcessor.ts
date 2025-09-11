@@ -21,6 +21,8 @@ import {
 import { sendMessage } from '@/services/Messaging/messaging';
 import { browser } from 'wxt/browser';
 import { RequestUserInputMessage, UserResponseMessage } from './MessageTypes';
+import { ServiceFactory } from '@/services/DIContainer';
+import { EventBus, EventTypes, PageSummaryReceivedEvent } from '@/events';
 
 /**
  * Processes and executes automation actions
@@ -29,6 +31,7 @@ export class ActionProcessor {
   private readonly logger: LoggingService;
   private readonly elementActionExecutor: ElementActionExecutor;
   private readonly strategyRegistry: AutomationActionStrategyRegistry;
+  private readonly eventBus: EventBus;
   private pendingUserResponse: {
     sessionId: string;
     resolve: (response: string) => void;
@@ -41,6 +44,7 @@ export class ActionProcessor {
     this.logger = logger;
     this.elementActionExecutor = elementActionExecutor;
     this.strategyRegistry = new AutomationActionStrategyRegistry();
+    this.eventBus = ServiceFactory.getInstance().createEventBus();
     this.initializeStrategies();
     this.setupMessageListener();
   }
@@ -127,6 +131,35 @@ export class ActionProcessor {
     outcomes: ExecutedAction[];
     userResponse?: string;
   }> {
+    // Send page summary to ChatBox component if available
+    if (
+      actionResponse.pageSummary &&
+      actionResponse.pageSummary.trim().length > 0
+    ) {
+      try {
+        const pageSummaryEvent: PageSummaryReceivedEvent = {
+          type: EventTypes.PAGE_SUMMARY_RECEIVED,
+          timestamp: Date.now(),
+          sessionId,
+          pageSummary: actionResponse.pageSummary,
+          source: 'ActionProcessor',
+        };
+
+        await this.eventBus.emit(pageSummaryEvent);
+
+        this.logger.info(
+          `Page summary event emitted for session ${sessionId}`,
+          'ActionProcessor'
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to emit page summary event: ${error instanceof Error ? error.message : String(error)}`,
+          'ActionProcessor'
+        );
+        // Don't fail the entire automation if page summary display fails
+      }
+    }
+
     if (!actionResponse.actions || actionResponse.actions.length === 0) {
       this.logger.info(
         'No actions received from backend, ending automation',

@@ -23,4 +23,5 @@ export {
   type StorageChangedEvent,
   type APIRequestEvent,
   type APIResponseEvent,
+  type PageSummaryReceivedEvent,
 } from './EventTypes';
