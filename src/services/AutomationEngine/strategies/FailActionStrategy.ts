@@ -13,7 +13,7 @@ export class FailActionStrategy extends BaseAutomationActionStrategy {
     visibleElements: HTMLElement[],
     stepCount: number
   ): Promise<{ outcome: ExecutedAction; shouldContinue: boolean }> {
-    const errorMessage = action.message || 'Automation failed';
+    const errorMessage = action.statusMessage || 'Automation failed';
     this.logger.error(
       `Step ${stepCount}: Automation failed: ${errorMessage} (${visibleElements.length} elements visible)`,
       'FailActionStrategy'

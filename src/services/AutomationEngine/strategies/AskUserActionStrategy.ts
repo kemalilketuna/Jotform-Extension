@@ -28,7 +28,7 @@ export class AskUserActionStrategy extends BaseAutomationActionStrategy {
     shouldContinue: boolean;
     userResponse?: string;
   }> {
-    const question = action.question || 'User input required';
+    const question = action.userQuestion || 'User input required';
     this.logger.info(
       `Step ${stepCount}: Asking user: ${question} (${visibleElements.length} elements visible)`,
       'AskUserActionStrategy'

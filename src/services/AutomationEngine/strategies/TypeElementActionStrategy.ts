@@ -41,8 +41,7 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
         );
       }
 
-      // Check for both 'value' and 'typeValue' properties for compatibility
-      const typeValue = action.value || action.typeValue;
+      const typeValue = action.typeValue;
       if (!typeValue) {
         throw new AutomationError('Value is required for TYPE action');
       }
