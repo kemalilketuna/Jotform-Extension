@@ -33,6 +33,7 @@ export const AiTextInput: React.FC<AiTextInputProps> = ({
       onKeyDown={onKeyDown}
       placeholder={placeholder}
       className={`${styles.aiTextInput} ${EXTENSION_COMPONENTS.EXTENSION_COMPONENT_CLASS} ${className}`}
+      style={{ border: 'none !important' }}
       title={title}
     />
   );
