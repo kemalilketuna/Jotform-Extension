@@ -7,6 +7,7 @@ export class ComponentStrings {
     EMPTY_STATE:
       "🚀 Ready to automate! I'm your AI agent that can interact with any website, fill forms, click buttons, and complete tasks just like a human. What would you like me to help you with?",
     LOADING: 'AI is thinking...',
+    THINKING: "I'm currently thinking about how to accomplish your request...",
     TOGGLE_HIDE: 'Hide chatbot',
     TOGGLE_SHOW: 'Show chatbot',
     PAGE_SUMMARY_PREFIX: '📄 Page Analysis:',

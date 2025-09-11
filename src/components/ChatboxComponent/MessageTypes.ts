@@ -4,7 +4,12 @@
 
 export interface ChatMessage {
   readonly id: string;
-  readonly type: 'page_summary' | 'system' | 'user' | 'ai_response';
+  readonly type:
+    | 'page_summary'
+    | 'system'
+    | 'user'
+    | 'ai_response'
+    | 'ai_thinking';
   readonly content: string;
   readonly timestamp: number;
   readonly sessionId?: string;
@@ -18,6 +23,11 @@ export interface PageSummaryMessage extends ChatMessage {
 
 export interface SystemMessage extends ChatMessage {
   readonly type: 'system';
+}
+
+export interface AIThinkingMessage extends ChatMessage {
+  readonly type: 'ai_thinking';
+  readonly sessionId: string;
 }
 
 /**
@@ -70,6 +80,27 @@ export class MessageFactory {
       timestamp,
       metadata: {
         source: 'system',
+      },
+    };
+  }
+
+  /**
+   * Create an AI thinking message
+   */
+  static createAIThinkingMessage(
+    content: string,
+    sessionId: string,
+    timestamp: number = Date.now()
+  ): AIThinkingMessage {
+    return {
+      id: this.generateMessageId(),
+      type: 'ai_thinking',
+      content,
+      timestamp,
+      sessionId,
+      metadata: {
+        source: 'automation_engine',
+        messageType: 'ai_thinking',
       },
     };
   }

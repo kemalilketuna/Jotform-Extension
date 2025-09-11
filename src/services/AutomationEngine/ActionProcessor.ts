@@ -22,7 +22,13 @@ import { sendMessage } from '@/services/Messaging/messaging';
 import { browser } from 'wxt/browser';
 import { RequestUserInputMessage, UserResponseMessage } from './MessageTypes';
 import { ServiceFactory } from '@/services/DIContainer';
-import { EventBus, EventTypes, PageSummaryReceivedEvent } from '@/events';
+import {
+  EventBus,
+  EventTypes,
+  PageSummaryReceivedEvent,
+  AIThinkingEvent,
+} from '@/events';
+import { ComponentStrings } from '@/components/ChatboxComponent/ComponentStrings';
 
 /**
  * Processes and executes automation actions
@@ -89,6 +95,9 @@ export class ActionProcessor {
     screenshotBase64?: string,
     userResponse?: string
   ): Promise<NextActionResponse> {
+    // Emit thinking message to ChatBox when starting to get next action
+    await this.emitThinkingMessage(sessionId);
+
     const config: ErrorHandlingConfig = {
       context: 'ActionProcessor',
       operation: 'getNextAction',
@@ -303,5 +312,33 @@ export class ActionProcessor {
         }
       }, 300000); // 5 minutes
     });
+  }
+
+  /**
+   * Emit thinking message to ChatBox component
+   */
+  private async emitThinkingMessage(sessionId: string): Promise<void> {
+    try {
+      const thinkingEvent: AIThinkingEvent = {
+        type: EventTypes.AI_THINKING,
+        timestamp: Date.now(),
+        sessionId,
+        message: ComponentStrings.CHATBOX_LABELS.THINKING,
+        source: 'ActionProcessor',
+      };
+
+      await this.eventBus.emit(thinkingEvent);
+
+      this.logger.info(
+        `AI thinking message emitted for session ${sessionId}`,
+        'ActionProcessor'
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to emit AI thinking message: ${error instanceof Error ? error.message : String(error)}`,
+        'ActionProcessor'
+      );
+      // Don't fail the entire automation if thinking message fails
+    }
   }
 }

@@ -24,4 +24,5 @@ export {
   type APIRequestEvent,
   type APIResponseEvent,
   type PageSummaryReceivedEvent,
+  type AIThinkingEvent,
 } from './EventTypes';
