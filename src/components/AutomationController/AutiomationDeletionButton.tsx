@@ -35,21 +35,16 @@ export const AutomationDeletionButton: React.FC<
     }
   };
 
+  // bg red #c90909
+  // bg hover ab0101
+
   return (
     <button
       className={`
-        ${styles.logoContainer} 
+        ${styles.automationDeletionButton} 
         ${getSizeClass()} 
         ${className}
-        flex items-center justify-center
-        bg-red-500 hover:bg-red-600 
-        disabled:bg-gray-400 disabled:cursor-not-allowed
-        transition-colors duration-200
-        rounded-full
-        border-none
-        cursor-pointer
       `}
-      style={{ border: 'none' }}
       onClick={onClick}
       disabled={disabled}
       type="button"
