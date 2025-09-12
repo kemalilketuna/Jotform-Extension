@@ -193,12 +193,15 @@
 }
 
 .chatboxContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background-color: white;
   border: 1px solid #f3f3f3;
   overflow: hidden;
   width: 324px;
   padding: 16px;
-  min-height: 90px;
+  min-height: 150px;
   max-height: 300px;
   border-radius: 12px;
   box-shadow:
