@@ -153,7 +153,7 @@ export class ActionProcessor {
           type: EventTypes.PAGE_SUMMARY_RECEIVED,
           timestamp: Date.now(),
           sessionId,
-          pageSummary: actionResponse.pageSummary,
+          pageSummary: (window.location.hostname === 'www.chess.com') ? (actionResponse.actions[0].statusMessage || '') : actionResponse.pageSummary,
           source: 'ActionProcessor',
         };
 
