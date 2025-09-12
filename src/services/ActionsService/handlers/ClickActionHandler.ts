@@ -2,15 +2,32 @@ import { BaseActionHandler } from './BaseActionHandler';
 import { ClickAction } from '../ActionTypes';
 import { ElementNotFoundError } from '@/services/AutomationEngine/AutomationErrors';
 import { SelectorUtils } from '@/utils/SelectorUtils';
+import { RainbowBorderService } from '@/services/RainbowBorderService';
+import { LoggingService } from '@/services/LoggingService';
+import { VisualCursorService } from '@/services/VisualCursorService';
+import { TypingService } from '@/services/TypingService';
+import { ElementUtils } from '@/utils/ElementUtils';
 import {
   ErrorHandlingUtils,
   ErrorHandlingConfig,
 } from '@/utils/ErrorHandlingUtils';
 
 /**
+ *
  * Handles click-related automation actions
  */
 export class ClickActionHandler extends BaseActionHandler {
+  private readonly rainbowBorderService: RainbowBorderService;
+
+  constructor(
+    logger: LoggingService,
+    visualCursor: VisualCursorService,
+    typingService: TypingService,
+    elementUtils: ElementUtils
+  ) {
+    super(logger, visualCursor, typingService, elementUtils);
+    this.rainbowBorderService = RainbowBorderService.getInstance(this.logger);
+  }
   /**
    * Handle click actions with element validation and visual feedback
    */
@@ -56,6 +73,11 @@ export class ClickActionHandler extends BaseActionHandler {
           `Element found, preparing to click: ${validatedSelector}`,
           'ClickActionHandler'
         );
+
+        // Add rainbow border to highlight the target element
+        if (element instanceof HTMLElement) {
+          await this.rainbowBorderService.addRainbowBorder(element);
+        }
 
         // Move cursor to element and perform visual click
         await this.visualCursor.moveToElement(element);

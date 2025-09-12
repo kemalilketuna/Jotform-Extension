@@ -16,6 +16,7 @@ import { NavigationDetector } from '@/entrypoints/content/NavigationDetector';
 import { ScreenshotService } from '@/services/ScreenshotService';
 import { UserMessagesService } from '@/services/MessagesService';
 import { EventBus } from '@/events';
+import { RainbowBorderService } from '@/services/RainbowBorderService';
 import { SingletonManager } from '../../utils/SingletonService';
 
 /**
@@ -157,6 +158,13 @@ export class ServiceFactory {
     return this.container.get<typeof UserMessagesService>(
       'UserMessagesService'
     );
+  }
+
+  /**
+   * Create a rainbow border service instance
+   */
+  createRainbowBorderService(): RainbowBorderService {
+    return RainbowBorderService.getInstance(this.logger);
   }
 
   /**

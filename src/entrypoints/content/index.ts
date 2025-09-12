@@ -6,6 +6,7 @@ import { ContentScriptCoordinator } from './ContentScriptCoordinator';
 import { ServiceInitializer } from './ServiceInitializer';
 import { MessageRouter } from './MessageRouter';
 import { NavigationDetector } from './NavigationDetector';
+import { RainbowBorderService } from '@/services/RainbowBorderService';
 
 /**
  * Main content script entry point

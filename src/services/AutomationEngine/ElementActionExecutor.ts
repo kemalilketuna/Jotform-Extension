@@ -2,6 +2,7 @@ import { LoggingService } from '@/services/LoggingService';
 import { DOMDetectionService } from '@/services/DOMDetectionService';
 import { ActionsService } from '@/services/ActionsService';
 import { VisualCursorService } from '@/services/VisualCursorService';
+import { RainbowBorderService } from '@/services/RainbowBorderService';
 import { Action } from '@/services/APIService/APITypes';
 import { TimingConfig } from '@/config';
 import {
@@ -17,6 +18,7 @@ export class ElementActionExecutor {
   private readonly domDetectionService: DOMDetectionService;
   private readonly actionsService: ActionsService;
   private readonly visualCursorService: VisualCursorService;
+  private readonly rainbowBorderService: RainbowBorderService;
 
   constructor(
     logger: LoggingService,
@@ -27,6 +29,7 @@ export class ElementActionExecutor {
     this.domDetectionService = domDetectionService;
     this.actionsService = actionsService;
     this.visualCursorService = VisualCursorService.getInstance(logger);
+    this.rainbowBorderService = RainbowBorderService.getInstance(logger);
   }
 
   /**
@@ -81,7 +84,7 @@ export class ElementActionExecutor {
   }
 
   /**
-   * Execute click action directly on element with visual cursor
+   * Execute click action directly on element with visual cursor and rainbow border
    */
   private async executeClickOnElement(
     element: HTMLElement,
@@ -93,6 +96,9 @@ export class ElementActionExecutor {
       : `Step ${stepIndex}: Executing direct click on element: ${element.tagName}`;
 
     this.logger.info(logMessage, 'ElementActionExecutor');
+
+    // Add rainbow border to highlight the target element
+    await this.rainbowBorderService.addRainbowBorder(element);
 
     const visualCursorConfig: ErrorHandlingConfig = {
       context: 'ElementActionExecutor',

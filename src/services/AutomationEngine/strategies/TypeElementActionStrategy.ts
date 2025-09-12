@@ -4,6 +4,7 @@ import { AutomationError } from '../AutomationErrors';
 import { TypingService } from '@/services/TypingService';
 import { ServiceFactory } from '@/services/DIContainer';
 import { VisualCursorService } from '@/services/VisualCursorService';
+import { RainbowBorderService } from '@/services/RainbowBorderService';
 import { TimingConfig } from '@/config';
 import {
   ErrorHandlingUtils,
@@ -18,6 +19,7 @@ import { ElementActionExecutor } from '../ElementActionExecutor';
  */
 export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
   private readonly visualCursorService: VisualCursorService;
+  private readonly rainbowBorderService: RainbowBorderService;
 
   constructor(
     logger: LoggingService,
@@ -25,6 +27,7 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
   ) {
     super(logger, elementActionExecutor);
     this.visualCursorService = VisualCursorService.getInstance(logger);
+    this.rainbowBorderService = RainbowBorderService.getInstance(logger);
   }
   /**
    * Execute TYPE action
@@ -65,6 +68,9 @@ export class TypeElementActionStrategy extends BaseAutomationActionStrategy {
           'Target element is not a valid input or textarea element'
         );
       }
+
+      // Add rainbow border to highlight the target element
+      await this.rainbowBorderService.addRainbowBorder(targetElement);
 
       // First click the element to ensure it has focus
       await this.clickElementBeforeTyping(targetElement, stepCount);

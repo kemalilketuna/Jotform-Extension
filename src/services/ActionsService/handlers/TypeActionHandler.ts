@@ -2,6 +2,11 @@ import { BaseActionHandler } from './BaseActionHandler';
 import { TypeAction } from '../ActionTypes';
 import { ElementNotFoundError } from '@/services/AutomationEngine/AutomationErrors';
 import { SelectorUtils } from '@/utils/SelectorUtils';
+import { RainbowBorderService } from '@/services/RainbowBorderService';
+import { LoggingService } from '@/services/LoggingService';
+import { VisualCursorService } from '@/services/VisualCursorService';
+import { TypingService } from '@/services/TypingService';
+import { ElementUtils } from '@/utils/ElementUtils';
 import {
   ErrorHandlingUtils,
   ErrorHandlingConfig,
@@ -11,6 +16,17 @@ import {
  * Handles typing-related automation actions
  */
 export class TypeActionHandler extends BaseActionHandler {
+  private readonly rainbowBorderService: RainbowBorderService;
+
+  constructor(
+    logger: LoggingService,
+    visualCursor: VisualCursorService,
+    typingService: TypingService,
+    elementUtils: ElementUtils
+  ) {
+    super(logger, visualCursor, typingService, elementUtils);
+    this.rainbowBorderService = RainbowBorderService.getInstance(this.logger);
+  }
   /**
    * Handle typing actions with input validation and visual feedback
    */
@@ -34,6 +50,11 @@ export class TypeActionHandler extends BaseActionHandler {
 
         if (!element) {
           throw new ElementNotFoundError(validatedSelector);
+        }
+
+        // Add rainbow border to highlight the target element
+        if (element instanceof HTMLElement) {
+          await this.rainbowBorderService.addRainbowBorder(element);
         }
 
         // Move cursor to element before typing

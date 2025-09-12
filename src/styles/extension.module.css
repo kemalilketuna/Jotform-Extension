@@ -531,3 +531,343 @@
 .extensionComponent *:after {
   box-sizing: border-box;
 }
+
+/* Rainbow Border Animation Styles */
+.extensionRainbowBorder {
+  border: 3px solid transparent !important;
+  border-radius: 8px !important;
+  background:
+    linear-gradient(white, white) padding-box,
+    linear-gradient(
+        45deg,
+        #ff0000,
+        #ff8000,
+        #ffff00,
+        #80ff00,
+        #00ff00,
+        #00ff80,
+        #00ffff,
+        #0080ff,
+        #0000ff,
+        #8000ff,
+        #ff00ff,
+        #ff0080
+      )
+      border-box !important;
+  animation: rainbowBorderRotation 2s linear infinite !important;
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.8),
+    0 0 40px rgba(255, 255, 255, 0.4) !important;
+  position: relative !important;
+  z-index: 999998 !important;
+}
+
+.extensionRainbowGlow {
+  position: relative !important;
+}
+
+.extensionRainbowGlow::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(
+    45deg,
+    #ff0000,
+    #ff8000,
+    #ffff00,
+    #80ff00,
+    #00ff00,
+    #00ff80,
+    #00ffff,
+    #0080ff,
+    #0000ff,
+    #8000ff,
+    #ff00ff,
+    #ff0080
+  );
+  border-radius: inherit;
+  z-index: -1;
+  animation: rainbowBorderRotation 2s linear infinite;
+  filter: blur(1px);
+}
+
+@keyframes rainbowBorderRotation {
+  0% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          0deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  8.33% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          30deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  16.66% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          60deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  25% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          90deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  33.33% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          120deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  41.66% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          150deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  50% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          180deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  58.33% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          210deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  66.66% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          240deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  75% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          270deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  83.33% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          300deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  91.66% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          330deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+  100% {
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(
+          360deg,
+          #ff0000,
+          #ff8000,
+          #ffff00,
+          #80ff00,
+          #00ff00,
+          #00ff80,
+          #00ffff,
+          #0080ff,
+          #0000ff,
+          #8000ff,
+          #ff00ff,
+          #ff0080
+        )
+        border-box;
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .extensionRainbowBorder {
+    animation: none !important;
+    background:
+      linear-gradient(white, white) padding-box,
+      linear-gradient(45deg, #4f46e5, #7c3aed) border-box !important;
+  }
+
+  .extensionRainbowGlow::before {
+    animation: none !important;
+    background: linear-gradient(45deg, #4f46e5, #7c3aed);
+  }
+}
