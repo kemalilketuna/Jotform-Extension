@@ -114,7 +114,7 @@ export class ExecutionController {
 
         const automationError = new AutomationError(
           result.error!.message ||
-            'Unknown error during step-by-step automation'
+          'Unknown error during step-by-step automation'
         );
         throw automationError;
       }
@@ -187,7 +187,9 @@ export class ExecutionController {
         sessionId,
         visibleElementsHtml,
         lastTurnOutcome,
-        screenshotBase64
+        screenshotBase64,
+        undefined, // userResponse
+        stepCount === 0 // isFirstStep - only true for the very first step
       );
 
       // Process and execute actions
@@ -208,7 +210,8 @@ export class ExecutionController {
           visibleElementsHtml,
           lastTurnOutcome,
           screenshotBase64,
-          result.userResponse
+          result.userResponse,
+          false // isFirstStep - never true for user response follow-ups
         );
 
         // Process the response action

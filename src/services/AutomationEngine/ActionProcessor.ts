@@ -93,10 +93,13 @@ export class ActionProcessor {
     visibleElementsHtml: string[],
     lastTurnOutcome: ExecutedAction[],
     screenshotBase64?: string,
-    userResponse?: string
+    userResponse?: string,
+    isFirstStep?: boolean
   ): Promise<NextActionResponse> {
-    // Emit thinking message to ChatBox when starting to get next action
-    await this.emitThinkingMessage(sessionId);
+    // Only emit thinking message on the first step of a new session
+    if (isFirstStep) {
+      await this.emitThinkingMessage(sessionId);
+    }
 
     const config: ErrorHandlingConfig = {
       context: 'ActionProcessor',
